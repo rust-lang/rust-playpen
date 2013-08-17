@@ -18,12 +18,12 @@ def evaluate():
         return {"error": "invalid version"}
     print(request.json)
     with subprocess.Popen(["playpen",
+                          "root-" + version,
                            "--user=rust",
                            "--timeout=5",
                            "--syscalls-file=whitelist",
                            "--devices=c:1:9",
                            "--memory-limit=128M",
-                           "--root=root-" + version,
                            "--",
                            "/usr/local/bin/evaluate.sh",
                            request.json["code"]],
@@ -38,12 +38,12 @@ def format():
         return {"error": "invalid version"}
     print(request.json)
     with subprocess.Popen(["playpen",
+                           "root-" + version,
                            "--user=rust",
                            "--timeout=5",
                            "--syscalls-file=whitelist",
                            "--devices=c:1:9",
                            "--memory-limit=128M",
-                           "--root=root-" + version,
                            "--",
                            "/usr/local/bin/format.sh",
                            request.json["code"]],
