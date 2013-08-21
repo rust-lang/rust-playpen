@@ -6,10 +6,9 @@ function send(path, data, callback) {
     var request = new XMLHttpRequest();
     request.open("POST", path, true);
     request.setRequestHeader("Content-Type", "application/json");
-    request.responseType = "json";
     request.onreadystatechange = function() {
         if (request.readyState == 4) {
-            callback(request.status, request.response);
+            callback(request.status, JSON.parse(request.response));
         }
     }
     request.send(JSON.stringify(data));
