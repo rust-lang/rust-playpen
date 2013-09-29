@@ -39,10 +39,9 @@ function format(result, session, version) {
     });
 }
 
-function sample(session, result) {
+function set_sample(sample, session, result, index) {
     var request = new XMLHttpRequest();
-    var index = Math.floor(Math.random() * samples);
-    console.log(index);
+    sample.options[index].selected = true;
     request.open("GET", "/sample/" + index + ".rs", true);
     request.onreadystatechange = function() {
         if (request.readyState == 4) {
@@ -56,16 +55,26 @@ function sample(session, result) {
     request.send();
 }
 
+function set_random_sample(sample, session, result) {
+    var index = Math.floor(Math.random() * samples);
+    set_sample(sample, session, result, index);
+}
+
 addEventListener("DOMContentLoaded", function() {
     var evaluate_button = document.getElementById("evaluate");
     var format_button = document.getElementById("format");
     var result = document.getElementById("result");
     var version = document.getElementById("version");
+    var sample = document.getElementById("sample");
     var editor = ace.edit("editor");
     var session = editor.getSession();
 
     session.setMode("ace/mode/rust");
-    sample(session, result);
+    set_random_sample(sample, session, result);
+
+    sample.onchange = function() {
+        set_sample(sample, session, result, sample.selectedIndex);
+    };
 
     evaluate_button.onclick = function() {
         evaluate(result, session.getValue(), version.options[version.selectedIndex].text);
