@@ -9,7 +9,7 @@ rustc - -o out <<EOF
 
 extern mod extra;
 
-static version: &'static str = "$(rustc -v | head -1)";
+static version: &'static str = "$(rustc -v | tail | head -1)";
 
 fn main() {
     let r = {
