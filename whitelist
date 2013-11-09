@@ -65,3 +65,4 @@ unlink
 vfork
 wait4
 write
+socketpair
