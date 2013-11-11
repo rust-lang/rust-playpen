@@ -4,6 +4,7 @@ bind
 brk
 chdir
 chmod
+clock_getres
 clone
 close
 dup
@@ -56,6 +57,7 @@ rt_sigreturn
 setrlimit
 set_robust_list
 set_tid_address
+socketpair
 stat
 statfs
 tgkill
@@ -65,4 +67,3 @@ unlink
 vfork
 wait4
 write
-socketpair
