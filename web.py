@@ -34,7 +34,7 @@ def evaluate():
 @post("/format.json")
 def format():
     version = request.json["version"]
-    if version not in ("master", "0.7"):
+    if version not in ("master",):
         return {"error": "invalid version"}
     print(request.json)
     with subprocess.Popen(["playpen",
