@@ -14,7 +14,7 @@ def serve_static(path):
 @post("/evaluate.json")
 def evaluate():
     version = request.json["version"]
-    if version not in ("master", "0.8", "0.7"):
+    if version not in ("master",):
         return {"error": "invalid version"}
     print(request.json)
     with subprocess.Popen(["playpen",

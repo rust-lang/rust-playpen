@@ -40,6 +40,7 @@ ioctl
 lseek
 lstat
 madvise
+mkdir
 mmap
 mprotect
 mremap
@@ -51,6 +52,7 @@ pipe
 pipe2
 read
 readlink
+rmdir
 rt_sigaction
 rt_sigprocmask
 rt_sigreturn
