@@ -9,6 +9,7 @@ rustc - -o out <<EOF
 
 extern mod extra;
 
+#[allow(dead_code)]
 static version: &'static str = "$(rustc -v | tail | head -1)";
 
 fn main() {
