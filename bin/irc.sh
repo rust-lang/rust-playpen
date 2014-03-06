@@ -7,7 +7,7 @@ set -o errexit
 rustc - -o out <<EOF
 #[feature(globs, macro_rules, struct_variant)];
 
-extern mod extra;
+extern crate extra;
 
 #[allow(dead_code)]
 static version: &'static str = "$(rustc -v | tail | head -1)";
