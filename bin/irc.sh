@@ -16,7 +16,7 @@ fn main() {
     let r = {
         $@
     };
-    println!("{:?}", r)
+    println!("{}", r)
 }
 EOF
 
