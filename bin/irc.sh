@@ -13,11 +13,6 @@ extern crate native;
 #[allow(dead_code)]
 static version: &'static str = "$(rustc -v | tail | head -1)";
 
-#[start]
-fn start(argc: int, argv: **u8) -> int {
-    native::start(argc, argv, main)
-}
-
 fn main() {
     let r = {
         $@
