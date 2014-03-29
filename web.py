@@ -11,24 +11,28 @@ def serve_index():
 def serve_static(path):
     return static_file(path, root="static")
 
+def playpen(version, command, argument):
+    return subprocess.Popen(["playpen",
+                             "root-" + version,
+                             "--mount-proc",
+                             "--user=rust",
+                             "--timeout=5",
+                             "--syscalls-file=whitelist",
+                             "--devices=/dev/urandom:r",
+                             "--memory-limit=128",
+                             "--",
+                             command,
+                             argument],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
+
 @post("/evaluate.json")
 def evaluate():
     version = request.json["version"]
     if version not in ("master",):
         return {"error": "invalid version"}
     print(request.json)
-    with subprocess.Popen(["playpen",
-                          "root-" + version,
-                           "--user=rust",
-                           "--timeout=5",
-                           "--syscalls-file=whitelist",
-                           "--devices=c:1:9",
-                           "--memory-limit=128M",
-                           "--",
-                           "/usr/local/bin/evaluate.sh",
-                           request.json["code"]],
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.STDOUT) as p:
+    with playpen(version, "/usr/local/bin/evaluate.sh", request.json["code"]) as p:
         return {"result": p.stdout.read().decode()}
 
 @post("/format.json")
@@ -37,18 +41,7 @@ def format():
     if version not in ("master",):
         return {"error": "invalid version"}
     print(request.json)
-    with subprocess.Popen(["playpen",
-                           "root-" + version,
-                           "--user=rust",
-                           "--timeout=5",
-                           "--syscalls-file=whitelist",
-                           "--devices=c:1:9",
-                           "--memory-limit=128M",
-                           "--",
-                           "/usr/local/bin/format.sh",
-                           request.json["code"]],
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.STDOUT) as p:
+    with playpen(version, "/usr/local/bin/format.sh", request.json["code"]) as p:
         output = p.communicate()[0][:-1].decode()
         if p.returncode:
             return {"error": output}
