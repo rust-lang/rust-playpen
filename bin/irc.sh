@@ -5,7 +5,7 @@
 set -o errexit
 
 rustc - -o out <<EOF
-#[feature(globs, macro_rules, struct_variant, simd, asm)];
+#![feature(globs, macro_rules, struct_variant, simd, asm)]
 
 extern crate collections;
 extern crate native;
