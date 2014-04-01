@@ -19,7 +19,6 @@ pacstrap -c -d root-master \
 
 mkdir root-master/dev/shm
 mknod -m 644 root-master/dev/urandom c 1 9
-mknod -m 666 root-master/dev/null c 1 3
 arch-chroot root-master useradd -m -g users -s /bin/bash rust
 install -m755 bin/* root-master/usr/local/bin
 
