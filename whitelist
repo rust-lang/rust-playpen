@@ -30,7 +30,6 @@ getrlimit
 getrusage
 gettid
 getuid
-getxattr
 ioctl
 lseek
 lstat
@@ -57,7 +56,6 @@ stat
 statfs
 tgkill
 umask
-uname
 unlink
 vfork
 wait4
