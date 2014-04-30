@@ -5,10 +5,14 @@
 set -o errexit
 
 rustc - -o out <<EOF
-#![feature(asm, globs, macro_rules, struct_variant, simd, quad_precision_float)]
+#![feature(asm, globs, macro_rules, phase, simd, struct_variant, quad_precision_float)]
 
 extern crate collections;
 extern crate native;
+extern crate rand;
+#[phase(syntax)]
+extern crate regex_macros;
+extern crate regex;
 
 #[allow(dead_code)]
 static version: &'static str = "$(rustc -v | tail | head -1)";
