@@ -4,6 +4,7 @@ brk
 chdir
 chmod
 clock_getres
+clock_gettime
 clone
 close
 dup
@@ -29,6 +30,7 @@ getresuid
 getrlimit
 getrusage
 gettid
+gettimeofday
 getuid
 ioctl
 lseek
