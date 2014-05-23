@@ -22,4 +22,6 @@ mknod -m 644 root-master/dev/urandom c 1 9
 arch-chroot root-master useradd -m -g users -s /bin/bash rust
 install -m755 bin/* root-master/usr/local/bin
 
+cp -a root-master root-0.10
 pacman -r root-master -S rust-git --noconfirm
+pacman -r root-0.10 -S rust --noconfirm

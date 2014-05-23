@@ -29,7 +29,7 @@ def playpen(version, command, argument):
 @post("/evaluate.json")
 def evaluate():
     version = request.json["version"]
-    if version not in ("master",):
+    if version not in ("master", "0.10"):
         return {"error": "invalid version"}
     print(request.json)
     with playpen(version, "/usr/local/bin/evaluate.sh", request.json["code"]) as p:
@@ -38,7 +38,7 @@ def evaluate():
 @post("/format.json")
 def format():
     version = request.json["version"]
-    if version not in ("master",):
+    if version not in ("master", "0.10"):
         return {"error": "invalid version"}
     print(request.json)
     with playpen(version, "/usr/local/bin/format.sh", request.json["code"]) as p:
