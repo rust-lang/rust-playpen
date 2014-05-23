@@ -63,4 +63,4 @@ def compile():
         else:
             return {"result": output}
 
-run(host='0.0.0.0', port=8000, server='cherrypy')
+run(host='0.0.0.0', port=80, server='cherrypy')
