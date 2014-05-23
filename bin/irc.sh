@@ -22,7 +22,7 @@ fn show<T: std::fmt::Show>(e: T) { println!("{}", e) }
 
 fn main() {
     let r = {
-        $@
+        $1
     };
     println!("{}", r)
 }
