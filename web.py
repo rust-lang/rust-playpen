@@ -30,8 +30,11 @@ def evaluate():
     version = request.json["version"]
     if version not in ("master", "0.10"):
         return {"error": "invalid version"}
+    optimize = request.json["optimize"]
+    if optimize not in ("0", "1", "2", "3"):
+        return {"error": "invalid optimization level"}
     print(request.json)
-    with playpen(version, "/usr/local/bin/evaluate.sh", [request.json["code"]]) as p:
+    with playpen(version, "/usr/local/bin/evaluate.sh", [optimize, request.json["code"]]) as p:
         return {"result": p.stdout.read().decode()}
 
 @post("/format.json")
@@ -55,8 +58,11 @@ def compile():
     emit = request.json["emit"]
     if emit not in ("asm", "ir"):
         return {"error": "invalid emission type"}
+    optimize = request.json["optimize"]
+    if optimize not in ("0", "1", "2", "3"):
+        return {"error": "invalid optimization level"}
     print(request.json)
-    with playpen(version, "/usr/local/bin/compile.sh", [emit, request.json["code"]]) as p:
+    with playpen(version, "/usr/local/bin/compile.sh", [optimize, emit, request.json["code"]]) as p:
         output = p.communicate()[0].decode()
         if p.returncode:
             return {"error": output}

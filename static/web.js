@@ -14,8 +14,9 @@ function send(path, data, callback) {
     request.send(JSON.stringify(data));
 }
 
-function evaluate(result, code, version) {
-    send("/evaluate.json", {code: code, version: version}, function(rc, object) {
+function evaluate(result, code, version, optimize) {
+    send("/evaluate.json", {code: code, version: version, optimize: optimize},
+         function(rc, object) {
         if (rc == 200) {
             result.textContent = object["result"];
         } else {
@@ -24,8 +25,9 @@ function evaluate(result, code, version) {
     });
 }
 
-function compile(emit, result, code, version) {
-    send("/compile.json", {code: code, version: version, emit: emit}, function(rc, object) {
+function compile(emit, result, code, version, optimize) {
+    send("/compile.json", {emit: emit, code: code, version: version, optimize: optimize},
+         function(rc, object) {
         if (rc == 200) {
             result.textContent = object["result"];
         } else {
@@ -76,6 +78,7 @@ addEventListener("DOMContentLoaded", function() {
     var ir_button = document.getElementById("ir");
     var format_button = document.getElementById("format");
     var result = document.getElementById("result");
+    var optimize = document.getElementById("optimize");
     var version = document.getElementById("version");
     var sample = document.getElementById("sample");
     var editor = ace.edit("editor");
@@ -89,15 +92,18 @@ addEventListener("DOMContentLoaded", function() {
     };
 
     evaluate_button.onclick = function() {
-        evaluate(result, session.getValue(), version.options[version.selectedIndex].text);
+        evaluate(result, session.getValue(), version.options[version.selectedIndex].text,
+                 optimize.options[optimize.selectedIndex].value);
     };
 
     asm_button.onclick = function() {
-        compile("asm", result, session.getValue(), version.options[version.selectedIndex].text);
+        compile("asm", result, session.getValue(), version.options[version.selectedIndex].text,
+                 optimize.options[optimize.selectedIndex].value);
     };
 
     ir_button.onclick = function() {
-        compile("ir", result, session.getValue(), version.options[version.selectedIndex].text);
+        compile("ir", result, session.getValue(), version.options[version.selectedIndex].text,
+                 optimize.options[optimize.selectedIndex].value);
     };
 
     format_button.onclick = function() {

@@ -1,5 +1,5 @@
 #!/usr/bin/dash
 
-exec rustc - --emit=$1 -o - <<EOF
-$2
+exec rustc - --opt-level=$1 --emit=$2 -o - <<EOF
+$3
 EOF
