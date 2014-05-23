@@ -24,6 +24,16 @@ function evaluate(result, code, version) {
     });
 }
 
+function compile(emit, result, code, version) {
+    send("/compile.json", {code: code, version: version, emit: emit}, function(rc, object) {
+        if (rc == 200) {
+            result.textContent = object["result"];
+        } else {
+            result.textContent = "connection failure";
+        }
+    });
+}
+
 function format(result, session, version) {
     send("/format.json", {code: session.getValue(), version: version}, function(rc, object) {
         if (rc == 200) {
@@ -62,6 +72,8 @@ function set_random_sample(sample, session, result) {
 
 addEventListener("DOMContentLoaded", function() {
     var evaluate_button = document.getElementById("evaluate");
+    var asm_button = document.getElementById("asm");
+    var ir_button = document.getElementById("ir");
     var format_button = document.getElementById("format");
     var result = document.getElementById("result");
     var version = document.getElementById("version");
@@ -78,6 +90,14 @@ addEventListener("DOMContentLoaded", function() {
 
     evaluate_button.onclick = function() {
         evaluate(result, session.getValue(), version.options[version.selectedIndex].text);
+    };
+
+    asm_button.onclick = function() {
+        compile("asm", result, session.getValue(), version.options[version.selectedIndex].text);
+    };
+
+    ir_button.onclick = function() {
+        compile("ir", result, session.getValue(), version.options[version.selectedIndex].text);
     };
 
     format_button.onclick = function() {
