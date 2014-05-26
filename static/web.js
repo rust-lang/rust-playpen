@@ -67,9 +67,16 @@ function set_sample(sample, session, result, index) {
     request.send();
 }
 
-function set_random_sample(sample, session, result) {
-    var index = Math.floor(Math.random() * samples);
-    set_sample(sample, session, result, index);
+function get_query_parameters() {
+    var a = window.location.search.substr(1).split('&');
+    if (a == "") return {};
+    var b = {};
+    for (var i = 0; i < a.length; i++) {
+        var p = a[i].split('=');
+        if (p.length != 2) continue;
+        b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+    }
+    return b;
 }
 
 addEventListener("DOMContentLoaded", function() {
@@ -85,7 +92,19 @@ addEventListener("DOMContentLoaded", function() {
     var session = editor.getSession();
 
     session.setMode("ace/mode/rust");
-    set_random_sample(sample, session, result);
+
+    var query = get_query_parameters();
+    if ("code" in query) {
+        session.setValue(query["code"]);
+    } else {
+        var index = Math.floor(Math.random() * samples);
+        set_sample(sample, session, result, index);
+    }
+
+    if ("run" in query && query["run"] === "1") {
+        evaluate(result, session.getValue(), version.options[version.selectedIndex].text,
+                 optimize.options[optimize.selectedIndex].value);
+    }
 
     sample.onchange = function() {
         set_sample(sample, session, result, sample.selectedIndex);
