@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import subprocess
+import sys
 from bottle import get, post, request, run, static_file
 
 @get("/")
@@ -33,7 +34,7 @@ def evaluate():
     optimize = request.json["optimize"]
     if optimize not in ("0", "1", "2", "3"):
         return {"error": "invalid optimization level"}
-    print(request.json)
+    print(request.json, file=sys.stderr, flush=True)
     with playpen(version, "/usr/local/bin/evaluate.sh", [optimize, request.json["code"]]) as p:
         return {"result": p.stdout.read().decode()}
 
@@ -42,7 +43,7 @@ def format():
     version = request.json["version"]
     if version not in ("master", "0.10"):
         return {"error": "invalid version"}
-    print(request.json)
+    print(request.json, file=sys.stderr, flush=True)
     with playpen(version, "/usr/local/bin/format.sh", [request.json["code"]]) as p:
         output = p.communicate()[0][:-1].decode()
         if p.returncode:
@@ -61,7 +62,7 @@ def compile():
     optimize = request.json["optimize"]
     if optimize not in ("0", "1", "2", "3"):
         return {"error": "invalid optimization level"}
-    print(request.json)
+    print(request.json, file=sys.stderr, flush=True)
     with playpen(version, "/usr/local/bin/compile.sh", [optimize, emit, request.json["code"]]) as p:
         output = p.communicate()[0].decode()
         if p.returncode:
