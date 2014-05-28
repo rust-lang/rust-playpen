@@ -101,7 +101,7 @@ addEventListener("DOMContentLoaded", function() {
         set_sample(sample, session, result, index);
     }
 
-    if ("run" in query && query["run"] === "1") {
+    if (query["run"] === "1") {
         evaluate(result, session.getValue(), version.options[version.selectedIndex].text,
                  optimize.options[optimize.selectedIndex].value);
     }
