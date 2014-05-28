@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import functools
 import os
 import subprocess
 import sys
@@ -13,19 +14,22 @@ def serve_index():
 def serve_static(path):
     return static_file(path, root="static")
 
+@functools.lru_cache(maxsize=256)
 def playpen(version, command, arguments):
-    return subprocess.Popen(["playpen",
-                             "root-" + version,
-                             "--mount-proc",
-                             "--user=rust",
-                             "--timeout=5",
-                             "--syscalls-file=whitelist",
-                             "--devices=/dev/urandom:r",
-                             "--memory-limit=128",
-                             "--",
-                             command] + arguments,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT)
+    print("running:", version, command, arguments, file=sys.stderr, flush=True)
+    with subprocess.Popen(("playpen",
+                           "root-" + version,
+                           "--mount-proc",
+                           "--user=rust",
+                           "--timeout=5",
+                           "--syscalls-file=whitelist",
+                           "--devices=/dev/urandom:r",
+                           "--memory-limit=128",
+                           "--",
+                           command) + arguments,
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT) as p:
+        return (p.communicate()[0].decode(), p.returncode)
 
 @post("/evaluate.json")
 def evaluate():
@@ -35,22 +39,19 @@ def evaluate():
     optimize = request.json["optimize"]
     if optimize not in ("0", "1", "2", "3"):
         return {"error": "invalid optimization level"}
-    print(request.json, file=sys.stderr, flush=True)
-    with playpen(version, "/usr/local/bin/evaluate.sh", [optimize, request.json["code"]]) as p:
-        return {"result": p.stdout.read().decode()}
+    (out, _) = playpen(version, "/usr/local/bin/evaluate.sh", (optimize, request.json["code"]))
+    return {"result": out}
 
 @post("/format.json")
 def format():
     version = request.json["version"]
     if version not in ("master", "0.10"):
         return {"error": "invalid version"}
-    print(request.json, file=sys.stderr, flush=True)
-    with playpen(version, "/usr/local/bin/format.sh", [request.json["code"]]) as p:
-        output = p.communicate()[0][:-1].decode()
-        if p.returncode:
-            return {"error": output}
-        else:
-            return {"result": output}
+    (out, rc) = playpen(version, "/usr/local/bin/format.sh", (request.json["code"],))
+    if rc:
+        return {"error": out}
+    else:
+        return {"result": out[:-1]}
 
 @post("/compile.json")
 def compile():
@@ -63,13 +64,11 @@ def compile():
     optimize = request.json["optimize"]
     if optimize not in ("0", "1", "2", "3"):
         return {"error": "invalid optimization level"}
-    print(request.json, file=sys.stderr, flush=True)
-    with playpen(version, "/usr/local/bin/compile.sh", [optimize, emit, request.json["code"]]) as p:
-        output = p.communicate()[0].decode()
-        if p.returncode:
-            return {"error": output}
-        else:
-            return {"result": output}
+    (out, rc) = playpen(version, "/usr/local/bin/compile.sh", (optimize, emit, request.json["code"]))
+    if rc:
+        return {"error": out}
+    else:
+        return {"result": out}
 
 os.chdir(sys.path[0])
 run(host='0.0.0.0', port=80, server='cherrypy')
