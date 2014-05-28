@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import subprocess
 import sys
 from bottle import get, post, request, run, static_file
@@ -70,4 +71,5 @@ def compile():
         else:
             return {"result": output}
 
+os.chdir(sys.path[0])
 run(host='0.0.0.0', port=80, server='cherrypy')
