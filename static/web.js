@@ -29,7 +29,11 @@ function compile(emit, result, code, version, optimize) {
     send("/compile.json", {emit: emit, code: code, version: version, optimize: optimize},
          function(rc, object) {
         if (rc == 200) {
-            result.textContent = object["result"];
+            if ("error" in object) {
+                result.textContent = object["error"];
+            } else {
+                result.textContent = object["result"];
+            }
         } else {
             result.textContent = "connection failure";
         }
