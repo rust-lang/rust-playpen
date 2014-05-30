@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd "${BASH_SOURCE%/*}" || exit
+
 umask 022
 
 mkdir root-master.new
