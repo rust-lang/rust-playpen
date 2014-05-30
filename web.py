@@ -4,7 +4,7 @@ import functools
 import os
 import subprocess
 import sys
-from bottle import get, post, request, run, static_file
+from bottle import get, request, response, route, run, static_file
 
 @get("/")
 def serve_index():
@@ -31,7 +31,19 @@ def playpen(version, command, arguments):
                            stderr=subprocess.STDOUT) as p:
         return (p.communicate()[0].decode(), p.returncode)
 
-@post("/evaluate.json")
+def enable_post_cors(wrappee):
+    def wrapper(*args, **kwargs):
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Origin, Accept, Content-Type"
+
+        if request.method != "OPTIONS":
+            return wrappee(*args, **kwargs)
+
+    return wrapper
+
+@route("/evaluate.json", method=["POST", "OPTIONS"])
+@enable_post_cors
 def evaluate():
     version = request.json["version"]
     if version not in ("master", "0.10"):
@@ -42,7 +54,8 @@ def evaluate():
     (out, _) = playpen(version, "/usr/local/bin/evaluate.sh", (optimize, request.json["code"]))
     return {"result": out}
 
-@post("/format.json")
+@route("/format.json", method=["POST", "OPTIONS"])
+@enable_post_cors
 def format():
     version = request.json["version"]
     if version not in ("master", "0.10"):
@@ -53,7 +66,8 @@ def format():
     else:
         return {"result": out[:-1]}
 
-@post("/compile.json")
+@route("/compile.json", method=["POST", "OPTIONS"])
+@enable_post_cors
 def compile():
     version = request.json["version"]
     if version not in ("master", "0.10"):
