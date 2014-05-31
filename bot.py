@@ -5,6 +5,7 @@ import irc.client
 import itertools
 import playpen
 import requests
+import shorten_key
 import subprocess
 import sys
 import threading
@@ -35,14 +36,13 @@ fn main() {
 }"""
 
 def pastebin(command):
-    with open("shorten_key.txt") as f:
-        key = f.read().strip()
     bitly = "https://api-ssl.bitly.com/v3/shorten"
     server = "http://playtest.rust-lang.org/?"
 
     params = urlencode({"code": command, "run": 1})
     url = server + params
-    r = requests.get(bitly, params={"access_token": key, "longUrl": url})
+    r = requests.get(bitly,
+                     params={"access_token": shorten_key.key, "longUrl": url})
     response = r.json()
 
     if response["status_txt"] == "OK":
