@@ -66,7 +66,7 @@ def compile():
     optimize = request.json["optimize"]
     if optimize not in ("0", "1", "2", "3"):
         return {"error": "invalid optimization level"}
-    out, rc = playpen(version, "/usr/local/bin/compile.sh", (optimize, emit, request.json["code"]))
+    out, rc = execute(version, "/usr/local/bin/compile.sh", (optimize, emit, request.json["code"]))
     if rc:
         return {"error": out}
     else:
