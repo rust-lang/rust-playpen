@@ -1,6 +1,16 @@
 "use strict";
 
-var samples = 2;
+function get_query_parameters() {
+    var a = window.location.search.substr(1).split('&');
+    if (a == "") return {};
+    var b = {};
+    for (var i = 0; i < a.length; i++) {
+        var p = a[i].split('=');
+        if (p.length != 2) continue;
+        b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+    }
+    return b;
+}
 
 function send(path, data, callback) {
     var result = document.getElementById("result");
@@ -27,49 +37,89 @@ function send(path, data, callback) {
     request.send(JSON.stringify(data));
 }
 
-function evaluate(result, code, version, optimize) {
-    send("/evaluate.json", {code: code, version: version, optimize: optimize},
-         function(rc, object) {
-        if (rc == 200) {
-            result.textContent = object["result"];
+/**
+ * Evaluate a block of Rust code.
+ *
+ * @param {String} code
+ * @param {String} version
+ * @param {String} optimize
+ * @param {Function} fn Callback
+ */
 
-            var div = document.createElement("div");
-            div.className = "message";
-            div.textContent = "Program ended.";
-            result.appendChild(div);
+function evaluate(code, version, optimize, fn) {
+    if ('function' !== typeof fn) {
+        throw new Error("Expected a function");
+    }
+
+    var obj = {code: code, version: version, optimize: optimize};
+
+    send("/evaluate.json", obj, function(rc, object) {
+        if (rc == 200) {
+            if ("error" in object) {
+                fn({ message: object["error"] }, null);
+            } else {
+                fn(null, object["result"]);
+            }
         } else {
-            result.textContent = "connection failure";
+            fn({ message: "connection failure"}, null);
         }
     });
 }
 
-function compile(emit, result, code, version, optimize) {
-    send("/compile.json", {emit: emit, code: code, version: version, optimize: optimize,
-                           highlight: true},
-         function(rc, object) {
+/**
+ * Compile a piece of Rust code and emit a specific output.
+ *
+ * @param {String} emit
+ * @param {String} code
+ * @param {String} version
+ * @param {String} optimize
+ * @param {Function} fn
+ */
+
+function compile(emit, code, version, optimize, fn) {
+    var obj = {
+        emit: emit,
+        code: code,
+        version: version,
+        optimize: optimize
+    };
+
+    send("/compile.json", obj, function(rc, object) {
         if (rc == 200) {
             if ("error" in object) {
-                result.textContent = object["error"];
+                fn({ message: object["error"] }, null);
             } else {
-                result.innerHTML = object["result"];
+                fn(null, object["result"]);
             }
         } else {
-            result.textContent = "connection failure";
+            fn({ message: "connection failure" });
         }
     });
 }
 
-function format(result, session, version) {
-    send("/format.json", {code: session.getValue(), version: version}, function(rc, object) {
+/**
+ * Format a given block of Rust code.
+ *
+ * @param {String} code
+ * @param {String} version
+ * @param {Function} fn
+ */
+
+function format(code, version, fn) {
+    var obj = {
+        code: code,
+        version: version
+    };
+
+    send("/format.json", obj, function(rc, object) {
         if (rc == 200) {
             if ("error" in object) {
-                result.textContent = object["error"];
+                fn({ message: object["error"] }, null);
             } else {
-                result.textContent = "";
-                session.setValue(object["result"]);
+                fn(null, object["result"]);
             }
         } else {
-            result.textContent = "connection failure";
+            fn({ message: "connection failure" }, null);
         }
     });
 }
@@ -115,91 +165,238 @@ function share(result, version, code) {
     }
 }
 
-function setSample(sample, session, result, index) {
+/**
+ * Sample Constructor
+ */
+
+function Sample(index) {
+    if (!(this instanceof Sample)) return new Sample(index);
+    this.index = index;
+}
+
+/**
+ * Retrive the sample according to the passed index.
+ *
+ * Usage:
+ *
+ * Sample(0).set(function(err, value) {
+ *
+ * });
+ *
+ * @param {Function} fn
+ */
+
+Sample.prototype.set = function(fn) {
     var request = new XMLHttpRequest();
-    sample.options[index].selected = true;
-    request.open("GET", "/sample/" + index + ".rs", true);
+
+    request.open("GET", "/sample/" + this.index + ".rs", true);
     request.onreadystatechange = function() {
         if (request.readyState == 4) {
             if (request.status == 200) {
-                session.setValue(request.responseText.slice(0, -1));
+                fn(null, request.responseText.slice(0, -1));
             } else {
-                result.textContent = "connection failure";
+                fn({
+                    message: "connection failure"
+                }, null);
             }
         }
     }
+
     request.send();
+};
+
+/**
+ * Keep track of the current selected dropdown to restrict a single dropdown
+ * being active at any given time.
+ */
+
+var currentSelection = null;
+
+/**
+ * A generic dropdown implementation.
+ *
+ * @param {Element} el A dom element that is the root of the dropdown.
+ */
+
+function Dropdown(el) {
+    var self = this;
+
+    this.el = el;
+    this.selected = this.el.querySelector("li.default").textContent;
+    this.index = (function() {
+        // Get all the lis:
+        var lis = self.el.querySelector("li");
+
+        for (var i = 0; i < lis.length; i++) {
+            var li = lis[i];
+
+            if (li.classList.contains("default")) {
+                return i;
+            }
+        }
+
+        return 0;
+    }());
+
+    this.callbacks = [];
 }
 
-function getQueryParameters() {
-    var a = window.location.search.substr(1).split('&');
-    if (a == "") return {};
-    var b = {};
-    for (var i = 0; i < a.length; i++) {
-        var p = a[i].split('=');
-        if (p.length != 2) continue;
-        b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+/**
+ * Initialize all the events that need to be attached to the dropdown. This
+ * includes all the functionality of the dropdown.
+ */
+
+Dropdown.prototype.initialize = function() {
+    var self = this;
+
+    this.el.onclick = function() {
+        if (this !== currentSelection && currentSelection && currentSelection.classList.contains("open")) {
+            currentSelection.classList.toggle("open");
+        }
+
+        this.classList.toggle("open");
+
+        if (this.classList.contains("open")) {
+            currentSelection = this;
+        }
+    };
+
+    // Look for the options.
+    var options = this.el.querySelectorAll("li");
+    for (var j = 0; j < options.length; j++) {
+        var option = options[j];
+        option.__id = j;
+
+        option.onclick = function() {
+            var el   = option.parentNode.parentNode.parentNode.querySelector("span");
+            el.textContent = this.textContent;
+            self.selected = this.textContent;
+
+            self.el.classList.toggle("open");
+
+            for (var i = 0; i < self.callbacks.length; i++) {
+                self.callbacks[i](this.textContent, this.__id);
+            }
+        };
     }
-    return b;
 }
 
-addEventListener("DOMContentLoaded", function() {
-    var evaluateButton = document.getElementById("evaluate");
-    var asmButton = document.getElementById("asm");
-    var irButton = document.getElementById("ir");
-    var formatButton = document.getElementById("format");
-    var shareButton = document.getElementById("share");
-    var result = document.getElementById("result");
-    var optimize = document.getElementById("optimize");
-    var version = document.getElementById("version");
-    var sample = document.getElementById("sample");
-    var editor = ace.edit("editor");
-    var session = editor.getSession();
+/**
+ * Add a callback to the queue. All the callbacks will be fired when the dropdown
+ * has a new selection, thus changes.
+ */
 
-    editor.setTheme("ace/theme/github");
-    session.setMode("ace/mode/rust");
-
-    var query = getQueryParameters();
-    if ("code" in query) {
-        session.setValue(query["code"]);
-    } else {
-        var index = Math.floor(Math.random() * samples);
-        setSample(sample, session, result, index);
+Dropdown.prototype.change = function(fn) {
+    if ('function' !== typeof fn) {
+        throw new Error("Expected a function.");
     }
 
-    if ("version" in query) {
-        version.value = query["version"];
-    }
+    this.callbacks.push(fn);
+    return this;
+};
 
-    if (query["run"] === "1") {
-        evaluate(result, session.getValue(), version.options[version.selectedIndex].text,
-                 optimize.options[optimize.selectedIndex].value);
-    }
+/**
+ * Starting point for the application.
+ */
 
-    sample.onchange = function() {
-        setSample(sample, session, result, sample.selectedIndex);
-    };
+;(function(window, document, undefined) {
 
-    evaluateButton.onclick = function() {
-        evaluate(result, session.getValue(), version.options[version.selectedIndex].text,
-                 optimize.options[optimize.selectedIndex].value);
-    };
+    document.addEventListener("DOMContentLoaded", function() {
+        var evaluate_button = document.getElementById("evaluate");
+        var asm_button = document.getElementById("asm");
+        var ir_button = document.getElementById("ir");
+        var format_button = document.getElementById("format");
+        var result = document.getElementById("result");
 
-    asmButton.onclick = function() {
-        compile("asm", result, session.getValue(), version.options[version.selectedIndex].text,
-                 optimize.options[optimize.selectedIndex].value);
-    };
+        // Initialize the ace editor:
+        var editor = ace.edit("editor");
+        var session = editor.getSession();
 
-    irButton.onclick = function() {
-        compile("ir", result, session.getValue(), version.options[version.selectedIndex].text,
-                 optimize.options[optimize.selectedIndex].value);
-    };
+        session.setMode("ace/mode/rust");
+        editor.resize();
+        editor.setTheme("ace/theme/github");
 
-    formatButton.onclick = function() {
-        format(result, session, version.options[version.selectedIndex].text);
-    };
+        // Initialize the dropdowns. Each index is the DOM id of the dropdown.
+        var dropdowns = ['optimize', 'version', 'sample'];
+        var collection = {};
 
-    shareButton.onclick = function() {
-        share(result, version.value, session.getValue());
-    };
-}, false);
+        for (var i = 0; i < dropdowns.length; i++) {
+            var dropdown = new Dropdown(document.getElementById(dropdowns[i]));
+            dropdown.initialize();
+
+            collection[dropdowns[i]] = dropdown;
+        }
+
+        var query = get_query_parameters();
+
+        if ("code" in query) {
+            session.setValue(query["code"]);
+        } else {
+            Sample(collection.sample.index).set(function(err, text) {
+                if (err) {
+
+                } else {
+                    session.setValue(text);
+                }
+            });
+        }
+
+        if (query["run"] === "1") {
+            //evaluate(session.getValue(), collection['version'].selected, collection['optimize'].selected);
+        }
+
+        collection.sample.change(function(value, index) {
+            Sample(index).set(function(err, text) {
+                if (err) {
+
+                } else {
+                    session.setValue(text);
+                }
+            });
+        });
+
+        evaluate_button.onclick = function() {
+            var optimize = collection.optimize.selected.match(/O([0-3])/)[1];
+            evaluate(session.getValue(), collection.version.selected, optimize, function(err, response) {
+                if (err) {
+                    result.textContent = err.message;
+                } else {
+                    result.textContent = response;
+                }
+            });
+        };
+
+        asm_button.onclick = function() {
+            var optimize = collection.optimize.selected.match(/O([0-3])/)[1];
+            compile("asm", session.getValue(), collection.version.selected, optimize, function(err, response) {
+                if (err) {
+                    result.textContent = err.message;
+                } else {
+                    result.textContent = response;
+                }
+            });
+        };
+
+        ir_button.onclick = function() {
+            var optimize = collection.optimize.selected.match(/O([0-3])/)[1];
+            compile("ir", session.getValue(), collection.version.selected, optimize, function(err, response) {
+                if (err) {
+                    result.textContent = err.message;
+                } else {
+                    result.textContent = response;
+                }
+            });
+        };
+
+        format_button.onclick = function() {
+            format(session.getValue(), collection.version.selected, function(err, text) {
+                if (err) {
+                    result.textContent = err.message;
+                } else {
+                    session.setValue(text);
+                }
+            });
+        };
+    }, false);
+}(window, document));
+
