@@ -100,6 +100,21 @@ addEventListener("DOMContentLoaded", function() {
     var query = get_query_parameters();
     if ("code" in query) {
         session.setValue(query["code"]);
+    } else if (window.location.pathname.indexOf("/c/") === 0) {
+        var id = window.location.pathname.substr(3);
+
+        var request = new XMLHttpRequest();
+        request.open("GET", "/raw/" + id, true);
+        request.onreadystatechange = function() {
+            if (request.readyState == 4) {
+                if (request.status == 200) {
+                    session.setValue(request.responseText);
+                } else {
+                    result.textContent = "connection failure";
+                }
+            }
+        }
+        request.send();
     } else {
         var index = Math.floor(Math.random() * samples);
         set_sample(sample, session, result, index);

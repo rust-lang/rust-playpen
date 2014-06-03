@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 import functools
+import hashlib
 import os
 import playpen
+import re
 import sys
-from bottle import get, request, response, route, run, static_file
+from bottle import abort, get, request, response, route, run, static_file
 
 @get("/")
 def serve_index():
@@ -19,8 +21,24 @@ def serve_index():
     # queries containing Rust snippets end up being classified as cross-site
     # scripting attacks. Luckily, there's a header for turning off this bug.
     response.set_header("X-XSS-Protection", "0")
-
     return response
+
+# This is not required because we load the code with Javascript, but better
+# claim the route explicitly to avoid confusion.
+@get("/c/<identifier>")
+def serve_preloaded_index(identifier):
+    response = static_file("web.html", root="static")
+    response.set_header("X-XSS-Protection", "0")
+    return response
+
+@get("/raw/<identifier>")
+def get_identifier(identifier):
+    filename = cache_get_fullpath(identifier) + ".rs"
+    if not os.access (filename, os.R_OK):
+        abort(404, "Not Found")
+
+    with open(filename, 'r') as f:
+        return f.read()
 
 @get("/<path:path>")
 def serve_static(path):
@@ -42,8 +60,47 @@ def enable_post_cors(wrappee):
 
     return wrapper
 
+def cache_lookup(wrappee):
+    def wrapper(*args, **kwargs):
+        identifier = cache_get_id(request)
+        filename = cache_get_fullpath(identifier)
+        cached = cache_json_content(filename)
+        if not cached:
+            return wrappee(*args, **kwargs)
+
+        return cached
+
+    return wrapper
+
+def cache_json_content(filename):
+    if not os.access (filename, os.R_OK):
+        return None
+
+    with open(filename, 'r') as f:
+        return {"result": f.read(), "id": os.path.basename(filename)}
+
+def cache_update(identifier, code, output):
+    filename = cache_get_fullpath(identifier)
+    os.makedirs(name=os.path.dirname(filename), exist_ok=True)
+    with open(filename + ".rs", "w") as src:
+        src.write(code)
+    with open(filename, "w") as out:
+        out.write(output)
+
+def cache_get_id(request):
+    args = [request.json[k] for k in sorted(request.json.keys())]
+    args.append(request.script_name)
+
+    return hashlib.md5(''.join(args).encode()).hexdigest()
+
+def cache_get_fullpath(identifier):
+    path = os.path.join(*re.findall (".{4}", identifier))
+
+    return os.path.join("cache", path, identifier)
+
 @route("/evaluate.json", method=["POST", "OPTIONS"])
 @enable_post_cors
+@cache_lookup
 def evaluate():
     version = request.json["version"]
     if version not in ("master", "0.10"):
@@ -52,10 +109,14 @@ def evaluate():
     if optimize not in ("0", "1", "2", "3"):
         return {"error": "invalid optimization level"}
     out, _ = execute(version, "/usr/local/bin/evaluate.sh", (optimize, request.json["code"]))
-    return {"result": out}
+    cache_id = cache_get_id(request)
+    cache_update(cache_id, request.json["code"], out)
+
+    return {"result": out, "id": cache_id}
 
 @route("/format.json", method=["POST", "OPTIONS"])
 @enable_post_cors
+@cache_lookup
 def format():
     version = request.json["version"]
     if version not in ("master", "0.10"):
@@ -64,10 +125,13 @@ def format():
     if rc:
         return {"error": out}
     else:
-        return {"result": out[:-1]}
+        cache_id = cache_get_id(request)
+        cache_update(cache_id, request.json["code"], out)
+        return {"result": out[:-1], "id": cache_id}
 
 @route("/compile.json", method=["POST", "OPTIONS"])
 @enable_post_cors
+@cache_lookup
 def compile():
     version = request.json["version"]
     if version not in ("master", "0.10"):
@@ -82,7 +146,10 @@ def compile():
     if rc:
         return {"error": out}
     else:
-        return {"result": out}
+        cache_id = cache_get_id(request)
+        cache_update(cache_id, request.json["code"], out)
+
+        return {"result": out, "id": cache_id}
 
 os.chdir(sys.path[0])
 run(host='0.0.0.0', port=80, server='cherrypy')
