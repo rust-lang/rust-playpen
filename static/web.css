@@ -2,3 +2,8 @@
     border: 1px solid #000;
     height: 50em;
 }
+
+#editor, #result {
+    font-size: 10pt;
+    font-family: "Source Code Pro", monospace;
+}
