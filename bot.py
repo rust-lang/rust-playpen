@@ -37,7 +37,7 @@ fn main() {
 
 def pastebin(command):
     bitly = "https://api-ssl.bitly.com/v3/shorten"
-    server = "http://playtest.rust-lang.org/?"
+    server = "http://play.rust-lang.org/?"
 
     params = urlencode({"code": command, "run": 1})
     url = server + params
