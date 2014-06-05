@@ -26,13 +26,14 @@ function evaluate(result, code, version, optimize) {
 }
 
 function compile(emit, result, code, version, optimize) {
-    send("/compile.json", {emit: emit, code: code, version: version, optimize: optimize},
+    send("/compile.json", {emit: emit, code: code, version: version, optimize: optimize,
+                           highlight: true},
          function(rc, object) {
         if (rc == 200) {
             if ("error" in object) {
-                result.textContent = object["error"];
+                result.innerHTML = object["error"];
             } else {
-                result.textContent = object["result"];
+                result.innerHTML = object["result"];
             }
         } else {
             result.textContent = "connection failure";

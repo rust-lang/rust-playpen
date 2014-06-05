@@ -2,9 +2,14 @@
 
 import functools
 import os
-import playpen
 import sys
+
 from bottle import get, request, response, route, run, static_file
+from pygments import highlight
+from pygments.formatters import HtmlFormatter
+from pygments.lexers import GasLexer, LlvmLexer
+
+import playpen
 
 @get("/")
 def serve_index():
@@ -82,7 +87,11 @@ def compile():
     if rc:
         return {"error": out}
     else:
-        return {"result": out}
+        if request.json.get("highlight") is not True:
+            return {"result": out}
+        if emit == "asm":
+            return {"result": highlight(out, GasLexer(), HtmlFormatter(nowrap=True))}
+        return {"result": highlight(out, LlvmLexer(), HtmlFormatter(nowrap=True))}
 
 os.chdir(sys.path[0])
 run(host='0.0.0.0', port=80, server='cherrypy')
