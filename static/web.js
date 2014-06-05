@@ -96,6 +96,7 @@ addEventListener("DOMContentLoaded", function() {
     var editor = ace.edit("editor");
     var session = editor.getSession();
 
+    editor.setTheme("ace/theme/github");
     session.setMode("ace/mode/rust");
 
     var query = get_query_parameters();
