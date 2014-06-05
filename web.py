@@ -47,24 +47,28 @@ def enable_post_cors(wrappee):
 
     return wrapper
 
+def extractor(key, default, valid):
+    def decorator(wrappee):
+        def wrapper(*args, **kwargs):
+            value = request.json.get(key, default)
+            if value not in valid:
+                return {"error": "invalid value for {}".format(key)}
+            return wrappee(value, *args, **kwargs)
+        return wrapper
+    return decorator
+
 @route("/evaluate.json", method=["POST", "OPTIONS"])
 @enable_post_cors
-def evaluate():
-    version = request.json["version"]
-    if version not in ("master", "0.10"):
-        return {"error": "invalid version"}
-    optimize = request.json["optimize"]
-    if optimize not in ("0", "1", "2", "3"):
-        return {"error": "invalid optimization level"}
+@extractor("version", "master", ("master", "0.10"))
+@extractor("optimize", "2", ("0", "1", "2", "3"))
+def evaluate(optimize, version):
     out, _ = execute(version, "/usr/local/bin/evaluate.sh", (optimize, request.json["code"]))
     return {"result": out}
 
 @route("/format.json", method=["POST", "OPTIONS"])
 @enable_post_cors
-def format():
-    version = request.json["version"]
-    if version not in ("master", "0.10"):
-        return {"error": "invalid version"}
+@extractor("version", "master", ("master", "0.10"))
+def format(version):
     out, rc = execute(version, "/usr/local/bin/format.sh", (request.json["code"],))
     if rc:
         return {"error": out}
@@ -73,16 +77,10 @@ def format():
 
 @route("/compile.json", method=["POST", "OPTIONS"])
 @enable_post_cors
-def compile():
-    version = request.json["version"]
-    if version not in ("master", "0.10"):
-        return {"error": "invalid version"}
-    emit = request.json["emit"]
-    if emit not in ("asm", "ir"):
-        return {"error": "invalid emission type"}
-    optimize = request.json["optimize"]
-    if optimize not in ("0", "1", "2", "3"):
-        return {"error": "invalid optimization level"}
+@extractor("version", "master", ("master", "0.10"))
+@extractor("optimize", "2", ("0", "1", "2", "3"))
+@extractor("emit", "asm", ("asm", "ir"))
+def compile(emit, optimize, version):
     out, rc = execute(version, "/usr/local/bin/compile.sh", (optimize, emit, request.json["code"]))
     if rc:
         return {"error": out}
