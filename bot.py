@@ -60,7 +60,7 @@ def evaluate(script, arguments, template):
     if len(out) > 5000:
         return "more than 5000 bytes of output, bailing out"
 
-    if out.count("\n") > 5:
+    if out.count("\n") > 3:
         return pastebin(template % {"version": version, "input": arguments[-1]})
 
     for line in out.splitlines():
