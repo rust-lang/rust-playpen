@@ -32,9 +32,9 @@ def serve_static(path):
     return static_file(path, root="static")
 
 @functools.lru_cache(maxsize=256)
-def execute(version, command, arguments):
+def execute(version, command, arguments, **kwargs):
     print("running:", version, command, arguments, file=sys.stderr, flush=True)
-    return playpen.execute(version, command, arguments)
+    return playpen.execute(version, command, arguments, **kwargs)
 
 def enable_post_cors(wrappee):
     def wrapper(*args, **kwargs):
@@ -62,8 +62,23 @@ def extractor(key, default, valid):
 @extractor("version", "master", ("master", "0.10"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 def evaluate(optimize, version):
-    out, _ = execute(version, "/usr/local/bin/evaluate.sh", (optimize, request.json["code"]))
-    return {"result": out}
+    separate_output = request.json.get("separate_output") is True
+    s_o_str = "1" if separate_output else "0"
+
+    out, _ = execute(version, "bin/evaluate.sh",
+                     (optimize, request.json["code"], s_o_str),
+                     decode = not separate_output)
+
+    if separate_output:
+        split = out.split(b"\xff", 1)
+
+        ret = {"rustc": split[0].decode(errors="replace")}
+        if len(split) == 2: # compilation succeeded
+            ret["program"] = split[1].decode(errors="replace")
+
+        return ret
+    else:
+        return {"result": out}
 
 @route("/format.json", method=["POST", "OPTIONS"])
 @enable_post_cors
