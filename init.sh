@@ -1,9 +1,12 @@
 #!/bin/bash
 
-cd "${BASH_SOURCE%/*}" || exit
+set -o errexit -o nounset -o pipefail
+
+cd "${BASH_SOURCE%/*}"
 
 umask 022
 
+rm -rf root-master.new
 mkdir root-master.new
 
 pacstrap -c -d root-master.new \
@@ -23,6 +26,7 @@ mknod -m 644 root-master.new/dev/urandom c 1 9
 arch-chroot root-master.new useradd -m -g users -s /bin/bash rust
 install -m755 bin/* root-master.new/usr/local/bin
 
+rm -rf root-0.10.new
 cp -a root-master.new root-0.10.new
 pacman -r root-master.new -S rust-git --noconfirm
 pacman -r root-0.10.new -S rust --noconfirm
