@@ -2,3 +2,4 @@ __pycache__
 irc.yaml
 root-*
 shorten_key.py
+.DS_Store

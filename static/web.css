@@ -1,5 +1,8 @@
 body {
-    min-width: 1000px;
+    min-width: 750px;
+    margin: 0;
+    padding: 0;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 #logo {
@@ -11,7 +14,6 @@ body {
     margin-bottom: 20px;
     text-decoration: none;
     color: #333;
-    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
 }
 
 #logo span {
@@ -20,38 +22,72 @@ body {
     margin-top: 20px;
 }
 
-#result {
-    border: 3px solid #eee;
-    background: #fff;
-    color: #333;
-    width: 90%;
-    height: 300px;
-    margin: 70px auto;
-    border-radius: 5px;
+#options {
+    display: none;
 }
 
 #topbar {
     width: 100%;
-    height: 3px;
-    position: fixed;
-    background: #983e17;
+    height: 90px;
+    line-height: 90px;
+    position: relative;
+    background: #B58777;
     top: 0px;
     left: 0px;
+    color: #fff;
     z-index: 99;
+    border-bottom: 2px solid #9C7365;
+}
+
+#topbar img {
+    display: inline-block;
+    margin-top: 9px;
+    margin-left: 10px;
+}
+
+#topbar h1 {
+    margin: 0px;
+    padding: 0px;
+    line-height: 90px;
+    font-family: Arial;
+    font-weight: 300;
+    text-align: center;
+    text-shadow: 0px 1px 1px #333;
+}
+
+#topbar h1 a {
+    background: #DE947A;
+    border-radius: 5px;
+    padding: 0px 3px;
+    color: #fff;
+    text-decoration: none;
+}
+
+#topbar h1 a:hover {
+    background: #42565E;
 }
 
 #editor-container {
-    display: inline-block;
-    min-width: 400px;
-    width: 50%;
+    width: 700px;
+    margin: 30px auto;
 }
 
 #editor {
+    min-height: 340px;
     border: 4px solid #e3e3e3;
-    min-height: 40em;
     font-size: 16px;
     font-family: 'Source Code Pro';
     border-radius: 5px;
+}
+
+#result {
+    overflow: hidden;
+    color: #333;
+    position: relative;
+    z-index: 99;
+    border-radius: 5px;
+    margin-top: -5px;
+    padding: 10px 10px;
 }
 
 #editor-container .controls {
@@ -66,6 +102,7 @@ body {
     position: relative;
     float: left;
     padding-top: 12px;
+    display: none;
 }
 
 .panel .controls {
@@ -75,18 +112,38 @@ body {
 button, .button {
     outline: none;
     border: 3px solid #e3e3e3;
-    background: #fff;
-    color: #333;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: #eee;
+    color: #555;
     font-size: 17px;
     cursor: pointer;
     padding: 9px 35px;
     border-radius: 5px;
 }
 
-button#evaluate {
-    background: #ae4128;
+button:hover {
+    background: #42565E;
     color: #fff;
+}
+
+/**
+ * Separate the primary buttons from the other functions.
+ */
+
+button.primary {
+    margin-right: 60px;
+}
+
+button#evaluate {
+    border-color: #4296EF;
+    background: #4296EF;
+    color: #fff;
+    padding: 10px 40px;
+}
+
+button#evaluate:hover {
+    background: #fff;
+    border-color: #4296EF;
+    color: #333;
 }
 
 .panel .extras {
@@ -98,7 +155,6 @@ button#evaluate {
 .dropdown {
     position: relative;
     display: inline-block;
-    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
 }
 
 .dropdown .button {
@@ -132,39 +188,48 @@ button#evaluate {
     padding: 10px 5px;
 }
 
-.dropdown li.default {
-    font-weight: bold;
-}
+.dropdown li.default {}
 
 .dropdown li:hover {
     background: #eee;
 }
 
 #editor, #result {
-    font-size: 11pt;
+    font-size: 12.5pt;
     font-family: "Source Code Pro", monospace;
 }
 
-.message {
-    color: #999;
+/**
+ * Ace Editor
+ */
+
+.ace-github .ace_marker-layer .ace_active-line {
+    background: rgb(247, 247, 247) !important;
 }
 
-select,
-button {
-    background-color: white;
-    border: 1px solid #aaa;
-    border-radius: 5px;
-    height: 31px;
-    padding: 5px 10px;
-    font-size: 16px;
-    cursor: pointer;
-    color: #777;
-    margin-right: 5px;
+.ace_gutter {
+    background: #eee !important;
+    color: #555 !important;
 }
 
-button:hover {
-    background-color: #eee;
-    color: black;
+.ace-error-text, .ace-error-line, .ace-warning-text, .ace-warning-line {
+  position: absolute;
+}
+
+.ace-error-text {
+  background-color: #e9abab;
+}
+
+.ace-error-line {
+  background-color: #F6E2E2;
+}
+
+.ace-warning-text {
+  background-color: #FFEF00;
+}
+
+.ace-warning-line {
+  background-color: #FFFBCB;
 }
 
 /* Pygments github style */
