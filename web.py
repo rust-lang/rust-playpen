@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import functools
+import html
 import os
 import sys
 
@@ -88,8 +89,8 @@ def compile(emit, optimize, version):
         if request.json.get("highlight") is not True:
             return {"result": out}
         if emit == "asm":
-            return {"result": highlight(out, GasLexer(), HtmlFormatter(nowrap=True))}
-        return {"result": highlight(out, LlvmLexer(), HtmlFormatter(nowrap=True))}
+            return {"result": highlight(html.escape(out), GasLexer(), HtmlFormatter(nowrap=True))}
+        return {"result": highlight(html.escape(out), LlvmLexer(), HtmlFormatter(nowrap=True))}
 
 os.chdir(sys.path[0])
 run(host='0.0.0.0', port=80, server='cherrypy')

@@ -31,8 +31,9 @@ function compile(emit, result, code, version, optimize) {
          function(rc, object) {
         if (rc == 200) {
             if ("error" in object) {
-                result.innerHTML = object["error"];
+                result.textContent = object["error"];
             } else {
+                /* Highlighted result is already HTML escaped by the server. */
                 result.innerHTML = object["result"];
             }
         } else {
