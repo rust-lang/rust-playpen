@@ -5,6 +5,7 @@ import itertools
 import subprocess
 import sys
 import threading
+from time import sleep
 from urllib.parse import urlencode
 
 import irc.client
@@ -108,12 +109,14 @@ class RustEvalbot(irc.client.SimpleIRCClient):
         self._run(nickname, msg)
 
     def on_disconnect(self, connection, event):
-        sys.exit(0)
+        sleep(10)
+        connection.reconnect()
 
 def start(nickname, server, port, channels, keys):
     client = RustEvalbot(nickname, channels, keys)
     try:
         client.connect(server, port, nickname)
+        client.connection.set_keepalive(30)
     except irc.client.ServerConnectionError as x:
         print(x)
         sys.exit(1)
