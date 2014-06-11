@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 
 import os
-import irc.client
 import itertools
-import playpen
-import requests
-import shorten_key
 import subprocess
 import sys
 import threading
-import yaml
 from urllib.parse import urlencode
+
+import irc.client
+import requests
+import yaml
+
+import playpen
+import shorten_key
 
 irc_template = """\
 #![feature(asm, globs, macro_rules, phase, simd, struct_variant, quad_precision_float)]
