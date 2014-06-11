@@ -31,7 +31,7 @@ function compile(emit, result, code, version, optimize) {
          function(rc, object) {
         if (rc == 200) {
             if ("error" in object) {
-                result.innerHTML = object["error"];
+                result.textContent = object["error"];
             } else {
                 result.innerHTML = object["result"];
             }
