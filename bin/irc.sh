@@ -10,7 +10,7 @@ rustc - -o out <<EOF
 extern crate collections;
 extern crate native;
 extern crate rand;
-#[phase(syntax)]
+#[phase(plugin)]
 extern crate regex_macros;
 extern crate regex;
 
