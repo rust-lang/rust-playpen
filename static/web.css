@@ -8,6 +8,11 @@
     font-family: "Source Code Pro", monospace;
 }
 
+.message {
+    color: #999;
+    font-family: monospace;
+}
+
 /* Pygments github style */
 .highlight .hll { background-color: #ffffcc }
 .highlight .c { color: #999988; font-style: italic } /* Comment */
