@@ -3,12 +3,25 @@
 var samples = 2;
 
 function send(path, data, callback) {
+    var result = document.getElementById("result");
+
+    result.textContent = "Running...";
+
     var request = new XMLHttpRequest();
     request.open("POST", path, true);
     request.setRequestHeader("Content-Type", "application/json");
     request.onreadystatechange = function() {
         if (request.readyState == 4) {
-            callback(request.status, JSON.parse(request.response));
+            var json;
+
+            try {
+                json = JSON.parse(request.response);
+            }
+            catch (e) {
+                console.log ("JSON.parse(): " + e);
+            }
+
+            callback(request.status, json);
         }
     }
     request.send(JSON.stringify(data));
@@ -19,6 +32,11 @@ function evaluate(result, code, version, optimize) {
          function(rc, object) {
         if (rc == 200) {
             result.textContent = object["result"];
+
+            var div = document.createElement("div");
+            div.className = "message";
+            div.textContent = "Program ended.";
+            result.appendChild(div);
         } else {
             result.textContent = "connection failure";
         }
