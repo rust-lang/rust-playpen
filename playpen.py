@@ -15,4 +15,4 @@ def execute(version, command, arguments):
                            command) + arguments,
                            stdout=subprocess.PIPE,
                            stderr=subprocess.STDOUT) as p:
-        return (p.communicate()[0].decode(), p.returncode)
+        return (p.communicate()[0].decode(errors="replace"), p.returncode)
