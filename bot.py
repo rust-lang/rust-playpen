@@ -75,6 +75,7 @@ def evaluate(script, arguments, template):
 class RustEvalbot(irc.client.SimpleIRCClient):
     def __init__(self, nickname, channels, keys):
         irc.client.SimpleIRCClient.__init__(self)
+        irc.client.ServerConnection.buffer_class = irc.buffer.LenientDecodingLineBuffer
         self.nickname = nickname
         self.channels = channels
         self.keys = keys
