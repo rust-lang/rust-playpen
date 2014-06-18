@@ -56,6 +56,44 @@ function format(result, session, version) {
     });
 }
 
+function share(result, code) {
+    var playurl = "http://play.rust-lang.org?code=" + encodeURIComponent(code);
+    if(playurl.length > 5000) {
+        result.textContent = "resulting URL above character limit for sharing. " +
+            "Length: " + playurl.length + "; Maximum: 5000";
+        return;
+    }
+
+    var url = "http://is.gd/create.php?format=json&url=" + encodeURIComponent(playurl);
+
+    var request = new XMLHttpRequest();
+    request.open("GET", url, true);
+
+    request.onreadystatechange = function() {
+        if (request.readyState == 4) {
+            if (request.status == 200) {
+                setResponse(JSON.parse(request.responseText)['shorturl']);
+            } else {
+                result.textContent = "connection failure";
+            }
+        }
+    }
+
+    request.send();
+
+    function setResponse(shorturl) {
+        while(result.firstChild) {
+            result.removeChild(result.firstChild);
+        }
+
+        var link = document.createElement("a");
+        link.href = link.textContent = shorturl;
+
+        result.textContent = "short url: ";
+        result.appendChild(link);
+    }
+}
+
 function set_sample(sample, session, result, index) {
     var request = new XMLHttpRequest();
     sample.options[index].selected = true;
@@ -89,6 +127,7 @@ addEventListener("DOMContentLoaded", function() {
     var asm_button = document.getElementById("asm");
     var ir_button = document.getElementById("ir");
     var format_button = document.getElementById("format");
+    var share_button = document.getElementById("share");
     var result = document.getElementById("result");
     var optimize = document.getElementById("optimize");
     var version = document.getElementById("version");
@@ -133,5 +172,9 @@ addEventListener("DOMContentLoaded", function() {
 
     format_button.onclick = function() {
         format(result, session, version.options[version.selectedIndex].text);
+    };
+
+    share_button.onclick = function() {
+        share(result, session.getValue());
     };
 }, false);
