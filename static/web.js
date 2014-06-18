@@ -58,7 +58,7 @@ function format(result, session, version) {
 
 function share(result, code) {
     var playurl = "http://play.rust-lang.org?code=" + encodeURIComponent(code);
-    if(playurl.length > 5000) {
+    if (playurl.length > 5000) {
         result.textContent = "resulting URL above character limit for sharing. " +
             "Length: " + playurl.length + "; Maximum: 5000";
         return;
