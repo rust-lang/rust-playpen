@@ -2,8 +2,6 @@
 
 set -o errexit
 
-rustc - --opt-level=$1 -o out <<EOF
-$2
-EOF
+echo "$2" | rustc - --opt-level=$1 -o out
 
 exec ./out
