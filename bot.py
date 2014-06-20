@@ -53,22 +53,25 @@ def pastebin(command):
     else:
         return "failed to shorten url"
 
-def evaluate(script, arguments, template):
-    version, _ = playpen.execute("master",
-                                 "/bin/dash",
-                                 ("-c", "--", "rustc -v | tail | head -1 | tr -d '\n'"))
-    out, _ = playpen.execute("master", script, arguments)
-    n = 0
+def evaluate(code, nickname):
+    if nickname == "rusti":
+        version, _ = playpen.execute("master", "/bin/dash",
+                                     ("-c", "--", "rustc -v | tail | head -1 | tr -d '\n'"))
+        arguments = ("2", irc_template % {"version": version, "input": code},)
+    else:
+        arguments = ("2", code)
+
+    out, _ = playpen.execute("master", "/usr/local/bin/evaluate.sh", arguments)
 
     if len(out) > 5000:
         return "more than 5000 bytes of output, bailing out"
 
     if out.count("\n") > 3:
-        return pastebin(template % {"version": version, "input": arguments[-1]})
+        return pastebin(arguments[-1])
 
     for line in out.splitlines():
         if len(line) > 150:
-            return pastebin(template % {"version": version, "input": arguments[-1]})
+            return pastebin(arguments[-1])
 
     return out
 
@@ -81,10 +84,7 @@ class RustEvalbot(irc.client.SimpleIRCClient):
         self.keys = keys
 
     def _run(self, channel, code):
-        if self.nickname == "rusti":
-            result = evaluate("/usr/local/bin/irc.sh", (code,), irc_template)
-        else:
-            result = evaluate("/usr/local/bin/evaluate.sh", ("2", code), "%(input)s")
+        result = evaluate(code, self.nickname)
         for line in result.splitlines():
             self.connection.notice(channel, line)
 
