@@ -12,8 +12,6 @@ dup2
 execve
 exit
 exit_group
-faccessat
-fadvise64
 fcntl
 fstat
 futex
@@ -55,8 +53,6 @@ setrlimit
 set_robust_list
 set_tid_address
 stat
-statfs
-tgkill
 umask
 unlink
 vfork
