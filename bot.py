@@ -17,6 +17,7 @@ import shorten_key
 
 irc_template = """\
 #![feature(asm, globs, macro_rules, phase, simd, struct_variant, thread_local, quad_precision_float)]
+#![allow(dead_code, unused_variable)]
 
 extern crate collections;
 extern crate native;
@@ -25,10 +26,8 @@ extern crate rand;
 extern crate regex_macros;
 extern crate regex;
 
-#[allow(dead_code)]
 static version: &'static str = "%(version)s";
 
-#[allow(dead_code)]
 fn show<T: std::fmt::Show>(e: T) { println!("{}", e) }
 
 fn main() {
