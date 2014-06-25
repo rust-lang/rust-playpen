@@ -16,7 +16,7 @@ import playpen
 import shorten_key
 
 irc_template = """\
-#![feature(asm, globs, macro_rules, phase, simd, struct_variant, thread_local, quad_precision_float)]
+#![feature(asm, globs, macro_rules, phase, simd, struct_variant, thread_local)]
 #![allow(dead_code, unused_variable)]
 
 extern crate collections;
