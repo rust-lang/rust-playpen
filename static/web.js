@@ -115,7 +115,7 @@ function share(result, version, code) {
     }
 }
 
-function set_sample(sample, session, result, index) {
+function setSample(sample, session, result, index) {
     var request = new XMLHttpRequest();
     sample.options[index].selected = true;
     request.open("GET", "/sample/" + index + ".rs", true);
@@ -131,7 +131,7 @@ function set_sample(sample, session, result, index) {
     request.send();
 }
 
-function get_query_parameters() {
+function getQueryParameters() {
     var a = window.location.search.substr(1).split('&');
     if (a == "") return {};
     var b = {};
@@ -144,11 +144,11 @@ function get_query_parameters() {
 }
 
 addEventListener("DOMContentLoaded", function() {
-    var evaluate_button = document.getElementById("evaluate");
-    var asm_button = document.getElementById("asm");
-    var ir_button = document.getElementById("ir");
-    var format_button = document.getElementById("format");
-    var share_button = document.getElementById("share");
+    var evaluateButton = document.getElementById("evaluate");
+    var asmButton = document.getElementById("asm");
+    var irButton = document.getElementById("ir");
+    var formatButton = document.getElementById("format");
+    var shareButton = document.getElementById("share");
     var result = document.getElementById("result");
     var optimize = document.getElementById("optimize");
     var version = document.getElementById("version");
@@ -159,12 +159,12 @@ addEventListener("DOMContentLoaded", function() {
     editor.setTheme("ace/theme/github");
     session.setMode("ace/mode/rust");
 
-    var query = get_query_parameters();
+    var query = getQueryParameters();
     if ("code" in query) {
         session.setValue(query["code"]);
     } else {
         var index = Math.floor(Math.random() * samples);
-        set_sample(sample, session, result, index);
+        setSample(sample, session, result, index);
     }
 
     if ("version" in query) {
@@ -177,29 +177,29 @@ addEventListener("DOMContentLoaded", function() {
     }
 
     sample.onchange = function() {
-        set_sample(sample, session, result, sample.selectedIndex);
+        setSample(sample, session, result, sample.selectedIndex);
     };
 
-    evaluate_button.onclick = function() {
+    evaluateButton.onclick = function() {
         evaluate(result, session.getValue(), version.options[version.selectedIndex].text,
                  optimize.options[optimize.selectedIndex].value);
     };
 
-    asm_button.onclick = function() {
+    asmButton.onclick = function() {
         compile("asm", result, session.getValue(), version.options[version.selectedIndex].text,
                  optimize.options[optimize.selectedIndex].value);
     };
 
-    ir_button.onclick = function() {
+    irButton.onclick = function() {
         compile("ir", result, session.getValue(), version.options[version.selectedIndex].text,
                  optimize.options[optimize.selectedIndex].value);
     };
 
-    format_button.onclick = function() {
+    formatButton.onclick = function() {
         format(result, session, version.options[version.selectedIndex].text);
     };
 
-    share_button.onclick = function() {
+    shareButton.onclick = function() {
         share(result, version.value, session.getValue());
     };
 }, false);
