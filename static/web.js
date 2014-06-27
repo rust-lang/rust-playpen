@@ -164,6 +164,10 @@ addEventListener("DOMContentLoaded", function() {
         set_sample(sample, session, result, index);
     }
 
+    if ("version" in query) {
+        version.value = query["version"];
+    }
+
     if (query["run"] === "1") {
         evaluate(result, session.getValue(), version.options[version.selectedIndex].text,
                  optimize.options[optimize.selectedIndex].value);
