@@ -1,5 +1,5 @@
 fn main() {
-    for i in range(0, 10) {
+    for i in range(0, 10u) {
         println!("{}", i)
     }
 }
