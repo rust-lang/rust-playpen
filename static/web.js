@@ -74,8 +74,11 @@ function format(result, session, version) {
     });
 }
 
-function share(result, code) {
+function share(result, version, code) {
     var playurl = "http://play.rust-lang.org?code=" + encodeURIComponent(code);
+    if (version != "master") {
+        playurl += "&version=" + encodeURIComponent(version);
+    }
     if (playurl.length > 5000) {
         result.textContent = "resulting URL above character limit for sharing. " +
             "Length: " + playurl.length + "; Maximum: 5000";
@@ -197,6 +200,6 @@ addEventListener("DOMContentLoaded", function() {
     };
 
     share_button.onclick = function() {
-        share(result, session.getValue());
+        share(result, version.value, session.getValue());
     };
 }, false);
