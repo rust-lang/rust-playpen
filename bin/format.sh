@@ -1,3 +1,5 @@
 #!/usr/bin/dash
 
-echo "$1" | exec rustc - --pretty
+exec rustc - --pretty <<EOF
+$1
+EOF
