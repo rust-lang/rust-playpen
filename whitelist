@@ -45,6 +45,7 @@ open
 openat
 pipe
 pipe2
+pread64
 read
 readlink
 rmdir
