@@ -59,7 +59,7 @@ def extractor(key, default, valid):
 
 @route("/evaluate.json", method=["POST", "OPTIONS"])
 @enable_post_cors
-@extractor("version", "master", ("master", "0.10"))
+@extractor("version", "master", ("master", "0.11.0", "0.10"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 def evaluate(optimize, version):
     out, _ = execute(version, "/usr/local/bin/evaluate.sh", (optimize, request.json["code"]))
@@ -67,7 +67,7 @@ def evaluate(optimize, version):
 
 @route("/format.json", method=["POST", "OPTIONS"])
 @enable_post_cors
-@extractor("version", "master", ("master", "0.10"))
+@extractor("version", "master", ("master", "0.11.0", "0.10"))
 def format(version):
     out, rc = execute(version, "/usr/local/bin/format.sh", (request.json["code"],))
     if rc:
@@ -77,7 +77,7 @@ def format(version):
 
 @route("/compile.json", method=["POST", "OPTIONS"])
 @enable_post_cors
-@extractor("version", "master", ("master", "0.10"))
+@extractor("version", "master", ("master", "0.11.0", "0.10"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 @extractor("emit", "asm", ("asm", "ir"))
 def compile(emit, optimize, version):
