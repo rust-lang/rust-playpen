@@ -41,6 +41,7 @@ mmap
 mprotect
 mremap
 munmap
+nanosleep
 open
 openat
 pipe
