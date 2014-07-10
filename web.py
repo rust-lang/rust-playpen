@@ -32,9 +32,9 @@ def serve_static(path):
     return static_file(path, root="static")
 
 @functools.lru_cache(maxsize=256)
-def execute(version, command, arguments, **kwargs):
+def execute(version, command, arguments):
     print("running:", version, command, arguments, file=sys.stderr, flush=True)
-    return playpen.execute(version, command, arguments, **kwargs)
+    return playpen.execute(version, command, arguments)
 
 def enable_post_cors(wrappee):
     def wrapper(*args, **kwargs):
@@ -66,8 +66,7 @@ def evaluate(optimize, version):
     s_o_str = "1" if separate_output else "0"
 
     out, _ = execute(version, "/usr/local/bin/evaluate.sh",
-                     (optimize, request.json["code"], s_o_str),
-                     decode = not separate_output)
+                     (optimize, request.json["code"], s_o_str))
 
     if separate_output:
         split = out.split(b"\xff", 1)
@@ -78,13 +77,14 @@ def evaluate(optimize, version):
 
         return ret
     else:
-        return {"result": out}
+        return {"result": out.decode(errors="replace")}
 
 @route("/format.json", method=["POST", "OPTIONS"])
 @enable_post_cors
 @extractor("version", "master", ("master", "0.11.0", "0.10"))
 def format(version):
     out, rc = execute(version, "/usr/local/bin/format.sh", (request.json["code"],))
+    out = out.decode(errors="replace")
     if rc:
         return {"error": out}
     else:
@@ -97,6 +97,7 @@ def format(version):
 @extractor("emit", "asm", ("asm", "ir"))
 def compile(emit, optimize, version):
     out, rc = execute(version, "/usr/local/bin/compile.sh", (optimize, emit, request.json["code"]))
+    out = out.decode(errors="replace")
     if rc:
         return {"error": out}
     else:

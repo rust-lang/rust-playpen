@@ -56,7 +56,7 @@ def evaluate(code, nickname):
     if nickname == "rusti":
         version, _ = playpen.execute("master", "/bin/dash",
                                      ("-c", "--", "rustc -v | tail | head -1 | tr -d '\n'"))
-        arguments = ("2", irc_template % {"version": version, "input": code},)
+        arguments = ("2", irc_template % {"version": version.decode(), "input": code},)
     else:
         arguments = ("2", code)
 
@@ -65,14 +65,14 @@ def evaluate(code, nickname):
     if len(out) > 5000:
         return "more than 5000 bytes of output, bailing out"
 
-    if out.count("\n") > 3:
+    if out.count(b"\n") > 3:
         return pastebin(arguments[-1])
 
     for line in out.splitlines():
         if len(line) > 150:
             return pastebin(arguments[-1])
 
-    return out
+    return out.decode(errors="replace")
 
 class RustEvalbot(irc.client.SimpleIRCClient):
     def __init__(self, nickname, channels, keys):

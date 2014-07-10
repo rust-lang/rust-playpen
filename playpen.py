@@ -2,7 +2,7 @@
 
 import subprocess
 
-def execute(version, command, arguments, decode=True):
+def execute(version, command, arguments):
     with subprocess.Popen(("playpen",
                            "root-" + version,
                            "--mount-proc",
@@ -16,5 +16,4 @@ def execute(version, command, arguments, decode=True):
                            stdout=subprocess.PIPE,
                            stderr=subprocess.STDOUT) as p:
         out = p.communicate()[0]
-        return (out.decode(errors="replace") if decode else out,
-                p.returncode)
+        return (out, p.returncode)
