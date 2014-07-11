@@ -84,11 +84,11 @@ def evaluate(optimize, version):
 @extractor("version", "master", ("master", "0.11.0", "0.10"))
 def format(version):
     out, rc = execute(version, "/usr/local/bin/format.sh", (request.json["code"],))
-    out = out.decode(errors="replace")
+    split = out.split(b"\xff", 1)
     if rc:
-        return {"error": out}
+        return {"error": split[0].decode()}
     else:
-        return {"result": out[:-1]}
+        return {"result": split[1][:-1].decode()}
 
 @route("/compile.json", method=["POST", "OPTIONS"])
 @enable_post_cors
@@ -97,15 +97,15 @@ def format(version):
 @extractor("emit", "asm", ("asm", "ir"))
 def compile(emit, optimize, version):
     out, rc = execute(version, "/usr/local/bin/compile.sh", (optimize, emit, request.json["code"]))
-    out = out.decode(errors="replace")
+    split = out.split(b"\xff", 1)
     if rc:
-        return {"error": out}
+        return {"error": split[0].decode()}
     else:
         if request.json.get("highlight") is not True:
-            return {"result": out}
+            return {"result": split[1].decode()}
         if emit == "asm":
-            return {"result": highlight(out, GasLexer(), HtmlFormatter(nowrap=True))}
-        return {"result": highlight(out, LlvmLexer(), HtmlFormatter(nowrap=True))}
+            return {"result": highlight(split[1].decode(), GasLexer(), HtmlFormatter(nowrap=True))}
+        return {"result": highlight(split[1].decode(), LlvmLexer(), HtmlFormatter(nowrap=True))}
 
 os.chdir(sys.path[0])
 run(host='0.0.0.0', port=80, server='cherrypy')

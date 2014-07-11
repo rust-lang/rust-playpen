@@ -1,5 +1,11 @@
 #!/usr/bin/dash
 
-exec rustc - --pretty <<EOF
+set -o errexit
+
+rustc - --pretty -o out <<EOF
 $1
 EOF
+
+printf '\377' # 255 in octal
+
+exec cat out
