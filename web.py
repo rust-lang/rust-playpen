@@ -62,22 +62,18 @@ def extractor(key, default, valid):
 @extractor("version", "master", ("master", "0.11.0", "0.10"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 def evaluate(optimize, version):
-    separate_output = request.json.get("separate_output") is True
-    s_o_str = "1" if separate_output else "0"
+    out, _ = execute(version, "/usr/local/bin/evaluate.sh", (optimize, request.json["code"]))
 
-    out, _ = execute(version, "/usr/local/bin/evaluate.sh",
-                     (optimize, request.json["code"], s_o_str))
-
-    if separate_output:
+    if request.json.get("separate_output") is True:
         split = out.split(b"\xff", 1)
 
-        ret = {"rustc": split[0].decode(errors="replace")}
+        ret = {"rustc": split[0].decode()}
         if len(split) == 2: # compilation succeeded
             ret["program"] = split[1].decode(errors="replace")
 
         return ret
     else:
-        return {"result": out.decode(errors="replace")}
+        return {"result": out.replace(b"\xff", b"", 1).decode(errors="replace")}
 
 @route("/format.json", method=["POST", "OPTIONS"])
 @enable_post_cors
