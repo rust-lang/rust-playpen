@@ -72,7 +72,7 @@ def evaluate(code, nickname):
         if len(line) > 150:
             return pastebin(arguments[-1])
 
-    return out.decode(errors="replace")
+    return out.replace(b"\xff", b"", 1).decode(errors="replace")
 
 class RustEvalbot(irc.client.SimpleIRCClient):
     def __init__(self, nickname, channels, keys):
