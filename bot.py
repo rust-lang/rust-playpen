@@ -19,6 +19,7 @@ irc_template = """\
 #![feature(asm, globs, macro_rules, phase, simd, struct_variant, thread_local)]
 #![allow(dead_code, unused_variable)]
 
+extern crate debug;
 extern crate collections;
 extern crate native;
 extern crate rand;
