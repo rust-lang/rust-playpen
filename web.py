@@ -7,7 +7,7 @@ import sys
 from bottle import get, request, response, route, run, static_file
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
-from pygments.lexers import GasLexer, LlvmLexer
+from pygments.lexers import GasLexer, NasmLexer, LlvmLexer
 
 import playpen
 
@@ -91,8 +91,9 @@ def format(version):
 @extractor("version", "master", ("master", "0.11.0", "0.10"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 @extractor("emit", "asm", ("asm", "ir"))
-def compile(emit, optimize, version):
-    out, rc = execute(version, "/usr/local/bin/compile.sh", (optimize, emit, request.json["code"]))
+@extractor("asm", "intel", ("intel", "att"))
+def compile(asm, emit, optimize, version):
+    out, rc = execute(version, "/usr/local/bin/compile.sh", (optimize, emit, asm, request.json["code"]))
     split = out.split(b"\xff", 1)
     if rc:
         return {"error": split[0].decode()}
@@ -100,7 +101,8 @@ def compile(emit, optimize, version):
         if request.json.get("highlight") is not True:
             return {"result": split[1].decode()}
         if emit == "asm":
-            return {"result": highlight(split[1].decode(), GasLexer(), HtmlFormatter(nowrap=True))}
+            lexer = NasmLexer() if asm == "intel" else GasLexer()
+            return {"result": highlight(split[1].decode(), lexer, HtmlFormatter(nowrap=True))}
         return {"result": highlight(split[1].decode(), LlvmLexer(), HtmlFormatter(nowrap=True))}
 
 os.chdir(sys.path[0])

@@ -43,9 +43,9 @@ function evaluate(result, code, version, optimize) {
     });
 }
 
-function compile(emit, result, code, version, optimize) {
+function compile(emit, result, code, version, optimize, asm) {
     send("/compile.json", {emit: emit, code: code, version: version, optimize: optimize,
-                           highlight: true},
+                           asm: asm, highlight: true},
          function(rc, object) {
         if (rc == 200) {
             if ("error" in object) {
@@ -151,6 +151,7 @@ addEventListener("DOMContentLoaded", function() {
     var shareButton = document.getElementById("share");
     var result = document.getElementById("result");
     var optimize = document.getElementById("optimize");
+    var asm = document.getElementById("asm");
     var version = document.getElementById("version");
     var sample = document.getElementById("sample");
     var editor = ace.edit("editor");
@@ -187,12 +188,14 @@ addEventListener("DOMContentLoaded", function() {
 
     asmButton.onclick = function() {
         compile("asm", result, session.getValue(), version.options[version.selectedIndex].text,
-                 optimize.options[optimize.selectedIndex].value);
+                 optimize.options[optimize.selectedIndex].value,
+                 asm.options[asm.selectedIndex].value);
     };
 
     irButton.onclick = function() {
         compile("ir", result, session.getValue(), version.options[version.selectedIndex].text,
-                 optimize.options[optimize.selectedIndex].value);
+                 optimize.options[optimize.selectedIndex].value,
+                 asm.options[asm.selectedIndex].value);
     };
 
     formatButton.onclick = function() {
