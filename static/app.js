@@ -176,6 +176,48 @@ function compile(emit, code, version, optimize, fn) {
     });
 }
 
+function share(version, code, fn) {
+    var playurl = "http://play.rust-lang.org?code=" + encodeURIComponent(code);
+
+    if (version != "master") {
+        playurl += "&version=" + encodeURIComponent(version);
+    }
+
+    if (playurl.length > 5000) {
+        return fn("resulting URL above character limit for sharing. " +
+            "Length: " + playurl.length + "; Maximum: 5000", null);
+    }
+
+    var url = "http://is.gd/create.php?format=json&url=" + encodeURIComponent(playurl);
+
+    var request = new XMLHttpRequest();
+    request.open("GET", url, true);
+
+    request.onreadystatechange = function() {
+        if (request.readyState == 4) {
+            if (request.status == 200) {
+                fn(null, JSON.parse(request.responseText)['shorturl']);
+            } else {
+                fn("connection failure", null);
+            }
+        }
+    }
+
+    request.send();
+
+    // function setResponse(shorturl) {
+        // while(result.firstChild) {
+            // result.removeChild(result.firstChild);
+        // }
+
+        // var link = document.createElement("a");
+        // link.href = link.textContent = shorturl;
+
+        // result.textContent = "short url: ";
+        // result.appendChild(link);
+    // }
+}
+
 /**
  * Format a given block of Rust code.
  *
@@ -249,6 +291,7 @@ var evaluate_button = document.getElementById("evaluate");
 var asm_button = document.getElementById("asm");
 var ir_button = document.getElementById("ir");
 var format_button = document.getElementById("format");
+var share_button = document.getElementById("share");
 var resultDiv = document.getElementById("result");
 
 /**
@@ -336,6 +379,18 @@ function handleResult(result) {
     }
 }
 
+share_button.onclick = function() {
+    share(versionDropdown.selected, session.getValue(), function(err, link) {
+        if (err) {
+            resultDiv.style.backgroundColor = colors.error;
+            resultDiv.innerHTML = err;
+        } else {
+            resultDiv.style.backgroundColor = colors.success;
+            resultDiv.innerHTML = '<a href="' + link + '">'+link+'</a>';
+        }
+    });
+}
+
 evaluate_button.onclick = function() {
     // Note: Playpen expects these to be a string, so we need to coerce the
     // integer.
@@ -346,7 +401,8 @@ evaluate_button.onclick = function() {
 
     evaluate(session.getValue(), versionDropdown.selected, optimize, function(err, result) {
         if (err) {
-            result.textContent = err.message;
+            resultDiv.style.backgroundColor = colors.error;
+            resultDiv.innerHTML = err;
         } else {
             handleResult(result);
         }
@@ -365,7 +421,8 @@ asm_button.onclick = function() {
             optimize,
             function(err, response) {
         if (err) {
-            result.textContent = err.message;
+            resultDiv.style.backgroundColor = colors.error;
+            resultDiv.innerHTML = err;
         } else {
             handleResult(response);
         }
@@ -380,7 +437,8 @@ ir_button.onclick = function() {
 
     compile("ir", session.getValue(), versionDropdown.selected, optimize, function(err, response) {
         if (err) {
-            result.textContent = err.message;
+            resultDiv.style.backgroundColor = colors.error;
+            resultDiv.innerHTML = err;
         } else {
             handleResult(response);
         }
@@ -390,7 +448,8 @@ ir_button.onclick = function() {
 format_button.onclick = function() {
     format(session.getValue(), versionDropdown.selected, function(err, text) {
         if (err) {
-            result.textContent = err.message;
+            resultDiv.style.backgroundColor = colors.error;
+            resultDiv.innerHTML = err;
         } else {
             session.setValue(text.result);
         }
