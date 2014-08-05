@@ -9,6 +9,7 @@
         <link rel="stylesheet" href="css/fontello.css">
     </head>
     <body>
+        <div id="bar"></div>
         <div id="topbar">
           <h1>
             <a href="http://www.rust-lang.org">Rust</a>
@@ -55,16 +56,16 @@
                 <button id="share">Share</button>
                 <button id="moreOptions">More Options <i class="icon-angle-down"></i></button>
                 <div id="options">
-                  <div class="dropdown" id="optimize" title="Optimize Level">
+                  <div class="dropdown" id="optimize" title="Optimization Level">
                       <div class="button">
-                          <span>2</span> <i class="icon-angle-down"></i>
+                          <span>-O2</span> <i class="icon-angle-down"></i>
                       </div>
                       <div class="options">
                           <ul>
-                              <li>0</li>
-                              <li>1</li>
-                              <li class="default">2</li>
-                              <li>3</li>
+                              <li>-O0</li>
+                              <li>-O1</li>
+                              <li class="default">-O2</li>
+                              <li>-O3</li>
                           </ul>
                       </div>
                   </div>
@@ -75,6 +76,7 @@
                       <div class="options">
                           <ul>
                               <li class="default">master</li>
+                              <li>0.11</li>
                               <li>0.10</li>
                           </ul>
                       </div>
