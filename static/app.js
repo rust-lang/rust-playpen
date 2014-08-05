@@ -137,15 +137,11 @@ function evaluate(code, version, optimize, fn) {
         throw new Error("Expected a function");
     }
 
-    var obj = {code: code, version: version, optimize: optimize};
+    var obj = {code: code, version: version, optimize: optimize, separate_output: true};
 
-    send("/evaluate.json", obj, function(rc, object) {
-        if (rc == 200) {
-            if ("error" in object) {
-                fn({ message: object["error"] }, null);
-            } else {
-                fn(null, object["result"]);
-            }
+    send("/evaluate.json", obj, function(statusCode, res) {
+        if (statusCode == 200) {
+            fn(null, res);
         } else {
             fn({ message: "connection failure"}, null);
         }
@@ -167,16 +163,13 @@ function compile(emit, code, version, optimize, fn) {
         emit: emit,
         code: code,
         version: version,
-        optimize: optimize
+        optimize: optimize,
+        separate_output: true
     };
 
-    send("/compile.json", obj, function(rc, object) {
-        if (rc == 200) {
-            if ("error" in object) {
-                fn({ message: object["error"] }, null);
-            } else {
-                fn(null, object["result"]);
-            }
+    send("/compile.json", obj, function(status, res) {
+        if (status == 200) {
+            fn(null, res);
         } else {
             fn({ message: "connection failure" });
         }
@@ -194,16 +187,13 @@ function compile(emit, code, version, optimize, fn) {
 function format(code, version, fn) {
     var obj = {
         code: code,
-        version: version
+        version: version,
+        separate_output: true
     };
 
-    send("/format.json", obj, function(rc, object) {
-        if (rc == 200) {
-            if ("error" in object) {
-                fn({ message: object["error"] }, null);
-            } else {
-                fn(null, object["result"]);
-            }
+    send("/format.json", obj, function(status, res) {
+        if (status == 200) {
+            fn(null, res);
         } else {
             fn({ message: "connection failure" }, null);
         }
@@ -333,15 +323,15 @@ exampleDropdown.change(function(value, index) {
 
 
 function handleResult(result) {
-    if (result.indexOf('error:') !== -1 ) {
-        resultDiv.style.backgroundColor = colors.error;
-        handleProblem(result, "error");
-    } else if (result.indexOf('warning:') !== -1) {
-        resultDiv.style.backgroundColor = colors.warning;
-        handleProblem(result, "warning");
-    } else {
+    if (result.program) {
         resultDiv.style.backgroundColor = colors.success;
-        resultDiv.innerHTML = result;
+        resultDiv.innerHTML = result.program;
+    } else if (result.rustc && result.rustc.indexOf('error:') !== -1) {
+        resultDiv.style.backgroundColor = colors.error;
+        handleProblem(result.rustc, "error");
+    } else if (result.rustc && result.rustc.indexOf('warning:') !== -1) {
+        resultDiv.style.backgroundColor = colors.warning;
+        handleProblem(result.rustc, "warning");
     }
 }
 
@@ -354,7 +344,6 @@ evaluate_button.onclick = function() {
     markers.map(function(id) { editor.getSession().removeMarker(id); });
 
     evaluate(session.getValue(), versionDropdown.selected, optimize, function(err, result) {
-
         if (err) {
             result.textContent = err.message;
         } else {
