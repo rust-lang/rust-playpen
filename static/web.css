@@ -79,7 +79,7 @@ body {
 }
 
 #editor-container {
-    width: 850px;
+    width: 70%;
     margin: 30px auto;
 }
 
@@ -308,9 +308,9 @@ button#evaluate:hover {
 .highlight .vi { color: #008080 } /* Name.Variable.Instance */
 .highlight .il { color: #009999 } /* Literal.Number.Integer.Long */
 
-@media screen and (max-width: 910px) {
+@media screen and (max-width: 990px) {
     #editor-container {
-        width: 750px;
+        width: 90%;
     }
 }
 
