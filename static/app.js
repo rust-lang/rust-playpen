@@ -323,9 +323,10 @@ exampleDropdown.change(function(value, index) {
 
 
 function handleResult(result) {
-    if (result.program) {
+    // IR/asm is put in the `result` property.
+    if (result.program || result.result) {
         resultDiv.style.backgroundColor = colors.success;
-        resultDiv.innerHTML = result.program;
+        resultDiv.innerHTML = (result.program || result.result).replace(/\n/g, '<br />');
     } else if (result.rustc && result.rustc.indexOf('error:') !== -1) {
         resultDiv.style.backgroundColor = colors.error;
         handleProblem(result.rustc, "error");
@@ -391,7 +392,7 @@ format_button.onclick = function() {
         if (err) {
             result.textContent = err.message;
         } else {
-            session.setValue(text);
+            session.setValue(text.result);
         }
     });
 };
