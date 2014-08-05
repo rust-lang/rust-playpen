@@ -81,13 +81,14 @@ body {
 }
 
 #result {
-    overflow: hidden;
+    overflow: auto;
     color: #333;
     position: relative;
     z-index: 99;
     border-radius: 5px;
     margin-top: -5px;
     padding: 10px 10px;
+    max-height: 400px;
 }
 
 #editor-container .controls {
