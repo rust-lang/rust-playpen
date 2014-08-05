@@ -1,8 +1,10 @@
 body {
-    min-width: 750px;
+    min-width: 660px;
     margin: 0;
     padding: 0;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    padding-bottom: 70px;
+    font-size: 15px;
 }
 
 #logo {
@@ -14,6 +16,15 @@ body {
     margin-bottom: 20px;
     text-decoration: none;
     color: #333;
+}
+
+#bar {
+    background: #DEA584;
+    width: 100%;
+    position: fixed;
+    height: 2px;
+    z-index: 99;
+    top: 0px;
 }
 
 #logo span {
@@ -32,10 +43,10 @@ body {
     line-height: 90px;
     position: relative;
     background: #B58777;
+    background: #B58777;
     top: 0px;
     left: 0px;
     color: #fff;
-    z-index: 99;
     border-bottom: 2px solid #9C7365;
 }
 
@@ -68,14 +79,14 @@ body {
 }
 
 #editor-container {
-    width: 700px;
+    width: 850px;
     margin: 30px auto;
 }
 
 #editor {
-    min-height: 340px;
+    min-height: 460px;
     border: 4px solid #e3e3e3;
-    font-size: 16px;
+    font-size: 12px;
     font-family: 'Source Code Pro';
     border-radius: 5px;
 }
@@ -119,6 +130,7 @@ button, .button {
     cursor: pointer;
     padding: 9px 35px;
     border-radius: 5px;
+    margin-bottom: 10px;
 }
 
 button:hover {
@@ -196,7 +208,7 @@ button#evaluate:hover {
 }
 
 #editor, #result {
-    font-size: 12.5pt;
+    font-size: 0.95rem;
     font-family: "Source Code Pro", monospace;
 }
 
@@ -295,3 +307,19 @@ button#evaluate:hover {
 .highlight .vg { color: #008080 } /* Name.Variable.Global */
 .highlight .vi { color: #008080 } /* Name.Variable.Instance */
 .highlight .il { color: #009999 } /* Literal.Number.Integer.Long */
+
+@media screen and (max-width: 910px) {
+    #editor-container {
+        width: 750px;
+    }
+}
+
+@media screen and (max-width: 780px) {
+    #editor-container {
+        width: 660px;
+    }
+
+    .controls .primary {
+        margin-right: 0;
+    }
+}
