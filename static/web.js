@@ -166,8 +166,13 @@ addEventListener("DOMContentLoaded", function() {
     if ("code" in query) {
         session.setValue(query["code"]);
     } else {
-        var index = Math.floor(Math.random() * samples);
-        setSample(sample, session, result, index);
+        var code = localStorage.getItem("code");
+        if (code !== null) {
+            session.setValue(code);
+        } else {
+            var index = Math.floor(Math.random() * samples);
+            setSample(sample, session, result, index);
+        }
     }
 
     if ("version" in query) {
@@ -178,6 +183,10 @@ addEventListener("DOMContentLoaded", function() {
         evaluate(result, session.getValue(), version.options[version.selectedIndex].text,
                  optimize.options[optimize.selectedIndex].value);
     }
+
+    session.on("change", function() {
+        localStorage.setItem("code", session.getValue());
+    });
 
     sample.onchange = function() {
         setSample(sample, session, result, sample.selectedIndex);
