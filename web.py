@@ -32,9 +32,9 @@ def serve_static(path):
     return static_file(path, root="static")
 
 @functools.lru_cache(maxsize=256)
-def execute(version, command, arguments):
+def execute(version, command, arguments, code):
     print("running:", version, command, arguments, file=sys.stderr, flush=True)
-    return playpen.execute(version, command, arguments)
+    return playpen.execute(version, command, arguments, code)
 
 def enable_post_cors(wrappee):
     def wrapper(*args, **kwargs):
@@ -62,7 +62,7 @@ def extractor(key, default, valid):
 @extractor("version", "master", ("master", "0.11.0", "0.10"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 def evaluate(optimize, version):
-    out, _ = execute(version, "/usr/local/bin/evaluate.sh", (optimize, request.json["code"]))
+    out, _ = execute(version, "/usr/local/bin/evaluate.sh", (optimize,), request.json["code"])
 
     if request.json.get("separate_output") is True:
         split = out.split(b"\xff", 1)
@@ -79,7 +79,7 @@ def evaluate(optimize, version):
 @enable_post_cors
 @extractor("version", "master", ("master", "0.11.0", "0.10"))
 def format(version):
-    out, rc = execute(version, "/usr/local/bin/format.sh", (request.json["code"],))
+    out, rc = execute(version, "/usr/local/bin/format.sh", (), request.json["code"])
     split = out.split(b"\xff", 1)
     if rc:
         return {"error": split[0].decode()}
@@ -92,7 +92,7 @@ def format(version):
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 @extractor("emit", "asm", ("asm", "ir"))
 def compile(emit, optimize, version):
-    out, rc = execute(version, "/usr/local/bin/compile.sh", (optimize, emit, request.json["code"]))
+    out, rc = execute(version, "/usr/local/bin/compile.sh", (optimize, emit), request.json["code"])
     split = out.split(b"\xff", 1)
     if rc:
         return {"error": split[0].decode()}
