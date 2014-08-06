@@ -165,7 +165,11 @@ addEventListener("DOMContentLoaded", function() {
     editor.setTheme("ace/theme/github");
     session.setMode("ace/mode/rust");
 
-    set_keyboard(editor, localStorage.getItem("keyboard"));
+    var mode = localStorage.getItem("keyboard");
+    if (mode !== null) {
+        set_keyboard(editor, mode);
+        keyboard.value = mode;
+    }
 
     var query = getQueryParameters();
     if ("code" in query) {
