@@ -142,6 +142,16 @@ function getQueryParameters() {
     return b;
 }
 
+function set_keyboard(editor, mode) {
+    if (mode == "Emacs") {
+        editor.setKeyboardHandler("ace/keyboard/emacs");
+    } else if (mode == "Vim") {
+        editor.setKeyboardHandler("ace/keyboard/vim");
+    } else {
+        editor.setKeyboardHandler(null);
+    }
+}
+
 addEventListener("DOMContentLoaded", function() {
     var evaluateButton = document.getElementById("evaluate");
     var asmButton = document.getElementById("asm");
@@ -152,11 +162,14 @@ addEventListener("DOMContentLoaded", function() {
     var optimize = document.getElementById("optimize");
     var version = document.getElementById("version");
     var sample = document.getElementById("sample");
+    var keyboard = document.getElementById("keyboard");
     var editor = ace.edit("editor");
     var session = editor.getSession();
 
     editor.setTheme("ace/theme/github");
     session.setMode("ace/mode/rust");
+
+    set_keyboard(editor, localStorage.getItem("keyboard"));
 
     var query = getQueryParameters();
     if ("code" in query) {
@@ -187,6 +200,12 @@ addEventListener("DOMContentLoaded", function() {
     sample.onchange = function() {
         setSample(sample, session, result, sample.selectedIndex);
     };
+
+    keyboard.onchange = function() {
+        var mode = keyboard.options[keyboard.selectedIndex].value;
+        localStorage.setItem("keyboard", mode);
+        set_keyboard(editor, mode);
+    }
 
     evaluateButton.onclick = function() {
         evaluate(result, session.getValue(), version.options[version.selectedIndex].text,
