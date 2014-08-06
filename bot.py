@@ -26,6 +26,7 @@ extern crate rand;
 #[phase(plugin)]
 extern crate regex_macros;
 extern crate regex;
+extern crate debug;
 
 static version: &'static str = "%(version)s";
 
