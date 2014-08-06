@@ -21,7 +21,11 @@ function send(path, data, callback) {
                 console.log("JSON.parse(): " + e);
             }
 
-            callback(request.status, json);
+            if (request.status == 200) {
+                callback(json);
+            } else {
+                result.textContent = "connection failure";
+            }
         }
     }
     request.timeout = 10000;
@@ -33,49 +37,37 @@ function send(path, data, callback) {
 
 function evaluate(result, code, version, optimize) {
     send("/evaluate.json", {code: code, version: version, optimize: optimize},
-         function(rc, object) {
-        if (rc == 200) {
-            result.textContent = object["result"];
+         function(object) {
+          result.textContent = object["result"];
 
-            var div = document.createElement("div");
-            div.className = "message";
-            div.textContent = "Program ended.";
-            result.appendChild(div);
-        } else {
-            result.textContent = "connection failure";
-        }
+          var div = document.createElement("div");
+          div.className = "message";
+          div.textContent = "Program ended.";
+          result.appendChild(div);
     });
 }
 
 function compile(emit, result, code, version, optimize) {
     send("/compile.json", {emit: emit, code: code, version: version, optimize: optimize,
                            highlight: true},
-         function(rc, object) {
-        if (rc == 200) {
-            if ("error" in object) {
-                result.textContent = object["error"];
-            } else {
-                result.innerHTML = object["result"];
-            }
-        } else {
-            result.textContent = "connection failure";
-        }
+         function(object) {
+          if ("error" in object) {
+              result.textContent = object["error"];
+          } else {
+              result.innerHTML = object["result"];
+          }
     });
 }
 
 function format(result, session, version) {
-    send("/format.json", {code: session.getValue(), version: version}, function(rc, object) {
-        if (rc == 200) {
-            if ("error" in object) {
-                result.textContent = object["error"];
-            } else {
-                result.textContent = "";
-                result.classList.remove("non-empty");
-                session.setValue(object["result"]);
-            }
-        } else {
-            result.textContent = "connection failure";
-        }
+    send("/format.json", {code: session.getValue(), version: version}, function(object) {
+          if ("error" in object) {
+              result.textContent = object["error"];
+          } else {
+              result.textContent = "";
+              result.classList.remove("non-empty");
+              session.setValue(object["result"]);
+          }
     });
 }
 
