@@ -29,8 +29,8 @@ body, #control {
     border-bottom-right-radius: 5px;
 }
 
-.non-empty {
-    border-top: 1px solid #ccc !important;
+#result:not(:empty) {
+    border-top: 1px solid #ccc;
 }
 
 /* Pygments github style */

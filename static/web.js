@@ -6,7 +6,6 @@ function send(path, data, callback) {
     var result = document.getElementById("result");
 
     result.textContent = "Running...";
-    result.classList.add("non-empty");
 
     var request = new XMLHttpRequest();
     request.open("POST", path, true);
@@ -65,7 +64,6 @@ function format(result, session, version) {
               result.textContent = object["error"];
           } else {
               result.textContent = "";
-              result.classList.remove("non-empty");
               session.setValue(object["result"]);
           }
     });
@@ -93,7 +91,6 @@ function share(result, version, code) {
                 setResponse(JSON.parse(request.responseText)['shorturl']);
             } else {
                 result.textContent = "connection failure";
-                result.classList.add("non-empty");
             }
         }
     }
@@ -110,7 +107,6 @@ function share(result, version, code) {
 
         result.textContent = "short url: ";
         result.appendChild(link);
-        result.classList.add("non-empty");
     }
 }
 
