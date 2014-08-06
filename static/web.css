@@ -1,3 +1,7 @@
+body, #control {
+    margin: 5px;
+}
+
 .message {
     color: #999;
 }
@@ -10,8 +14,8 @@
 
 #editor {
     height: 60vh;
+    margin: 0;
     border-bottom: 0;
-    margin-bottom: 0;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
 }
@@ -19,8 +23,8 @@
 #result {
     overflow: auto;
     max-height: 30vh;
+    margin: 0;
     border-top: 0;
-    margin-top: 0;
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
 }
