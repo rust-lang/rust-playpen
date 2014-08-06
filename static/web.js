@@ -24,6 +24,10 @@ function send(path, data, callback) {
             callback(request.status, json);
         }
     }
+    request.timeout = 10000;
+    request.ontimeout = function() {
+        result.textContent = "connection timed out"
+    }
     request.send(JSON.stringify(data));
 }
 
