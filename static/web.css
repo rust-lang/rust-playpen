@@ -29,6 +29,24 @@
     border-top: 1px solid #ccc !important;
 }
 
+select,
+button {
+    background-color: white;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    height: 31px;
+    padding: 5px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    color: #777;
+    margin-right: 5px;
+}
+
+button:hover {
+    background-color: #eee;
+    color: black;
+}
+
 /* Pygments github style */
 .highlight .hll { background-color: #ffffcc }
 .highlight .c { color: #999988; font-style: italic } /* Comment */
