@@ -21,6 +21,7 @@ irc_template = """\
 
 extern crate debug;
 extern crate collections;
+extern crate libc;
 extern crate native;
 extern crate rand;
 #[phase(plugin)]
