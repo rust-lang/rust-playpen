@@ -49,7 +49,7 @@ def pastebin(command):
     response = r.json()
 
     if response["status_txt"] == "OK":
-        return response["data"]["url"]
+        return "output truncated; full output at: " + response["data"]["url"]
     else:
         return "failed to shorten url"
 
@@ -62,16 +62,20 @@ def evaluate(code, nickname):
     out, _ = playpen.execute("master", "/usr/local/bin/evaluate.sh", ("2",), code)
 
     if len(out) > 5000:
-        return "more than 5000 bytes of output, bailing out"
+        return "more than 5000 bytes of output; bailing out"
 
-    if out.count(b"\n") > 3:
-        return pastebin(code)
+    out = out.replace(b"\xff", b"", 1).decode(errors="replace")
+    lines = out.splitlines()
 
-    for line in out.splitlines():
+    limit = 3
+    if len(lines) > limit:
+        return "\n".join(lines[:limit - 1] + [pastebin(code)])
+
+    for line in lines:
         if len(line) > 150:
             return pastebin(code)
 
-    return out.replace(b"\xff", b"", 1).decode(errors="replace")
+    return out
 
 class RustEvalbot(irc.client.SimpleIRCClient):
     def __init__(self, nickname, channels, keys):
