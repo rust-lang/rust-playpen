@@ -12,7 +12,13 @@ body, #control {
     border: 3px solid #ccc;
 }
 
+#top-logo {
+    float: right;
+    padding: 1ex;
+}
+
 #editor {
+    float: none;
     height: 60vh;
     margin: 0;
     border-bottom: 0;
