@@ -67,13 +67,13 @@ def evaluate(code, nickname):
     out = out.replace(b"\xff", b"", 1).decode(errors="replace")
     lines = out.splitlines()
 
-    limit = 3
-    if len(lines) > limit:
-        return "\n".join(lines[:limit - 1] + [pastebin(code)])
-
     for line in lines:
         if len(line) > 150:
             return pastebin(code)
+
+    limit = 3
+    if len(lines) > limit:
+        return "\n".join(lines[:limit - 1] + [pastebin(code)])
 
     return out
 
