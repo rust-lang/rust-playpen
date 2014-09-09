@@ -12,13 +12,18 @@ body, #control {
     border: 3px solid #ccc;
 }
 
+#for-overlay {
+    position: relative;
+}
+
 #top-logo {
-    float: right;
+    position: absolute;
     padding: 1ex;
+    top: 0px;
+    right: 0px;
 }
 
 #editor {
-    float: none;
     height: 60vh;
     margin: 0;
     border-bottom: 0;
