@@ -16,7 +16,9 @@ import playpen
 import shorten_key
 
 irc_template = """\
-#![feature(asm, globs, macro_rules, phase, simd, struct_variant, thread_local)]
+#![feature(advanced_slice_patterns, asm, default_type_params, globs, macro_rules, non_ascii_idents,
+           overloaded_calls, phase, simd, struct_variant, thread_local, unboxed_closure_sugar,
+           unsafe_destructor)]
 #![allow(dead_code, unused_variable)]
 
 extern crate debug;
