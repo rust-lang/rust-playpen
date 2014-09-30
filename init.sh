@@ -22,6 +22,7 @@ pacstrap -c -d root-master.new \
     util-linux
 
 mkdir root-master.new/dev/shm
+mknod -m 666 root-master.new/dev/null c 1 3
 mknod -m 644 root-master.new/dev/urandom c 1 9
 arch-chroot root-master.new useradd -m rust
 install -m755 bin/* root-master.new/usr/local/bin

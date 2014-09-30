@@ -9,7 +9,7 @@ def execute(version, command, arguments, data=None):
                            "--user=rust",
                            "--timeout=5",
                            "--syscalls-file=whitelist",
-                           "--devices=/dev/urandom:r",
+                           "--devices=/dev/urandom:r,/dev/null:w",
                            "--memory-limit=128",
                            "--",
                            command) + arguments,
