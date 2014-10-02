@@ -12,6 +12,17 @@ body, #control {
     border: 3px solid #ccc;
 }
 
+#for-overlay {
+    position: relative;
+}
+
+#top-logo {
+    position: absolute;
+    padding: 1ex;
+    top: 0px;
+    right: 0px;
+}
+
 #editor {
     height: 60vh;
     margin: 0;
