@@ -30,7 +30,7 @@ extern crate rand;
 extern crate regex_macros;
 extern crate regex;
 
-static version: &'static str = "%(version)s";
+static VERSION: &'static str = "%(version)s";
 
 fn show<T: std::fmt::Show>(e: T) { println!("{}", e) }
 
