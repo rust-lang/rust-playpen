@@ -187,6 +187,12 @@ addEventListener("DOMContentLoaded", function() {
         evaluate(result, session.getValue(), version.options[version.selectedIndex].text,
                  optimize.options[optimize.selectedIndex].value);
     };
+    
+    editor.commands.addCommand({
+        name: "evaluate",
+        exec: evaluateButton.onclick,
+        bindKey: {win: "Ctrl-Enter", mac: "Ctrl-Enter"}
+    });
 
     asmButton.onclick = function() {
         compile("asm", result, session.getValue(), version.options[version.selectedIndex].text,
