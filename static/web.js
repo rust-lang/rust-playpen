@@ -110,22 +110,6 @@ function share(result, version, code) {
     }
 }
 
-function setSample(sample, session, result, index) {
-    var request = new XMLHttpRequest();
-    sample.options[index].selected = true;
-    request.open("GET", "/sample/" + index + ".rs", true);
-    request.onreadystatechange = function() {
-        if (request.readyState == 4) {
-            if (request.status == 200) {
-                session.setValue(request.responseText.slice(0, -1));
-            } else {
-                result.textContent = "connection failure";
-            }
-        }
-    }
-    request.send();
-}
-
 function getQueryParameters() {
     var a = window.location.search.substr(1).split('&');
     if (a == "") return {};
@@ -157,7 +141,6 @@ addEventListener("DOMContentLoaded", function() {
     var result = document.getElementById("result");
     var optimize = document.getElementById("optimize");
     var version = document.getElementById("version");
-    var sample = document.getElementById("sample");
     var keyboard = document.getElementById("keyboard");
     var editor = ace.edit("editor");
     var session = editor.getSession();
@@ -178,9 +161,6 @@ addEventListener("DOMContentLoaded", function() {
         var code = localStorage.getItem("code");
         if (code !== null) {
             session.setValue(code);
-        } else {
-            var index = Math.floor(Math.random() * samples);
-            setSample(sample, session, result, index);
         }
     }
 
@@ -196,10 +176,6 @@ addEventListener("DOMContentLoaded", function() {
     session.on("change", function() {
         localStorage.setItem("code", session.getValue());
     });
-
-    sample.onchange = function() {
-        setSample(sample, session, result, sample.selectedIndex);
-    };
 
     keyboard.onchange = function() {
         var mode = keyboard.options[keyboard.selectedIndex].value;
