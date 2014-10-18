@@ -21,7 +21,7 @@ irc_template = """\
            tuple_indexing, unboxed_closures, unboxed_closure_sugar, unsafe_destructor)]
 #![allow(dead_code, unused_variable)]
 
-extern crate debug;
+%(debug)
 extern crate collections;
 extern crate libc;
 extern crate native;
@@ -60,7 +60,11 @@ def evaluate(code, nickname):
     if nickname == "rusti":
         version, _ = playpen.execute("master", "/bin/dash",
                                      ("-c", "--", "rustc -v | tail | head -1 | tr -d '\n'"))
-        code = irc_template % {"version": version.decode(), "input": code}
+        need_debug = version < "rustc 0.13"
+        code = irc_template % {"version": version.decode(), "input": code,
+                               "debug": ("extern crate debug;" if need_debug
+                                         else "")
+                              }
 
     out, _ = playpen.execute("master", "/usr/local/bin/evaluate.sh", ("2",), code)
 
