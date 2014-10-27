@@ -21,6 +21,7 @@ irc_template = """\
            tuple_indexing, unboxed_closures, unboxed_closure_sugar, unsafe_destructor)]
 #![allow(dead_code, unused_variable)]
 
+extern crate arena;
 extern crate collections;
 extern crate libc;
 extern crate native;
