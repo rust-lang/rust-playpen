@@ -53,9 +53,11 @@ rmdir
 rt_sigaction
 rt_sigprocmask
 rt_sigreturn
+sched_getaffinity
 setrlimit
 set_robust_list
 set_tid_address
+sigaltstack
 stat
 statfs
 tgkill
