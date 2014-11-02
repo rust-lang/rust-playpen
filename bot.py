@@ -19,7 +19,7 @@ irc_template = """\
 #![feature(advanced_slice_patterns, asm, default_type_params, globs, macro_rules, non_ascii_idents,
            overloaded_calls, phase, simd, slicing_syntax, struct_variant, thread_local,
            tuple_indexing, unboxed_closures, unboxed_closure_sugar, unsafe_destructor)]
-#![allow(dead_code, unused_variable)]
+#![allow(dead_code, unused_variables)]
 
 extern crate arena;
 extern crate collections;
