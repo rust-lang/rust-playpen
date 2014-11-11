@@ -118,6 +118,14 @@ class RustEvalbot(irc.client.SimpleIRCClient):
         sleep(10)
         connection.reconnect()
 
+    def on_kick(self, connection, event):
+        channel = event.target
+        key = self.keys[self.channels.index(channel)]
+        if key is None:
+            connection.join(channel)
+        else:
+            connection.join(channel, key)
+
 def start(nickname, server, port, channels, keys):
     client = RustEvalbot(nickname, channels, keys)
     try:
