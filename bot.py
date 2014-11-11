@@ -16,9 +16,10 @@ import playpen
 import shorten_key
 
 irc_template = """\
-#![feature(advanced_slice_patterns, asm, default_type_params, globs, macro_rules, non_ascii_idents,
-           overloaded_calls, phase, simd, slicing_syntax, struct_variant, thread_local,
-           tuple_indexing, unboxed_closures, unboxed_closure_sugar, unsafe_destructor)]
+#![feature(advanced_slice_patterns, asm, associated_types, default_type_params, globs,
+           macro_rules, non_ascii_idents, overloaded_calls, phase, simd, slicing_syntax,
+           struct_variant, thread_local, tuple_indexing, unboxed_closures,
+           unboxed_closure_sugar, unsafe_destructor)]
 #![allow(dead_code, unused_variables)]
 
 extern crate arena;
