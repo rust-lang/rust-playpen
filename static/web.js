@@ -69,8 +69,16 @@ function format(result, session, version) {
     });
 }
 
+function base64encode(a) {
+    return btoa(unescape(a));
+}
+
+function base64decode(b) {
+    return escape(atob(a));
+}
+
 function share(result, version, code) {
-    var playurl = "http://play.rust-lang.org?code=" + encodeURIComponent(code);
+    var playurl = "http://play.rust-lang.org?code=" + base64encode(encodeURIComponent(code));
     if (version != "master") {
         playurl += "&version=" + encodeURIComponent(version);
     }
@@ -156,7 +164,7 @@ addEventListener("DOMContentLoaded", function() {
 
     var query = getQueryParameters();
     if ("code" in query) {
-        session.setValue(query["code"]);
+        session.setValue(base64decode(query["code"]));
     } else {
         var code = localStorage.getItem("code");
         if (code !== null) {
