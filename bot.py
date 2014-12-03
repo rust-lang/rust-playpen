@@ -17,15 +17,13 @@ import shorten_key
 
 irc_template = """\
 #![feature(advanced_slice_patterns, asm, associated_types, default_type_params, globs,
-           macro_rules, non_ascii_idents, overloaded_calls, phase, simd, slicing_syntax,
-           struct_variant, thread_local, tuple_indexing, unboxed_closures,
-           unboxed_closure_sugar, unsafe_destructor)]
+           macro_rules, non_ascii_idents, phase, simd, slicing_syntax,
+           thread_local, tuple_indexing, unboxed_closures, unsafe_destructor)]
 #![allow(dead_code, unused_variables)]
 
 extern crate arena;
 extern crate collections;
 extern crate libc;
-extern crate native;
 extern crate rand;
 #[phase(plugin)]
 extern crate regex_macros;
