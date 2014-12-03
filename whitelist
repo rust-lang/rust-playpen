@@ -25,6 +25,7 @@ getgid
 getpgrp
 getpid
 getppid
+getrandom
 getresgid
 getresuid
 getrlimit
