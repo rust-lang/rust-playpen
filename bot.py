@@ -18,7 +18,7 @@ import shorten_key
 irc_template = """\
 #![feature(advanced_slice_patterns, asm, associated_types, default_type_params, globs,
            macro_rules, non_ascii_idents, phase, simd, slicing_syntax,
-           thread_local, tuple_indexing, unboxed_closures, unsafe_destructor)]
+           thread_local, unboxed_closures, unsafe_destructor)]
 #![allow(dead_code, unused_variables)]
 
 extern crate arena;
