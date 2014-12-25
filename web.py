@@ -90,7 +90,7 @@ def format(version):
 @enable_post_cors
 @extractor("version", "master", ("master", "0.12.0"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
-@extractor("emit", "asm", ("asm", "ir"))
+@extractor("emit", "asm", ("asm", "llvm-ir"))
 def compile(emit, optimize, version):
     out, rc = execute(version, "/usr/local/bin/compile.sh", (optimize, emit), request.json["code"])
     split = out.split(b"\xff", 1)

@@ -135,7 +135,7 @@ function set_keyboard(editor, mode) {
 addEventListener("DOMContentLoaded", function() {
     var evaluateButton = document.getElementById("evaluate");
     var asmButton = document.getElementById("asm");
-    var irButton = document.getElementById("ir");
+    var irButton = document.getElementById("llvm-ir");
     var formatButton = document.getElementById("format");
     var shareButton = document.getElementById("share");
     var result = document.getElementById("result");
@@ -200,7 +200,7 @@ addEventListener("DOMContentLoaded", function() {
     };
 
     irButton.onclick = function() {
-        compile("ir", result, session.getValue(), version.options[version.selectedIndex].text,
+        compile("llvm-ir", result, session.getValue(), version.options[version.selectedIndex].text,
                  optimize.options[optimize.selectedIndex].value);
     };
 
