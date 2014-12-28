@@ -58,7 +58,7 @@ def pastebin(command):
 def evaluate(code, nickname):
     if nickname == "rusti":
         version, _ = playpen.execute("master", "/bin/dash",
-                                     ("-c", "--", "rustc -v | tail | head -1 | tr -d '\n'"))
+                                     ("-c", "--", "rustc -V | head -1 | tr -d '\n'"))
         code = irc_template % {"version": version.decode(), "input": code}
 
     out, _ = playpen.execute("master", "/usr/local/bin/evaluate.sh", ("2",), code)
