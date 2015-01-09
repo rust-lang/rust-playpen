@@ -16,22 +16,16 @@ import playpen
 import shorten_key
 
 irc_template = """\
-#![feature(advanced_slice_patterns, asm, associated_types, default_type_params, globs,
-           macro_rules, non_ascii_idents, phase, simd, slicing_syntax,
-           thread_local, unboxed_closures, unsafe_destructor)]
-#![allow(dead_code, unused_variables)]
+#![feature(asm, non_ascii_idents, simd, thread_local, unsafe_destructor)]
+#![allow(dead_code, unused_variables, unstable)]
 
 extern crate arena;
-extern crate collections;
 extern crate libc;
-extern crate rand;
-#[phase(plugin)]
-extern crate regex_macros;
 extern crate regex;
 
 static VERSION: &'static str = "%(version)s";
 
-fn show<T: std::fmt::Show>(e: T) { println!("{}", e) }
+fn show<T: std::fmt::Show>(e: T) { println!("{:?}", e) }
 
 fn main() {
     let r = {
