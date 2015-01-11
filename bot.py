@@ -28,10 +28,9 @@ static VERSION: &'static str = "%(version)s";
 fn show<T: std::fmt::Show>(e: T) { println!("{:?}", e) }
 
 fn main() {
-    let r = {
+    show({
         %(input)s
-    };
-    println!("{}", r)
+    });
 }"""
 
 def pastebin(command):
