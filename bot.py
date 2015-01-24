@@ -25,7 +25,7 @@ extern crate regex;
 
 static VERSION: &'static str = "%(version)s";
 
-fn show<T: std::fmt::Show>(e: T) { println!("{:?}", e) }
+fn show<T: std::fmt::Debug>(e: T) { println!("{:?}", e) }
 
 fn main() {
     show({
