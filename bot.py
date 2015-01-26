@@ -21,7 +21,6 @@ irc_template = """\
 
 extern crate arena;
 extern crate libc;
-extern crate regex;
 
 static VERSION: &'static str = "%(version)s";
 
