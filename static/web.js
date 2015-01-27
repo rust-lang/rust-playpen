@@ -70,7 +70,7 @@ function format(result, session, version) {
 }
 
 function share(result, version, code) {
-    var playurl = "http://play.rust-lang.org?code=" + encodeURIComponent(code);
+    var playurl = "https://play.rust-lang.org?code=" + encodeURIComponent(code);
     if (version != "master") {
         playurl += "&version=" + encodeURIComponent(version);
     }
@@ -80,7 +80,7 @@ function share(result, version, code) {
         return;
     }
 
-    var url = "http://is.gd/create.php?format=json&url=" + encodeURIComponent(playurl);
+    var url = "https://is.gd/create.php?format=json&url=" + encodeURIComponent(playurl);
 
     var request = new XMLHttpRequest();
     request.open("GET", url, true);
