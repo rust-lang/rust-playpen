@@ -35,6 +35,7 @@ install -m755 bin/* root-master.new/usr/local/bin
 
 curl -O https://static.rust-lang.org/rustup.sh
 sh rustup.sh --prefix=root-master.new
+rm rustup.sh
 
 [[ -d root-master ]] && mv root-master root-master.old
 mv root-master.new root-master
