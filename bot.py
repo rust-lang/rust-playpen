@@ -48,7 +48,7 @@ def pastebin(command):
         return "failed to shorten url"
 
 def evaluate(code, nickname):
-    if nickname == "rusti":
+    if nickname == "rusti" or nickname == "playbot":
         version, _ = playpen.execute("master", "/bin/dash",
                                      ("-c", "--", "rustc -V | head -1 | tr -d '\n'"))
         code = irc_template % {"version": version.decode(), "input": code}
@@ -79,8 +79,8 @@ class RustEvalbot(irc.client.SimpleIRCClient):
         self.channels = channels
         self.keys = keys
 
-    def _run(self, channel, code):
-        result = evaluate(code, self.nickname)
+    def _run(self, channel, code, nick):
+        result = evaluate(code, nick)
         for line in result.splitlines():
             self.connection.notice(channel, line)
 
@@ -92,18 +92,25 @@ class RustEvalbot(irc.client.SimpleIRCClient):
                 connection.join(channel, key)
 
     def on_pubmsg(self, connection, event):
-        nickname = event.source.split("!")[0]
         msg = event.arguments[0]
-        if msg.startswith(self.nickname + ": ") or msg.startswith(self.nickname + ", "):
+        self.handle_pubmsg(event, msg, self.nickname)
+        if self.nickname == 'playbot':
+            self.handle_pubmsg(event, msg, 'rusti')
+        else:
+            self.handle_pubmsg(event, msg, 'rustilite')
+
+    def handle_pubmsg(self, event, msg, my_nick):
+        nickname = event.source.split("!")[0]
+        if msg.startswith(my_nick + ": ") or msg.startswith(my_nick + ", "):
             print("{} {}: {}".format(event.target, nickname, msg))
-            i = len(self.nickname) + 2
-            self._run(event.target, msg[i:])
+            i = len(my_nick) + 2
+            self._run(event.target, msg[i:], my_nick)
 
     def on_privmsg(self, connection, event):
         nickname = event.source.split("!")[0]
         msg = event.arguments[0]
         print("{} {}: {}".format(event.target, nickname, msg))
-        self._run(nickname, msg)
+        self._run(nickname, msg, self.nickname)
 
     def on_disconnect(self, connection, event):
         sleep(10)
@@ -133,7 +140,7 @@ def main():
     with open("irc.yaml") as f:
         cfg = yaml.load(f.read())
 
-    for c, nickname in itertools.product(cfg, ("rusti", "rustilite")):
+    for c, nickname in itertools.product(cfg, ("playbot", "playbot-mini")):
         thread = threading.Thread(target=start, args=(nickname,
                                                       c["server"],
                                                       c["port"],
