@@ -19,7 +19,8 @@ pacstrap -c -d root-master.new \
     pacman \
     procps-ng \
     shadow \
-    util-linux
+    util-linux \
+    gcc
 
 mkdir root-master.new/dev/shm
 mknod -m 666 root-master.new/dev/null c 1 3
