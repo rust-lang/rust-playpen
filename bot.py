@@ -16,10 +16,11 @@ import playpen
 import shorten_key
 
 irc_template = """\
-#![feature(asm, non_ascii_idents, simd, thread_local, unsafe_destructor)]
-#![allow(dead_code, unused_variables, unstable)]
+#![feature(asm, simd, thread_local, unsafe_destructor)]
+#![feature(core, libc, collections, std_misc, io, path)]
+#![allow(dead_code, unused_variables)]
+#![allow(unused_features)]
 
-extern crate arena;
 extern crate libc;
 
 static VERSION: &'static str = "%(version)s";
