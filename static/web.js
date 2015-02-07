@@ -69,11 +69,23 @@ function format(result, session, version) {
     });
 }
 
+// URL safe alphabet, no padding: https://tools.ietf.org/html/rfc4648#section-5
+// encodeURIComponent is due to https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64.btoa#Unicode_Strings
+function b64_encode(str) {
+    return btoa(encodeURIComponent(str)).replace(/\+/g, '-').replace(/\//g, '_').replace(/\=+$/, '');
+}
+function b64_decode(str) {
+    str = (str + '===').slice(0, str.length + (str.length % 4));
+    return decodeURIComponent(atob(str.replace(/-/g, '+').replace(/_/g, '/')));
+}
+
 function share(result, version, code) {
-    var playurl = "https://play.rust-lang.org?code=" + encodeURIComponent(code);
+    // NOTE: using "enc" query parameter instead of "code" to distinguish from unencoded URLs
+    var playurl = "https://play.rust-lang.org?enc=" + b64_encode(code);
     if (version != "master") {
         playurl += "&version=" + encodeURIComponent(version);
     }
+
     if (playurl.length > 5000) {
         result.textContent = "resulting URL above character limit for sharing. " +
             "Length: " + playurl.length + "; Maximum: 5000";
@@ -155,7 +167,10 @@ addEventListener("DOMContentLoaded", function() {
     }
 
     var query = getQueryParameters();
-    if ("code" in query) {
+    if ("enc" in query) {
+        session.setValue(b64_decode(query["code"]));
+    } else if ("code" in query) {
+        // don't break any old links, keep dealing with unencoded URLs
         session.setValue(query["code"]);
     } else {
         var code = localStorage.getItem("code");
