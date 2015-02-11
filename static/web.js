@@ -1,6 +1,33 @@
 "use strict";
 
 var samples = 2;
+var themelist = ace.require("ace/ext/themelist");
+
+function build_themes() {
+    // Load all ace themes, sorted by their proper name.
+    var themes = themelist.themes;
+    themes.sort(function (a, b) {
+        if (a.caption < b.caption) {
+            return -1
+        } else if (a.caption > b.caption) {
+            return 1;
+        } else {
+            return 0;
+        }
+    });
+
+    var themecur,
+        themeopt,
+        themefrag = document.createDocumentFragment();
+    for (var i=0; i < themes.length; i++) {
+        themecur = themelist.themes[i];
+        themeopt = document.createElement('option');
+        themeopt.setAttribute('val', themecur.theme);
+        themeopt.textContent = themecur.caption;
+        themefrag.appendChild(themeopt);
+    }
+    document.getElementById('themes').appendChild(themefrag);
+}
 
 function send(path, data, callback) {
     var result = document.getElementById("result");
@@ -132,6 +159,23 @@ function set_keyboard(editor, mode) {
     }
 }
 
+function set_theme(editor, theme) {
+    var themes = document.getElementById("themes");
+    var i = 0,
+        themelen = themes.options.length;
+
+    for (i; i < themelen; i++) {
+        if (themes.options[i].text == theme) {
+            if (themes.selectedIndex !== i) {
+                themes.selectedIndex = i;
+            }
+            editor.setTheme(themes.options[i].getAttribute("val"));
+            localStorage.setItem("theme", themes.options[i].text);
+            return;
+        }
+    }
+}
+
 addEventListener("DOMContentLoaded", function() {
     var evaluateButton = document.getElementById("evaluate");
     var asmButton = document.getElementById("asm");
@@ -142,10 +186,18 @@ addEventListener("DOMContentLoaded", function() {
     var optimize = document.getElementById("optimize");
     var version = document.getElementById("version");
     var keyboard = document.getElementById("keyboard");
+    var themes = document.getElementById("themes");
     var editor = ace.edit("editor");
     var session = editor.getSession();
+    build_themes();
 
-    editor.setTheme("ace/theme/github");
+    var theme = localStorage.getItem("theme");
+    if (theme === null) {
+        set_theme(editor, "GitHub");
+    } else {
+        set_theme(editor, theme);
+    }
+
     session.setMode("ace/mode/rust");
 
     var mode = localStorage.getItem("keyboard");
@@ -187,7 +239,7 @@ addEventListener("DOMContentLoaded", function() {
         evaluate(result, session.getValue(), version.options[version.selectedIndex].text,
                  optimize.options[optimize.selectedIndex].value);
     };
-    
+
     editor.commands.addCommand({
         name: "evaluate",
         exec: evaluateButton.onclick,
@@ -211,4 +263,9 @@ addEventListener("DOMContentLoaded", function() {
     shareButton.onclick = function() {
         share(result, version.value, session.getValue());
     };
+
+    themes.onchange = function () {
+        set_theme(editor, themes.selectedOptions[0].text);
+    }
+
 }, false);
