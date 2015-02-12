@@ -159,14 +159,13 @@ function set_theme(editor, themelist, theme) {
     var themes = document.getElementById("themes");
     var themepath = null,
         i = 0,
-        themelen = themelist.themes.length;
-    if (themes.options[themes.selectedIndex].textContent === theme) {
-        console.log('using option value: ' + themes.options[themes.selectedIndex].textContent);
-        themepath = themes.options[themes.selectedIndex].getAttribute("val");
+        themelen = themelist.themes.length,
+        selected = themes.options[themes.selectedIndex];
+    if (selected.textContent === theme) {
+        themepath = selected.getAttribute("val");
     } else {
         for (i; i < themelen; i++) {
             if (themelist.themes[i].caption == theme) {
-                console.log('found theme: ' + themelist.themes[i].caption);
                 themes.selectedIndex = i;
                 themepath = themelist.themes[i].theme;
                 break;
@@ -176,7 +175,6 @@ function set_theme(editor, themelist, theme) {
     if (themepath !== null) {
         editor.setTheme(themepath);
         localStorage.setItem("theme", theme);
-        console.log('saved theme: ' + theme);
     }
 }
 
