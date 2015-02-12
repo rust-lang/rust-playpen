@@ -1,9 +1,8 @@
 "use strict";
 
 var samples = 2;
-var themelist = ace.require("ace/ext/themelist");
 
-function build_themes() {
+function build_themes(themelist) {
     // Load all ace themes, sorted by their proper name.
     var themes = themelist.themes;
     themes.sort(function (a, b) {
@@ -11,22 +10,19 @@ function build_themes() {
             return -1
         } else if (a.caption > b.caption) {
             return 1;
-        } else {
-            return 0;
         }
+        return 0;
     });
 
-    var themecur,
-        themeopt,
+    var themeopt,
         themefrag = document.createDocumentFragment();
     for (var i=0; i < themes.length; i++) {
-        themecur = themelist.themes[i];
-        themeopt = document.createElement('option');
-        themeopt.setAttribute('val', themecur.theme);
-        themeopt.textContent = themecur.caption;
+        themeopt = document.createElement("option");
+        themeopt.setAttribute("val", themes[i].theme);
+        themeopt.textContent = themes[i].caption;
         themefrag.appendChild(themeopt);
     }
-    document.getElementById('themes').appendChild(themefrag);
+    document.getElementById("themes").appendChild(themefrag);
 }
 
 function send(path, data, callback) {
@@ -159,20 +155,28 @@ function set_keyboard(editor, mode) {
     }
 }
 
-function set_theme(editor, theme) {
+function set_theme(editor, themelist, theme) {
     var themes = document.getElementById("themes");
-    var i = 0,
-        themelen = themes.options.length;
-
-    for (i; i < themelen; i++) {
-        if (themes.options[i].text == theme) {
-            if (themes.selectedIndex !== i) {
+    var themepath = null,
+        i = 0,
+        themelen = themelist.themes.length;
+    if (themes.options[themes.selectedIndex].textContent === theme) {
+        console.log('using option value: ' + themes.options[themes.selectedIndex].textContent);
+        themepath = themes.options[themes.selectedIndex].getAttribute("val");
+    } else {
+        for (i; i < themelen; i++) {
+            if (themelist.themes[i].caption == theme) {
+                console.log('found theme: ' + themelist.themes[i].caption);
                 themes.selectedIndex = i;
+                themepath = themelist.themes[i].theme;
+                break;
             }
-            editor.setTheme(themes.options[i].getAttribute("val"));
-            localStorage.setItem("theme", themes.options[i].text);
-            return;
         }
+    }
+    if (themepath !== null) {
+        editor.setTheme(themepath);
+        localStorage.setItem("theme", theme);
+        console.log('saved theme: ' + theme);
     }
 }
 
@@ -189,13 +193,15 @@ addEventListener("DOMContentLoaded", function() {
     var themes = document.getElementById("themes");
     var editor = ace.edit("editor");
     var session = editor.getSession();
-    build_themes();
+    var themelist = ace.require("ace/ext/themelist");
+
+    build_themes(themelist);
 
     var theme = localStorage.getItem("theme");
     if (theme === null) {
-        set_theme(editor, "GitHub");
+        set_theme(editor, themelist, "GitHub");
     } else {
-        set_theme(editor, theme);
+        set_theme(editor, themelist, theme);
     }
 
     session.setMode("ace/mode/rust");
@@ -265,7 +271,7 @@ addEventListener("DOMContentLoaded", function() {
     };
 
     themes.onchange = function () {
-        set_theme(editor, themes.selectedOptions[0].text);
+        set_theme(editor, themelist, themes.selectedOptions[0].text);
     }
 
 }, false);
