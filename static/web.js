@@ -2,6 +2,22 @@
 
 var samples = 2;
 
+function optionalLocalStorageGetItem(key) {
+    try {
+        return localStorage.getItem(key);
+    } catch(e) {
+        return null;
+    }
+}
+
+function optionalLocalStorageSetItem(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch(e) {
+        // ignore
+    }
+}
+
 function build_themes(themelist) {
     // Load all ace themes, sorted by their proper name.
     var themes = themelist.themes;
@@ -174,10 +190,7 @@ function set_theme(editor, themelist, theme) {
     }
     if (themepath !== null) {
         editor.setTheme(themepath);
-        try {
-            localStorage.setItem("theme", theme);
-        } catch(e) {
-        }
+        optionalLocalStorageSetItem("theme", theme);
     }
 }
 
@@ -198,11 +211,7 @@ addEventListener("DOMContentLoaded", function() {
 
     build_themes(themelist);
 
-    try {
-        var theme = localStorage.getItem("theme");
-    } catch(e) {
-        var theme = null;
-    }
+    var theme = optionalLocalStorageGetItem("theme");
     if (theme === null) {
         set_theme(editor, themelist, "GitHub");
     } else {
@@ -211,25 +220,19 @@ addEventListener("DOMContentLoaded", function() {
 
     session.setMode("ace/mode/rust");
 
-    try {
-        var mode = localStorage.getItem("keyboard");
-        if (mode !== null) {
-            set_keyboard(editor, mode);
-            keyboard.value = mode;
-        }
-    } catch(e) {
+    var mode = optionalLocalStorageGetItem("keyboard");
+    if (mode !== null) {
+        set_keyboard(editor, mode);
+        keyboard.value = mode;
     }
 
     var query = getQueryParameters();
     if ("code" in query) {
         session.setValue(query["code"]);
     } else {
-        try {
-            var code = localStorage.getItem("code");
-            if (code !== null) {
-                session.setValue(code);
-            }
-        } catch(e) {
+        var code = optionalLocalStorageGetItem("code");
+        if (code !== null) {
+            session.setValue(code);
         }
     }
 
@@ -243,18 +246,12 @@ addEventListener("DOMContentLoaded", function() {
     }
 
     session.on("change", function() {
-        try {
-            localStorage.setItem("code", session.getValue());
-        } catch(e) {
-        }
+        optionalLocalStorageSetItem("code", session.getValue());
     });
 
     keyboard.onchange = function() {
         var mode = keyboard.options[keyboard.selectedIndex].value;
-        try {
-            localStorage.setItem("keyboard", mode);
-        } catch(e) {
-        }
+        optionalLocalStorageSetItem("keyboard", mode);
         set_keyboard(editor, mode);
     }
 
