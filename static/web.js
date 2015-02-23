@@ -2,6 +2,22 @@
 
 var samples = 2;
 
+function optionalLocalStorageGetItem(key) {
+    try {
+        return localStorage.getItem(key);
+    } catch(e) {
+        return null;
+    }
+}
+
+function optionalLocalStorageSetItem(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch(e) {
+        // ignore
+    }
+}
+
 function build_themes(themelist) {
     // Load all ace themes, sorted by their proper name.
     var themes = themelist.themes;
@@ -174,7 +190,7 @@ function set_theme(editor, themelist, theme) {
     }
     if (themepath !== null) {
         editor.setTheme(themepath);
-        localStorage.setItem("theme", theme);
+        optionalLocalStorageSetItem("theme", theme);
     }
 }
 
@@ -195,7 +211,7 @@ addEventListener("DOMContentLoaded", function() {
 
     build_themes(themelist);
 
-    var theme = localStorage.getItem("theme");
+    var theme = optionalLocalStorageGetItem("theme");
     if (theme === null) {
         set_theme(editor, themelist, "GitHub");
     } else {
@@ -204,7 +220,7 @@ addEventListener("DOMContentLoaded", function() {
 
     session.setMode("ace/mode/rust");
 
-    var mode = localStorage.getItem("keyboard");
+    var mode = optionalLocalStorageGetItem("keyboard");
     if (mode !== null) {
         set_keyboard(editor, mode);
         keyboard.value = mode;
@@ -214,7 +230,7 @@ addEventListener("DOMContentLoaded", function() {
     if ("code" in query) {
         session.setValue(query["code"]);
     } else {
-        var code = localStorage.getItem("code");
+        var code = optionalLocalStorageGetItem("code");
         if (code !== null) {
             session.setValue(code);
         }
@@ -230,12 +246,12 @@ addEventListener("DOMContentLoaded", function() {
     }
 
     session.on("change", function() {
-        localStorage.setItem("code", session.getValue());
+        optionalLocalStorageSetItem("code", session.getValue());
     });
 
     keyboard.onchange = function() {
         var mode = keyboard.options[keyboard.selectedIndex].value;
-        localStorage.setItem("keyboard", mode);
+        optionalLocalStorageSetItem("keyboard", mode);
         set_keyboard(editor, mode);
     }
 
