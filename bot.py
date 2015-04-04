@@ -17,7 +17,6 @@ import shorten_key
 
 irc_template = """\
 #![allow(dead_code, unused_variables)]
-#![allow(unused_features)]
 
 static VERSION: &'static str = "%(version)s";
 
