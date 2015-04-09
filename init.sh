@@ -32,8 +32,8 @@ rm -rf root-beta.new
 cp -a root-nightly.new root-beta.new
 
 curl -O https://static.rust-lang.org/rustup.sh
-sh rustup.sh --prefix=root-nightly.new --channel=nightly --components=rustc
-sh rustup.sh --prefix=root-beta.net --channel=beta --components=rustc
+sh rustup.sh --prefix=root-nightly.new --channel=nightly
+sh rustup.sh --prefix=root-beta.new --channel=beta
 rm rustup.sh
 
 [[ -d root-nightly ]] && mv root-nightly root-nightly.old
