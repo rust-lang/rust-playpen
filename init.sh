@@ -6,10 +6,10 @@ cd "${BASH_SOURCE%/*}"
 
 umask 022
 
-rm -rf root-master.new
-mkdir root-master.new
+rm -rf root-nightly.new
+mkdir root-nightly.new
 
-pacstrap -c -d root-master.new \
+pacstrap -c -d root-nightly.new \
     bash \
     coreutils \
     grep \
@@ -22,25 +22,24 @@ pacstrap -c -d root-master.new \
     util-linux \
     gcc
 
-mkdir root-master.new/dev/shm
-mknod -m 666 root-master.new/dev/null c 1 3
-mknod -m 644 root-master.new/dev/urandom c 1 9
-arch-chroot root-master.new useradd -m rust
-install -m755 bin/* root-master.new/usr/local/bin
+mkdir root-nightly.new/dev/shm
+mknod -m 666 root-nightly.new/dev/null c 1 3
+mknod -m 644 root-nightly.new/dev/urandom c 1 9
+arch-chroot root-nightly.new useradd -m rust
+install -m755 bin/* root-nightly.new/usr/local/bin
 
-#rm -rf root-0.12.0.new
-#cp -a root-master.new root-0.12.0.new
-#pacman -r root-master.new -S rust-git --noconfirm
-#pacman -r root-0.12.0.new -S rust --noconfirm
+rm -rf root-beta.new
+cp -a root-nightly.new root-beta.new
 
 curl -O https://static.rust-lang.org/rustup.sh
-sh rustup.sh --prefix=root-master.new
+sh rustup.sh --prefix=root-nightly.new --channel=nightly
+sh rustup.sh --prefix=root-beta --channel=beta
 rm rustup.sh
 
-[[ -d root-master ]] && mv root-master root-master.old
-mv root-master.new root-master
-[[ -d root-master.old ]] && rm -rf root-master.old
+[[ -d root-nightly ]] && mv root-nightly root-nightly.old
+mv root-nightly.new root-nightly
+[[ -d root-nightly.old ]] && rm -rf root-nightly.old
 
-#[[ -d root-0.12.0 ]] && mv root-0.12.0 root-0.12.0.old
-#mv root-0.12.0.new root-0.12.0
-#[[ -d root-0.12.0.old ]] && rm -rf root-0.12.0.old
+[[ -d root-beta ]] && mv root-beta root-beta.old
+mv root-beta.new root-beta
+[[ -d root-beta.old ]] && rm -rf root-beta.old
