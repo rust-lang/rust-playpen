@@ -164,6 +164,7 @@ button.primary:hover, button.primary:focus, button.primary:active {
 
 .radios > :first-child {
     position: absolute;
+    cursor: default;
     left: 4px;
     right: 4px;
     border-radius: 4px 4px 0 0;

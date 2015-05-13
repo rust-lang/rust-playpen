@@ -24,7 +24,11 @@
 				><button type=button id=share title="Share a link to your code">Share</button
 			></div
 			><wbr><div class=radios
-				><div>Optimizations</div
+				><div title="Select an optimization level:
+ · 0: no optimizations; debug assertions on
+ · 1: fast optimizations; debug assertions off
+ · 2: normal optimizations; debug assertions off
+ · 3: all optimizations; debug assertions off">Optimizations</div
 				><div
 					><input type=radio name=optimize id=optimize-0 value=0><label for=optimize-0 title="Optimization level 0: no optimizations; debug assertions on">0</label
 					><input type=radio name=optimize id=optimize-1 value=1><label for=optimize-1 title="Optimization level 1: fast optimizations; debug assertions off">1</label
@@ -33,7 +37,10 @@
 				></div
 			></div
 			><wbr><div class=radios
-				><div>Channel</div
+				><div title="Select which version of rustc to use:
+ · Stable: use this normally; stable features only.
+ · Beta: the next version; stable features only.
+ · Nightly: cutting edge; unstable features allowed.">Channel</div
 				><div
 					><input type=radio name=version id=version-beta value=beta checked><label for=version-beta title="Use the beta channel">Beta</label
 					><input type=radio name=version id=version-nightly value=nightly><label for=version-nightly title="Use the nightly channel">Nightly</label
