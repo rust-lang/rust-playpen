@@ -1,43 +1,61 @@
 <!doctype html>
 <html lang="en">
     <head>
-        <title>rust playpen</title>
+        <title>Rust Playground</title>
         <meta charset="utf-8"/>
-        <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro:400,700"/>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700"/>
         <link rel="stylesheet" href="web.css"/>
         <link rel="shortcut icon" href="http://www.rust-lang.org/favicon.ico"/>
-        <script src="//cdn.jsdelivr.net/ace/1.1.9/min/ace.js" charset="utf-8"></script>
-        <script src="//cdn.jsdelivr.net/ace/1.1.9/min/ext-themelist.js" charset="utf-8"></script>
+        <script src="https://cdn.jsdelivr.net/ace/1.1.9/min/ace.js" charset="utf-8"></script>
+        <script src="https://cdn.jsdelivr.net/ace/1.1.9/min/ext-themelist.js" charset="utf-8"></script>
         <script src="web.js"></script>
     </head>
     <body>
-        <p id="control">
-            <button id="evaluate">evaluate</button>
-            <button id="asm">asm</button>
-            <button id="llvm-ir">LLVM IR</button>
-            <button id="format">format</button>
-            <button id="share">share</button>
-            <select id="optimize">
-                <option value="0">-O0</option>
-                <option value="1">-O1</option>
-                <option value="2" selected="true">-O2</option>
-                <option value="3">-O3</option>
-            </select>
-            <select id="version">
-                <option>beta</option>
-                <option>nightly</option>
-            </select>
-            <select id="keyboard">
-                <option>Ace</option>
-                <option>Emacs</option>
-                <option>Vim</option>
-            </select>
-            <select id="themes">
-            </select>
-        </p>
-        <div id="editor">fn main() {
-    println!("Hello, world!")
+        <form id="control">
+			<div
+				><button type=button class=primary id=evaluate title="Execute your code (you can also press Ctrl+Enter when editing code)">Run</button
+				><button type=button id=asm title="Compile to ASM">ASM</button
+				><button type=button id=llvm-ir title="Compile to LLVM IR">LLVM IR</button
+			></div
+			><wbr><div
+				><button type=button id=format title="Automatically visually reformat your code">Format</button
+			></div
+			><wbr><div
+				><button type=button id=share title="Share a link to your code">Share</button
+			></div
+			><wbr><div class=radios
+				><div>Optimizations</div
+				><div
+					><input type=radio name=optimize id=optimize-0 value=0><label for=optimize-0 title="Optimization level 0: no optimizations">0</label
+					><input type=radio name=optimize id=optimize-1 value=1><label for=optimize-1 title="Optimization level 1: fast optimizations">1</label
+					><input type=radio name=optimize id=optimize-2 value=2 checked><label for=optimize-2 title="Optimization level 2: normal (fairly thorough) optimizations">2</label
+					><input type=radio name=optimize id=optimize-3 value=3><label for=optimize-3 title="Optimization level 3: all available optimizations">3</label
+				></div
+			></div
+			><wbr><div class=radios
+				><div>Channel</div
+				><div
+					><input type=radio name=version id=version-beta value=beta checked><label for=version-beta title="Use the beta channel">Beta</label
+					><input type=radio name=version id=version-nightly value=nightly><label for=version-nightly title="Use the nightly channel">Nightly</label
+				></div
+			></div
+			><wbr><div class=right-c-e
+				><button type=button id=configure-editor><span>Configure editor</span></button
+				><div class=dropdown>
+					<p><label for=keyboard>Keyboard bindings:</label>
+					<select name=keyboard id=keyboard>
+						<option>Ace</option>
+						<option>Emacs</option>
+						<option>Vim</option>
+					</select>
+					<p><label for=themes>Theme:</label>
+					<select name=themes id=themes></select>
+				</div
+			></div>
+        </form>
+        <div id=editor>fn main() {
+    println!("Hello, world!");
 }</div>
-        <pre id="result" class="highlight"></pre>
+        <div id=result></div>
     </body>
 </html>
