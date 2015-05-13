@@ -184,6 +184,9 @@ button.primary:hover, button.primary:focus, button.primary:active {
     line-height: 0;
     padding: 0.25em;
     border-radius: 4px;
+    /* Because it’s a button some superfluous width seems to get inserted in Firefox, dunno why. */
+    width: 16px;
+    box-sizing: content-box;
 }
 
 .right-c-e {
