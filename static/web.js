@@ -1,5 +1,8 @@
 "use strict";
 
+// For convenience of development
+var PREFIX = location.href.indexOf("/web.html") != -1 ? "https://play.rust-lang.org/" : "/";
+
 var samples = 2;
 
 function optionalLocalStorageGetItem(key) {
@@ -41,15 +44,17 @@ function build_themes(themelist) {
     document.getElementById("themes").appendChild(themefrag);
 }
 
-function send(path, data, callback) {
+function send(path, data, callback, button, message) {
+    button.disabled = true;
     var result = document.getElementById("result");
 
-    result.textContent = "Running...";
+    result.innerHTML = "<p class=message>" + message;
 
     var request = new XMLHttpRequest();
-    request.open("POST", path, true);
+    request.open("POST", PREFIX + path, true);
     request.setRequestHeader("Content-Type", "application/json");
     request.onreadystatechange = function() {
+        button.disabled = false;
         if (request.readyState == 4) {
             var json;
 
@@ -62,91 +67,123 @@ function send(path, data, callback) {
             if (request.status == 200) {
                 callback(json);
             } else {
-                result.textContent = "connection failure";
+                result.innerHTML = "<p class=error>Connection failure" +
+                    "<p class=error-explanation>Are you connected to the Internet?";
             }
         }
     }
     request.timeout = 10000;
     request.ontimeout = function() {
-        result.textContent = "connection timed out"
+        result.innerHTML = "<p class=error>Connection timed out" +
+            "<p class=error-explanation>Are you connected to the Internet?";
     }
     request.send(JSON.stringify(data));
 }
 
-function evaluate(result, code, version, optimize) {
-    send("/evaluate.json", {code: code, version: version, optimize: optimize},
-         function(object) {
-          result.textContent = object["result"];
+function evaluate(result, code, version, optimize, button) {
+    send("evaluate.json", {code: code, version: version, optimize: optimize, separate_output: true},
+        function(object) {
+            result.textContent = "";
+            var samp = document.createElement("samp");
+            samp.className = ("program" in object) ? "rustc-warnings" : "rustc-errors";
+            samp.textContent = object.rustc;
+            var pre = document.createElement("pre");
+            pre.appendChild(samp);
+            result.appendChild(pre);
+            if ("program" in object) {
+                var samp = document.createElement("samp");
+                samp.className = "output";
+                samp.textContent = object.program;
+                var pre = document.createElement("pre");
+                pre.appendChild(samp);
+                result.appendChild(pre);
 
-          var div = document.createElement("div");
-          div.className = "message";
-          div.textContent = "Program ended.";
-          result.appendChild(div);
-    });
+                var div = document.createElement("p");
+                div.className = "message";
+                div.textContent = "Program ended.";
+                result.appendChild(div);
+            }
+    }, button, "Running…");
 }
 
-function compile(emit, result, code, version, optimize) {
-    send("/compile.json", {emit: emit, code: code, version: version, optimize: optimize,
-                           highlight: true},
-         function(object) {
-          if ("error" in object) {
-              result.textContent = object["error"];
-          } else {
-              result.innerHTML = object["result"];
-          }
-    });
+function compile(emit, result, code, version, optimize, button) {
+    send("compile.json", {emit: emit, code: code, version: version, optimize: optimize,
+                          highlight: true}, function(object) {
+        if ("error" in object) {
+            result.innerHTML = "<pre class=highlight><samp class=rustc-errors></samp></pre>";
+            result.firstChild.firstChild.textContent = object["error"];
+        } else {
+            result.innerHTML = "<pre class=highlight><code>" + object["result"] + "</code></pre>";
+        }
+    }, button, "Compiling…");
 }
 
-function format(result, session, version) {
-    send("/format.json", {code: session.getValue(), version: version}, function(object) {
-          if ("error" in object) {
-              result.textContent = object["error"];
-          } else {
-              result.textContent = "";
-              session.setValue(object["result"]);
-          }
-    });
+function format(result, session, version, button) {
+    send("format.json", {code: session.getValue(), version: version}, function(object) {
+        if ("error" in object) {
+            result.innerHTML = "<pre class=highlight><samp class=rustc-errors></samp></pre>";
+            result.firstChild.firstChild.textContent = object["error"];
+        } else {
+            result.textContent = "";
+            session.setValue(object["result"]);
+        }
+    }, button, "Formatting…");
 }
 
-function share(result, version, code) {
+function share(result, version, code, button) {
     var playurl = "https://play.rust-lang.org?code=" + encodeURIComponent(code);
-    if (version != "master") {
-        playurl += "&version=" + encodeURIComponent(version);
-    }
+    playurl += "&version=" + encodeURIComponent(version);
     if (playurl.length > 5000) {
-        result.textContent = "resulting URL above character limit for sharing. " +
-            "Length: " + playurl.length + "; Maximum: 5000";
+        result.innerHTML = "<p class=error>Sorry, your code is too long to share this way." +
+            "<p class=error-explanation>At present, sharing produces a link containing the" +
+            " code in the URL, and the URL shortener used doesn’t accept URLs longer than" +
+            " <strong>5000</strong> characters. Your code results in a link that is <strong>" +
+            playurl.length + "</strong> characters long. Try shortening your code.";
         return;
     }
 
     var url = "https://is.gd/create.php?format=json&url=" + encodeURIComponent(playurl);
 
+    button.disabled = true;
     var request = new XMLHttpRequest();
     request.open("GET", url, true);
 
+    /*
+    var p = document.createElement("p");
+    p.className = "message";
+    p.textContent = "Shortening ";
+    p.appendChild(a);
+    result.innerHTML = "<p class=message>Shortening link…";
+    result.firstChild.firstChild
+    */
+
+    result.innerHTML = "<p>Short URL: ";
+    var link = document.createElement("a");
+    link.href = link.textContent = playurl;
+    link.className = "shortening-link";
+    result.firstChild.appendChild(link);
+
     request.onreadystatechange = function() {
+        button.disabled = false;
         if (request.readyState == 4) {
             if (request.status == 200) {
-                setResponse(JSON.parse(request.responseText)['shorturl']);
+                var link = result.firstChild.firstElementChild;
+                link.className = "";
+                link.href = link.textContent = JSON.parse(request.responseText)['shorturl'];
+                // Sadly the fun letter-spacing animation can leave artefacts,
+                // so we want to manually trigger a redraw. It doesn’t matter
+                // whether it’s relative or static for now, so we’ll flip that.
+                result.style.position = "relative";
+                result.offsetHeight;
+                result.style.position = "";
             } else {
-                result.textContent = "connection failure";
+                result.innerHTML = "<p class=error>Connection failure" +
+                    "<p class=error-explanation>Are you connected to the Internet?";
             }
         }
     }
 
     request.send();
-
-    function setResponse(shorturl) {
-        while(result.firstChild) {
-            result.removeChild(result.firstChild);
-        }
-
-        var link = document.createElement("a");
-        link.href = link.textContent = shorturl;
-
-        result.textContent = "short url: ";
-        result.appendChild(link);
-    }
 }
 
 function getQueryParameters() {
@@ -166,6 +203,15 @@ function set_keyboard(editor, mode) {
         editor.setKeyboardHandler("ace/keyboard/emacs");
     } else if (mode == "Vim") {
         editor.setKeyboardHandler("ace/keyboard/vim");
+        if (!set_keyboard.vim_set_up) {
+            ace.config.loadModule("ace/keyboard/vim", function(m) {
+                var Vim = ace.require("ace/keyboard/vim").CodeMirror.Vim;
+                Vim.defineEx("write", "w", function(cm, input) {
+                    cm.ace.execCommand("evaluate");
+                });
+            });
+        }
+        set_keyboard.vim_set_up = true;
     } else {
         editor.setKeyboardHandler(null);
     }
@@ -194,15 +240,24 @@ function set_theme(editor, themelist, theme) {
     }
 }
 
+function getRadioValue(name) {
+    var nodes = document.getElementsByName(name);
+    for (var i = 0; i < nodes.length; i++) {
+        var node = nodes[i];
+        if (node.checked) {
+            return node.value;
+        }
+    }
+}
+
 addEventListener("DOMContentLoaded", function() {
     var evaluateButton = document.getElementById("evaluate");
     var asmButton = document.getElementById("asm");
     var irButton = document.getElementById("llvm-ir");
     var formatButton = document.getElementById("format");
     var shareButton = document.getElementById("share");
+    var configureEditorButton = document.getElementById("configure-editor");
     var result = document.getElementById("result");
-    var optimize = document.getElementById("optimize");
-    var version = document.getElementById("version");
     var keyboard = document.getElementById("keyboard");
     var themes = document.getElementById("themes");
     var editor = ace.edit("editor");
@@ -237,12 +292,15 @@ addEventListener("DOMContentLoaded", function() {
     }
 
     if ("version" in query) {
-        version.value = query["version"];
+        var radio = document.getElementById("version-" + query.version);
+        if (radio !== null) {
+            radio.checked = true;
+        }
     }
 
     if (query["run"] === "1") {
-        evaluate(result, session.getValue(), version.options[version.selectedIndex].text,
-                 optimize.options[optimize.selectedIndex].value);
+        evaluate(result, session.getValue(), getRadioValue("version"),
+                 getRadioValue("optimize"), evaluateButton);
     }
 
     session.on("change", function() {
@@ -256,8 +314,8 @@ addEventListener("DOMContentLoaded", function() {
     }
 
     evaluateButton.onclick = function() {
-        evaluate(result, session.getValue(), version.options[version.selectedIndex].text,
-                 optimize.options[optimize.selectedIndex].value);
+        evaluate(result, session.getValue(), getRadioValue("version"),
+                 getRadioValue("optimize"), evaluateButton);
     };
 
     editor.commands.addCommand({
@@ -267,21 +325,26 @@ addEventListener("DOMContentLoaded", function() {
     });
 
     asmButton.onclick = function() {
-        compile("asm", result, session.getValue(), version.options[version.selectedIndex].text,
-                 optimize.options[optimize.selectedIndex].value);
+        compile("asm", result, session.getValue(), getRadioValue("version"),
+                 getRadioValue("optimize"), asmButton);
     };
 
     irButton.onclick = function() {
-        compile("llvm-ir", result, session.getValue(), version.options[version.selectedIndex].text,
-                 optimize.options[optimize.selectedIndex].value);
+        compile("llvm-ir", result, session.getValue(), getRadioValue("version"),
+                 getRadioValue("optimize"), irButton);
     };
 
     formatButton.onclick = function() {
-        format(result, session, version.options[version.selectedIndex].text);
+        format(result, session, getRadioValue("version"), formatButton);
     };
 
     shareButton.onclick = function() {
-        share(result, version.value, session.getValue());
+        share(result, getRadioValue("version"), session.getValue(), shareButton);
+    };
+
+    configureEditorButton.onclick = function() {
+        var dropdown = configureEditorButton.nextElementSibling;
+        dropdown.style.display = dropdown.style.display ? "" : "block";
     };
 
     themes.onchange = function () {

@@ -1,37 +1,408 @@
-body, #control {
-    margin: 5px;
+:root {
+    background-color: #f0f0ea;
+    background-image: linear-gradient(#e0e0da, #f0f0ea 400px);
+    background-image: linear-gradient(#e0e0da, #f0f0ea 50vh);
+    background-repeat: no-repeat;
+    color: #202020;
+    height: 100%;
+}
+
+:root::before {
+    content: url("data:image/svg+xml,%3C?xml version='1.0' standalone='no'?%3E%3Csvg xmlns='http://www.w3.org/2000/svg' width='375' height='375' viewBox='0 0 375 375' version='1.1'%3E%3Cpath fill='%23000' stroke-width='0' d='M 57.576172 0 L 58.839844 3.3339844 C 57.724721 5.0777244 56.625235 6.8348244 55.554688 8.6152344 L 31.044922 10.974609 C 28.5576 11.213169 26.367188 12.724329 25.259766 14.974609 C 24.153586 17.220249 24.288593 19.872577 25.613281 21.998047 L 38.6875 42.919922 C 37.94515 44.822902 37.221408 46.746075 36.527344 48.671875 L 12.888672 55.789062 C 10.495245 56.507793 8.6432536 58.415371 7.9941406 60.837891 C 7.3450276 63.260421 7.9962997 65.837804 9.7109375 67.652344 L 26.623047 85.636719 C 26.259984 87.656169 25.925782 89.678056 25.617188 91.697266 L 3.8320312 103.2832 C 1.6233139 104.45696 0.17923013 106.69228 0.015625 109.18555 C -0.15045385 111.68804 0.99182659 114.08613 3.0253906 115.54102 L 23.072266 129.83984 C 23.109176 131.917 23.183491 133.98895 23.277344 136.05664 L 4.2109375 151.63477 C 2.2722184 153.22213 1.2888267 155.69267 1.6191406 158.16992 C 1.946982 160.65638 3.5353285 162.79419 5.8183594 163.81641 L 28.277344 173.92969 C 28.718361 175.95686 29.189024 177.96222 29.689453 179.9707 L 14.013672 198.97852 C 12.417965 200.91001 11.937758 203.52751 12.746094 205.90039 C 13.553194 208.27789 15.532818 210.06991 17.962891 210.61719 L 42.015625 216.16602 C 42.84147 218.04903 43.68346 219.90181 44.552734 221.75195 L 32.863281 243.51172 C 31.678986 245.71666 31.716753 248.36133 32.974609 250.5332 C 34.216148 252.71058 36.509291 254.06253 39.015625 254.14062 L 63.695312 254.89258 C 64.860504 256.57968 66.05525 258.23657 67.267578 259.87695 L 60.048828 283.49609 C 59.309942 285.88466 59.872588 288.48854 61.523438 290.375 C 63.166297 292.25438 65.677826 293.14466 68.148438 292.72852 L 92.453125 288.66211 C 93.93773 290.09849 95.438245 291.51002 96.96875 292.9043 L 94.507812 317.4082 C 94.25497 319.90229 95.309544 322.35051 97.296875 323.86719 C 99.277122 325.39188 101.91958 325.77836 104.25781 324.89648 L 127.2793 316.16406 C 129.02308 317.27918 130.7801 318.38259 132.56055 319.45312 L 134.92383 343.95508 C 135.16243 346.44235 136.66909 348.64009 138.92188 349.73828 C 141.1651 350.8537 143.81928 350.71527 145.94141 349.38477 L 166.86719 336.3125 C 168.76774 337.06408 170.6931 337.78179 172.62109 338.48633 L 179.73828 362.125 C 180.4549 364.50792 182.36526 366.36969 184.7832 367.01758 C 187.20116 367.66547 189.78561 367.0135 191.60352 365.30469 L 209.58594 348.39258 C 211.60789 348.74643 213.63063 349.08342 215.65234 349.38281 L 227.23438 371.16602 C 228.40694 373.37933 230.63899 374.82802 233.13477 374.98242 C 235.63606 375.15314 238.03996 374.0074 239.49023 371.97266 L 253.78711 351.93555 C 255.86429 351.89865 257.93619 351.82235 260.00391 351.72852 L 275.58203 370.80273 C 277.16606 372.73558 279.64185 373.72093 282.11914 373.39062 C 284.59856 373.07081 286.73685 371.47316 287.76367 369.19141 L 297.88477 346.74023 C 299.90275 346.29676 301.91317 345.81078 303.91797 345.32422 L 322.93359 360.99805 C 324.86513 362.59375 327.4806 363.07641 329.84766 362.27148 C 332.22057 361.46318 334.00426 359.49412 334.56445 357.05273 L 340.12109 332.98828 C 341.99242 332.16923 343.85314 331.33673 345.70117 330.45703 L 367.45117 342.14453 C 369.66076 343.33006 372.31852 343.30592 374.48242 342.04102 C 374.66385 341.93659 374.83024 341.81543 375 341.69727 L 375 209.78906 C 373.77677 209.71473 372.5691 209.5804 371.39258 209.40234 C 361.8994 207.97141 352.99493 200.33757 353.24609 194.36133 C 356.00273 162.3303 348.69379 153.37472 337.41211 138.25977 C 350.7402 134.07873 364.94746 127.7659 375 117.90234 L 375 47.576172 C 373.93257 46.209252 372.87119 44.928462 371.85156 43.777344 C 358.87648 29.168104 341.98794 22.413494 337.28125 21.152344 L 258.33984 0 L 57.576172 0 z M 92.966797 10.054688 C 99.867131 10.374155 105.81824 15.499606 106.92773 22.599609 C 108.19697 30.709279 102.65402 38.328713 94.554688 39.595703 C 86.4529 40.871933 78.857844 35.329134 77.589844 27.214844 C 76.321844 19.100564 81.861106 11.49498 89.962891 10.21875 C 90.976036 10.059954 91.981035 10.009049 92.966797 10.054688 z M 122.75977 20.935547 L 147.7832 27.640625 L 117.56055 140.43359 L 67.074219 126.90625 C 66.819787 110.3395 68.824945 93.463395 73.324219 76.671875 C 75.041587 70.262565 77.085583 64.019336 79.417969 57.972656 L 113.98828 52.523438 C 121.372 51.361427 126.42597 44.426757 125.26758 37.029297 L 122.75977 20.935547 z M 226.83203 50.097656 L 286.42188 66.066406 C 289.49968 66.891106 307.20249 75.447384 303.46484 89.396484 C 300.36146 100.97844 284.94059 101.29743 273.17383 98.144531 L 217.92578 83.339844 L 226.83203 50.097656 z M 205.11133 131.12305 L 250.75781 143.35352 C 254.92463 144.47002 272.71664 150.51501 272.30469 175.2168 C 272.21039 182.82262 269.98705 207.04864 270.72266 215.19336 C 271.20793 224.23539 277.80479 243.80681 289.57617 246.96094 L 361.48242 266.22852 C 362.29917 266.44736 363.19542 266.58804 364.1582 266.66797 C 357.35375 272.10984 350.16276 277.05758 342.66406 281.47266 L 314.07031 266.82227 C 307.41118 263.4158 299.25783 266.04787 295.84766 272.7207 L 279.64844 304.38477 C 254.73311 308.51491 228.56312 307.50601 202.58398 300.54492 C 176.00957 293.42433 152.38199 280.79259 132.58789 264.22266 L 134.39453 228.70312 C 134.77518 221.22843 129.03323 214.86385 121.56641 214.49023 L 90.203125 212.91016 C 86.216435 205.76871 82.712112 198.36206 79.712891 190.72852 L 224.01367 229.39258 C 225.64716 229.83028 226.81477 229.82762 227.21289 228.3418 L 240.89062 177.29883 C 241.28875 175.81302 240.27998 175.22481 238.64648 174.78711 L 196.44141 163.47852 L 205.11133 131.12305 z M 103.69727 229.5332 C 111.88412 229.95139 118.18869 236.93298 117.77148 245.13477 C 117.35089 253.33072 110.37489 259.65061 102.19141 259.23828 C 94.000842 258.83394 87.700692 251.85537 88.113281 243.65234 C 88.538814 235.43794 95.50671 229.12886 103.69727 229.5332 z M 314.9082 287.15234 C 317.30093 287.09363 319.74116 287.61519 322.01953 288.78516 C 329.31865 292.51643 332.20319 301.48407 328.46484 308.79102 C 324.72649 316.09797 315.76912 318.9937 308.47461 315.26367 C 301.17921 311.51856 298.30091 302.56688 302.04297 295.24609 C 304.61075 290.21854 309.6442 287.28151 314.9082 287.15234 z'/%3E%3C/svg%3E");
+    position: absolute;
+    top: 0;
+    right: 0;
+    opacity: 0.3;
+    z-index: -1;
+    display: block;
+}
+
+:root, button {
+    line-height: 1.4;
+}
+
+:root, button, label {
+    font-family: sans-serif;
+    font-size: 1rem;
 }
 
 .message {
     color: #999;
+    font-style: italic;
 }
 
-#editor, #result {
-    font-size: 11pt;
-    font-family: "Source Code Pro", monospace;
-    border: 3px solid #ccc;
+.error {
+    font-weight: bold;
+    color: #931;
+}
+
+.rustc-errors {
+    color: #931;
+}
+
+.rustc-warnings {
+    color: #971;
+}
+
+.shortening-link {
+    color: #ddf;
+    position: relative;
+    letter-spacing: -1ex;
+    -webkit-animation: scrunch-letters 2s;
+    -ms-animation: scrunch-letters 2s;
+    -o-animation: scrunch-letters 2s;
+    animation: scrunch-letters 2s;
+}
+
+@-webkit-keyframes scrunch-letters {
+    0% { letter-spacing: 0; }
+    10% { letter-spacing: 0; }
+}
+
+@-o-keyframes scrunch-letters {
+    0% { letter-spacing: 0; }
+    10% { letter-spacing: 0; }
+}
+
+@keyframes scrunch-letters {
+    0% { letter-spacing: 0; }
+    10% { letter-spacing: 0; }
+}
+
+.shortening-link::before {
+    content: "shrinking…";
+    font-style: italic;
+    position: absolute;
+    color: #666;
+    letter-spacing: 0;
+}
+
+/*
+@media screen and (min-width: 1000px) {
+    #control::before {
+        content: "Rust Playground";
+        font-size: 2.0em;
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 0.5em;
+    }
+}
+*/
+
+#evaluate::after {
+    content: '▶';
+    margin-left: 8px;
+}
+
+#control > div {
+    margin-right: 0.5em;
+}
+
+#share { /* The last of the buttons, put in a little more space */
+    margin-right: 0.5em;
+}
+
+button:first-child {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-left-width: 1px;
+}
+
+button:last-child {
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+button {
+    color: #333;
+    background-color: #fff;
+    border: 1px solid rgba(153, 153, 153, 0.5);
+    border-left-width: 0;
+    padding: 0.25em 0.5em;
+    vertical-align: middle;
+    cursor: pointer;
+    outline: 0;
+}
+
+button::-moz-focus-inner {
+    border: 0;
+}
+
+label {
+    cursor: pointer;
+}
+
+button:hover, button:focus, button:active {
+    background: #ebebeb;
+}
+
+button.primary {
+    color: #fff;
+    background-color: #a42;
+    border-width: 0;
+    font-size: 1.4em;
+    border-radius: 4px;
+}
+
+button.primary:hover, button.primary:focus, button.primary:active {
+    background-color: #931;
+}
+
+#control > * {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.radios {
+    position: relative;
+}
+
+.radios > :first-child {
+    position: absolute;
+    cursor: default;
+    left: 4px;
+    right: 4px;
+    border-radius: 4px 4px 0 0;
+    top: -1.4em;
+    font-size: 0.8em;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.radios > :last-child {
+    white-space: nowrap;
+    background: #fff;
+    border-radius: 4px;
+}
+
+#configure-editor {
+    line-height: 0;
+    padding: 0.25em;
+    border-radius: 4px;
+    /* Because it’s a button some superfluous width seems to get inserted in Firefox, dunno why. */
+    width: 16px;
+    box-sizing: content-box;
+}
+
+.right-c-e {
+    /* Because of float: right we can’t use vertical-align: middle and so compensate manually */
+    float: right;
+    margin-top: 0.5em;
+}
+
+#configure-editor span {
+    background: url("data:image/svg+xml,%3C?xml version='1.0' standalone='no'?%3E%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' version='1.1'%3E%3Cpath fill='%23a42' stroke='%23931' stroke-width='1' d='M 7,0.5 6.5,1 6.5,3 6,3.5 5.5,3.5 4,2 3,2 2,3 2,4 3.5,5.5 3.5,6 3,6.5 1,6.5 0.5,7 l 0,2 0.5,0.5 2,0 0.5,0.5 0,0.5 -1.5,1.5 0,1 1,1 1,0 1.5,-1.5 0.5,0 0.5,0.5 0,2 0.5,0.5 2,0 0.5,-0.5 0,-2 0.5,-0.5 0.5,0 1.5,1.5 1,0 1,-1 0,-1 -1.5,-1.5 0,-0.5 0.5,-0.5 2,0 L 15.5,9 15.5,7 15,6.5 13,6.5 12.5,6 12.5,5.5 14,4 14,3 13,2 12,2 10.5,3.5 10,3.5 9.5,3 9.5,1 9,0.5 Z m 1,5 c 1.5,0 2.5,1 2.5,2.5 0,1.5 -1,2.5 -2.5,2.5 C 6.5,10.5 5.5,9.5 5.5,8 5.5,6.5 6.5,5.5 8,5.5 Z'/%3E%3C/svg%3E");
+    background-size: 100% 100%;
+    width: 16px;
+    height: 16px;
+    text-indent: -999em;
+    display: inline-block;
+    overflow: hidden;
+}
+
+.dropdown {
+    display: none;
+    position: absolute;
+    right: 0em;
+    margin-top: 1em;
+    z-index: 100;
+    background: #fff;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    padding: 0 1em;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.dropdown::before {
+    content: "";
+    border-left: 1px solid #bbb;
+    border-top: 1px solid #bbb;
+    position: absolute;
+    width: 1em;
+    height: 1em;
+    right: 0.8em;
+    top: -1em;
+    background-color: white;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+    transform: translateY(0.414214em) rotate(45deg);
+}
+
+.radios label:first-of-type {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+
+.radios label:last-child {
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-right-width: 1px;
+}
+
+.radios label {
+    color: #333;
+    background: rgba(170, 68, 34, 0.1);
+    transition: 0.2s background;
+    border: 1px solid rgba(170, 68, 34, 0.4);
+    border-right-width: 0;
+    padding: 0.25em 0.5em;
+    display: inline-block;
+}
+
+.radios label:hover,
+.radios:focus label,
+.radios:active label {
+    background: rgba(170, 68, 34, 0.4);
+}
+
+input[type=radio] {
+    /* TODO: this should keep tab indexing, but for some reason it’s not working */
+    position: absolute;
+    visibility: hidden;
+}
+
+input[type=radio]:checked + label {
+    background: rgba(170, 68, 34, 0.5);
+    border-right-width: 1px;
+}
+
+input[type=radio]:checked + label + input + label {
+    border-left-width: 0;
+}
+
+input[type=radio]:checked + label:hover,
+input[type=radio]:checked:focus + label,
+input[type=radio]:checked:active + label {
+    background: rgba(170, 68, 34, 0.7);
+    border-right-width: 1px;
+}
+
+input[type=radio]:checked + label:hover + input + label,
+input[type=radio]:checked:focus + label + input + label,
+input[type=radio]:checked:active + label + input + label {
+    border-left-width: 0;
+}
+
+#editor, pre {
+    font-size: 0.9rem;
+    font-family: Source Code Pro, monospace;
 }
 
 #editor {
-    height: 60vh;
-    margin: 0;
+    border: 3px solid rgba(153, 153, 153, 0.5);
     border-bottom: 0;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
 }
 
 #result {
+    background: rgba(255, 255, 255, 0.5);
     overflow: auto;
-    max-height: 30vh;
-    margin: 0;
+    border: 3px solid rgba(153, 153, 153, 0.5);
     border-top: 0;
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
+    padding: 0 1em;
 }
 
 #result:not(:empty) {
     border-top: 1px solid #ccc;
 }
+
+button[disabled] {
+    position: relative;
+}
+
+button[disabled]::before {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: -1px;
+    right: -1px;
+    height: 4px;
+    background: #931;
+    opacity: 0;
+    -webkit-animation: throb 1s infinite alternate ease-in-out;
+    -ms-animation: throb 1s infinite alternate ease-in-out;
+    -o-animation: throb 1s infinite alternate ease-in-out;
+    animation: throb 1s infinite alternate ease-in-out;
+}
+
+button[disabled]:first-child::before {
+    border-bottom-left-radius: 4px;
+}
+
+button[disabled]:last-child::before {
+    border-bottom-right-radius: 4px;
+}
+
+.primary[disabled]::before {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 0 0 4px 4px;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+@-webkit-keyframes throb {
+    0% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+@-o-keyframes throb {
+    0% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+@keyframes throb {
+    0% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Layout stuff. Absolute positioning is easiest, I must confess. We could get all fancy with flexbox if we wanted to. */
+
+#control, #editor, #result {
+    position: absolute;
+    box-sizing: border-box;
+    width: unset;
+    height: unset;
+    margin: unset;
+    left: 1rem;
+    right: 1rem;
+}
+
+#control {
+    top: 1.4rem;
+    /* Actual height: 43px; */
+}
+
+#editor {
+    top: 82px; /* 81.4px = 43px (#control height) + 1.4em (#control top) + 1em (spacing between) @ 1em = 16px */
+    bottom: 30%;
+}
+
+#result {
+    top: 70%;
+    bottom: 1rem;
+}
+
+#result:empty {
+    bottom: unset;
+}
+
+/* Overrides of theme styles to make their backgrounds semi-transparent so the page background and Rust logo show through somewhat. TODO: do these some better way.
+ * The :root is to override specificity.
+ * Colours are multiplied by 2 tackily (i.e. each channel of RGB separately, HSL would be more accurate) and opacity is halved. e.g. #e8e8e8ff becomes #d1d1d17f.
+ * Those colours that that *really* didn’t seem right for retain their RGB values and gain a = 0.8.
+ */
+:root .ace-github { background: rgba(255, 255, 255, 0.5); }
+:root .ace-github .ace_gutter { background: rgba(209, 209, 209, 0.5); }
+:root .ace-github.ace_focus .ace_marker-layer .ace_active-line { background: rgba(255, 255, 153, 0.5); }
+:root .ace-github .ace_marker-layer .ace_active-line { background: rgba(235, 235, 235, 0.5); }
+:root .ace-github .ace_marker-layer .ace_selection { background: rgba(107, 171, 255, 0.5); }
+:root .ace-github .ace_marker-layer .ace_step { background: rgba(255, 255, 0, 0.8); }
+:root .ace-github .ace_marker-layer .ace_stack { background: rgba(164, 229, 101, 0.8); }
+:root .ace-github .ace_marker-layer .ace_selected-word { background: rgba(245, 245, 255, 0.5); }
+:root .ace-github .ace_print-margin { background: rgba(209, 209, 209, 0.5); }
 
 /* Pygments github style */
 .highlight .hll { background-color: #ffffcc }
