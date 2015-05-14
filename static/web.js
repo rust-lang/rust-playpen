@@ -241,6 +241,7 @@ function set_result(result, contents) {
         result.textContent = "";
         result.appendChild(contents);
     }
+    set_result.editor.resize();
 }
 
 function set_keyboard(editor, mode) {
@@ -307,6 +308,7 @@ addEventListener("DOMContentLoaded", function() {
     var keyboard = document.getElementById("keyboard");
     var themes = document.getElementById("themes");
     var editor = ace.edit("editor");
+    set_result.editor = editor;
     var session = editor.getSession();
     var themelist = ace.require("ace/ext/themelist");
 
@@ -355,6 +357,10 @@ addEventListener("DOMContentLoaded", function() {
         evaluate(result, session.getValue(), getRadioValue("version"),
                  getRadioValue("optimize"), evaluateButton);
     }
+
+    addEventListener("resize", function() {
+        editor.resize();
+    });
 
     session.on("change", function() {
         optionalLocalStorageSetItem("code", session.getValue());

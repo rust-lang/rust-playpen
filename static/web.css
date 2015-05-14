@@ -490,9 +490,12 @@ button[disabled]:last-child::before {
     #result[data-empty] {
         display: none;
     }
+}
 
-    /* 1600px divided in two allows the editor to be about 80 characters wide */
-    @media screen and (min-width: 1600px) {
+/* 1600px divided in two allows the editor to be about 80 characters wide */
+@media screen and (min-width: 1600px) {
+    /* At the time of writing, @media inside @supports was broken in Chromium; when the viewport width changed, it wouldn’t apply or remove the rules. So we invert the nesting thusly. *Sigh.* Webkit/Blink seem such toys compared with Gecko and Trident. */
+    @supports (display: flex) {
         main {
             flex-flow: row;
         }
