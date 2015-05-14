@@ -254,7 +254,7 @@ addEventListener("DOMContentLoaded", function() {
     var evaluateButton = document.getElementById("evaluate");
     var asmButton = document.getElementById("asm");
     var irButton = document.getElementById("llvm-ir");
-    var formatButton = document.getElementById("format");
+    // var formatButton = document.getElementById("format");
     var shareButton = document.getElementById("share");
     var configureEditorButton = document.getElementById("configure-editor");
     var result = document.getElementById("result");
@@ -334,9 +334,11 @@ addEventListener("DOMContentLoaded", function() {
                  getRadioValue("optimize"), irButton);
     };
 
+    /*
     formatButton.onclick = function() {
         format(result, session, getRadioValue("version"), formatButton);
     };
+    */
 
     shareButton.onclick = function() {
         share(result, getRadioValue("version"), session.getValue(), shareButton);
