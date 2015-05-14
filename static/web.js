@@ -231,6 +231,7 @@ function getQueryParameters() {
 function clear_result(result) {
     result.innerHTML = "";
     result.parentNode.setAttribute("data-empty", "");
+	set_result.editor.resize();
 }
 
 function set_result(result, contents) {
