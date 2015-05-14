@@ -324,6 +324,13 @@ addEventListener("DOMContentLoaded", function() {
         bindKey: {win: "Ctrl-Enter", mac: "Ctrl-Enter"}
     });
 
+    // We’re all pretty much agreed that such an obscure command as transposing
+    // letters hogging Ctrl-T, normally “open new tab”, is a bad thing.
+    var transposeletters = editor.commands.commands.transposeletters;
+    editor.commands.removeCommand("transposeletters");
+    delete transposeletters.bindKey;
+    editor.commands.addCommand(transposeletters);
+
     asmButton.onclick = function() {
         compile("asm", result, session.getValue(), getRadioValue("version"),
                  getRadioValue("optimize"), asmButton);

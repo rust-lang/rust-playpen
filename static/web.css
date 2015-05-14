@@ -149,6 +149,7 @@ button.primary:hover, button.primary:focus, button.primary:active {
 }
 
 #control > * {
+    line-height: 1.4;
     display: inline-block;
     vertical-align: middle;
 }
@@ -187,7 +188,7 @@ button.primary:hover, button.primary:focus, button.primary:active {
 .right-c-e {
     /* Because of float: right we can’t use vertical-align: middle and so compensate manually */
     float: right;
-    margin-top: 0.5em;
+    margin-top: 1.25em;
 }
 
 #configure-editor span {
@@ -249,8 +250,8 @@ button.primary:hover, button.primary:focus, button.primary:active {
 }
 
 .radios label:hover,
-.radios:focus label,
-.radios:active label {
+.radios :focus + label,
+.radios :active + label {
     background: rgba(170, 68, 34, 0.4);
 }
 
@@ -283,15 +284,14 @@ input[type=radio]:checked:active + label + input + label {
 }
 
 #editor, pre {
-    font-size: 0.9rem;
+    font-size: 11pt;
     font-family: Source Code Pro, monospace;
 }
 
 #editor {
     border: 3px solid rgba(153, 153, 153, 0.5);
     border-bottom: 0;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
+    border-radius: 5px 5px 0 0;
 }
 
 #result {
@@ -299,8 +299,7 @@ input[type=radio]:checked:active + label + input + label {
     overflow: auto;
     border: 3px solid rgba(153, 153, 153, 0.5);
     border-top: 0;
-    border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 5px;
+    border-radius: 0 0 5px 5px;
     padding: 0 1em;
 }
 
@@ -366,27 +365,106 @@ button[disabled]:last-child::before {
     width: unset;
     height: unset;
     margin: unset;
-    left: 1rem;
-    right: 1rem;
+    left: 16px;
+    right: 16px;
 }
 
 #control {
-    top: 1.4rem;
-    /* Actual height: 43px; */
+    line-height: 4; /* For if it flows onto multiple lines, so the absolutely positioned radio label doesn’t hit the line above (the line-height is reset to 1.4 in the child) */
+    top: 0.7em;
+    /* Actual height: 64px; */
 }
 
 #editor {
-    top: 82px; /* 81.4px = 43px (#control height) + 1.4em (#control top) + 1em (spacing between) @ 1em = 16px */
+    top: 82px; /* 81.6px = 64px (#control height) + 0.7em (#control top) + 0.4em (extra spacing between) @ 1em = 16px */
     bottom: 30%;
 }
 
 #result {
     top: 70%;
-    bottom: 1rem;
+    bottom: 1em;
 }
 
 #result:empty {
     bottom: unset;
+}
+
+@supports (display: flex) {
+    /* The position: absolute approach is mostly OK, but flex is better. */
+
+    #control, #editor, #result {
+        position: relative;
+        left: unset;
+        right: unset;
+        top: unset;
+        bottom: unset;
+    }
+
+    body {
+        display: flex;
+        flex-flow: column;
+        height: 100%;
+        box-sizing: border-box;
+        padding: 1em;
+        margin: 0;
+    }
+
+    #control {
+        flex: 0 0 auto;
+        margin-top: -0.3em;
+        margin-bottom: 0.4em;
+    }
+
+    main {
+        flex: 1;
+        display: flex;
+        flex-flow: column;
+        border: 3px solid rgba(153, 153, 153, 0.5);
+        border-radius: 5px;
+        overflow-y: auto;
+    }
+
+    #editor, #result {
+        border: none;
+    }
+
+    #editor {
+        flex: 1 60%;
+        border-radius: 2px 2px 0 0;
+    }
+
+    #result {
+        flex: 1 40%;
+        border-radius: 0 0 2px 2px;
+    }
+
+    #result:empty {
+        display: none;
+    }
+
+    /* 1600px divided in two allows the editor to be about 80 characters wide */
+    @media screen and (min-width: 1600px) {
+        main {
+            flex-flow: row;
+        }
+
+        #editor, #result {
+            flex: 1 50%;
+        }
+
+        #result:not(:empty) {
+            border-top: none;
+        }
+
+        #editor {
+            border-right: 1px solid rgba(153, 153,153, 0.5);
+            border-radius: 2px 0 0 2px;
+        }
+
+        #result {
+            border-radius: 0 2px 2px 0;
+        }
+    }
 }
 
 /* Overrides of theme styles to make their backgrounds semi-transparent so the page background and Rust logo show through somewhat. TODO: do these some better way.
