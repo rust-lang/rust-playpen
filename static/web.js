@@ -203,9 +203,9 @@ function share(result, version, code, button) {
                 // Sadly the fun letter-spacing animation can leave artefacts,
                 // so we want to manually trigger a redraw. It doesn’t matter
                 // whether it’s relative or static for now, so we’ll flip that.
-                result.style.position = "relative";
-                result.offsetHeight;
-                result.style.position = "";
+                result.parentNode.style.visibility = "hidden";
+                result.parentNode.offsetHeight;
+                result.parentNode.style.visibility = "";
             } else {
                 set_result(result, "<p class=error>Connection failure" +
                     "<p class=error-explanation>Are you connected to the Internet?");
