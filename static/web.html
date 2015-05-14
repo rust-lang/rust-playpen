@@ -4,11 +4,12 @@
         <title>Rust Playground</title>
         <meta charset="utf-8"/>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700"/>
-        <link rel="stylesheet" href="web.css"/>
+        <!-- web.css and web.js need cache busting; increment the numbers when you make changes -->
+        <link rel="stylesheet" href="web.css?1"/>
         <link rel="shortcut icon" href="https://doc.rust-lang.org/favicon.ico"/>
         <script src="https://cdn.jsdelivr.net/ace/1.1.9/min/ace.js" charset="utf-8"></script>
         <script src="https://cdn.jsdelivr.net/ace/1.1.9/min/ext-themelist.js" charset="utf-8"></script>
-        <script src="web.js"></script>
+        <script src="web.js?1"></script>
     </head>
     <body>
         <form id="control">
@@ -60,9 +61,11 @@
 				</div
 			></div>
         </form>
-        <div id=editor>fn main() {
+        <main>
+            <div id=editor>fn main() {
     println!("Hello, world!");
 }</div>
-        <div id=result></div>
+            <div id=result></div>
+        </main>
     </body>
 </html>
