@@ -44,11 +44,10 @@ function build_themes(themelist) {
     document.getElementById("themes").appendChild(themefrag);
 }
 
-function send(path, data, callback, button, message) {
+function send(path, data, callback, button, message, result) {
     button.disabled = true;
-    var result = document.getElementById("result");
 
-    result.innerHTML = "<p class=message>" + message;
+    set_result(result, "<p class=message>" + message);
 
     var request = new XMLHttpRequest();
     request.open("POST", PREFIX + path, true);
@@ -67,29 +66,69 @@ function send(path, data, callback, button, message) {
             if (request.status == 200) {
                 callback(json);
             } else {
-                result.innerHTML = "<p class=error>Connection failure" +
-                    "<p class=error-explanation>Are you connected to the Internet?";
+                set_result(result, "<p class=error>Connection failure" +
+                    "<p class=error-explanation>Are you connected to the Internet?");
             }
         }
     }
     request.timeout = 10000;
     request.ontimeout = function() {
-        result.innerHTML = "<p class=error>Connection timed out" +
-            "<p class=error-explanation>Are you connected to the Internet?";
+        set_result(result, "<p class=error>Connection timed out" +
+            "<p class=error-explanation>Are you connected to the Internet?");
     }
     request.send(JSON.stringify(data));
+}
+
+var PYGMENTS_TO_ACE_MAPPINGS = {
+    'asm': {
+        'c':  'ace_comment', // Comment,
+        'na': 'ace_support ace_function ace_directive', // Name.Attribute,
+        'no': 'ace_constant', // Name.Constant,
+        'nl': 'ace_entity ace_name ace_function', // Name.Label,
+        'nv': 'ace_variable ace_parameter ace_register', // Name.Variable,
+        'mh': 'ace_constant ace_character ace_hexadecimal', // Number.Hex,
+        'mi': 'ace_constant ace_character ace_decimal', // Number.Integer,
+        'p':  'ace_punctuation', // Punctuation,
+        's':  'ace_string', // String,
+        'sc': 'ace_string', // String.Char,
+        '':   '', // Text,
+    },
+    'llvm-ir': {
+        'c':            'ace_comment', // Comment
+        'k':            'ace_keyword', // Keyword
+        'kt':           'ace_storage ace_type', // Keyword.Type
+        'nl':           'ace_identifier', // Name.Label
+        'nv':           'ace_variable', // Name.Variable
+        'nv-Anonymous': 'ace_support ace_variable', // Name.Variable.Anonymous
+        'vg':           'ace_variable ace_other', // Name.Variable.Global
+        'm':            'ace_constant ace_numeric', // Number
+        'p':            'ace_punctuation', // Punctuation
+        's':            'ace_string', // String
+        '':             '', // Text
+    }
+};
+
+function rehighlight(pygmentized, language) {
+    var mappings = PYGMENTS_TO_ACE_MAPPINGS[language];
+    return pygmentized.replace(/<span class="([^"]*)">([^<]*)<\/span>/g, function() {
+        var classes = mappings[arguments[1]];
+        if (classes) {
+            return '<span class="' + classes + '">' + arguments[2] + '</span>';
+        } else {
+            return arguments[2];
+        }
+    });
 }
 
 function evaluate(result, code, version, optimize, button) {
     send("evaluate.json", {code: code, version: version, optimize: optimize, separate_output: true},
         function(object) {
-            result.textContent = "";
             var samp = document.createElement("samp");
             samp.className = ("program" in object) ? "rustc-warnings" : "rustc-errors";
             samp.textContent = object.rustc;
             var pre = document.createElement("pre");
             pre.appendChild(samp);
-            result.appendChild(pre);
+            set_result(result, pre);
             if ("program" in object) {
                 var samp = document.createElement("samp");
                 samp.className = "output";
@@ -103,42 +142,42 @@ function evaluate(result, code, version, optimize, button) {
                 div.textContent = "Program ended.";
                 result.appendChild(div);
             }
-    }, button, "Running…");
+    }, button, "Running…", result);
 }
 
 function compile(emit, result, code, version, optimize, button) {
     send("compile.json", {emit: emit, code: code, version: version, optimize: optimize,
                           highlight: true}, function(object) {
         if ("error" in object) {
-            result.innerHTML = "<pre class=highlight><samp class=rustc-errors></samp></pre>";
+            set_result(result, "<pre class=highlight><samp class=rustc-errors></samp></pre>");
             result.firstChild.firstChild.textContent = object["error"];
         } else {
-            result.innerHTML = "<pre class=highlight><code>" + object["result"] + "</code></pre>";
+            set_result(result, "<pre class=highlight><code>" + rehighlight(object["result"], emit) + "</code></pre>");
         }
-    }, button, "Compiling…");
+    }, button, "Compiling…", result);
 }
 
 function format(result, session, version, button) {
     send("format.json", {code: session.getValue(), version: version}, function(object) {
         if ("error" in object) {
-            result.innerHTML = "<pre class=highlight><samp class=rustc-errors></samp></pre>";
+            set_result(result, "<pre class=highlight><samp class=rustc-errors></samp></pre>");
             result.firstChild.firstChild.textContent = object["error"];
         } else {
-            result.textContent = "";
+            clear_result();
             session.setValue(object["result"]);
         }
-    }, button, "Formatting…");
+    }, button, "Formatting…", result);
 }
 
 function share(result, version, code, button) {
     var playurl = "https://play.rust-lang.org?code=" + encodeURIComponent(code);
     playurl += "&version=" + encodeURIComponent(version);
     if (playurl.length > 5000) {
-        result.innerHTML = "<p class=error>Sorry, your code is too long to share this way." +
+        set_result(result, "<p class=error>Sorry, your code is too long to share this way." +
             "<p class=error-explanation>At present, sharing produces a link containing the" +
             " code in the URL, and the URL shortener used doesn’t accept URLs longer than" +
             " <strong>5000</strong> characters. Your code results in a link that is <strong>" +
-            playurl.length + "</strong> characters long. Try shortening your code.";
+            playurl.length + "</strong> characters long. Try shortening your code.");
         return;
     }
 
@@ -148,16 +187,7 @@ function share(result, version, code, button) {
     var request = new XMLHttpRequest();
     request.open("GET", url, true);
 
-    /*
-    var p = document.createElement("p");
-    p.className = "message";
-    p.textContent = "Shortening ";
-    p.appendChild(a);
-    result.innerHTML = "<p class=message>Shortening link…";
-    result.firstChild.firstChild
-    */
-
-    result.innerHTML = "<p>Short URL: ";
+    set_result(result, "<p>Short URL: ");
     var link = document.createElement("a");
     link.href = link.textContent = playurl;
     link.className = "shortening-link";
@@ -177,8 +207,8 @@ function share(result, version, code, button) {
                 result.offsetHeight;
                 result.style.position = "";
             } else {
-                result.innerHTML = "<p class=error>Connection failure" +
-                    "<p class=error-explanation>Are you connected to the Internet?";
+                set_result(result, "<p class=error>Connection failure" +
+                    "<p class=error-explanation>Are you connected to the Internet?");
             }
         }
     }
@@ -196,6 +226,21 @@ function getQueryParameters() {
         b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
     }
     return b;
+}
+
+function clear_result(result) {
+    result.innerHTML = "";
+    result.parentNode.setAttribute("data-empty", "");
+}
+
+function set_result(result, contents) {
+    result.parentNode.removeAttribute("data-empty");
+    if (typeof contents == "string") {
+        result.innerHTML = contents;
+    } else {
+        result.textContent = "";
+        result.appendChild(contents);
+    }
 }
 
 function set_keyboard(editor, mode) {
@@ -257,7 +302,8 @@ addEventListener("DOMContentLoaded", function() {
     // var formatButton = document.getElementById("format");
     var shareButton = document.getElementById("share");
     var configureEditorButton = document.getElementById("configure-editor");
-    var result = document.getElementById("result");
+    var result = document.getElementById("result").firstChild;
+    var clearResultButton = document.getElementById("clear-result");
     var keyboard = document.getElementById("keyboard");
     var themes = document.getElementById("themes");
     var editor = ace.edit("editor");
@@ -265,6 +311,13 @@ addEventListener("DOMContentLoaded", function() {
     var themelist = ace.require("ace/ext/themelist");
 
     build_themes(themelist);
+
+    editor.renderer.on('themeChange', function(e) {
+        var path = e.theme;
+        ace.config.loadModule(['theme', e.theme], function(t) {
+            document.getElementById("result").className = t.cssClass + (t.isDark ? " ace_dark" : "");
+        });
+    });
 
     var theme = optionalLocalStorageGetItem("theme");
     if (theme === null) {
@@ -354,6 +407,10 @@ addEventListener("DOMContentLoaded", function() {
     configureEditorButton.onclick = function() {
         var dropdown = configureEditorButton.nextElementSibling;
         dropdown.style.display = dropdown.style.display ? "" : "block";
+    };
+
+    clearResultButton.onclick = function() {
+        clear_result(result);
     };
 
     themes.onchange = function () {

@@ -3,16 +3,16 @@
     <head>
         <title>Rust Playground</title>
         <meta charset="utf-8"/>
-        <!-- Bear in mind with the figure 700 that when the stable channel is added the toolbar will be pretty much full, and so any additions beyond that will necessitate change here or there. -->
-        <meta name=viewport id=meta-viewport content="width=700">
-        <script>if (screen.width > 700) { document.getElementById("meta-viewport").setAttribute('content', 'width=device-width'); }</script>
+        <!-- Bear in mind with the figure 720 that when the stable channel is added the toolbar will be full, and so any additions beyond that will necessitate change here or there. -->
+        <meta name=viewport id=meta-viewport content="width=720">
+        <script>if (screen.width > 720) { document.getElementById("meta-viewport").setAttribute('content', 'width=device-width'); }</script>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700"/>
         <!-- web.css and web.js need cache busting; increment the numbers when you make changes -->
-        <link rel="stylesheet" href="web.css?1"/>
+        <link rel="stylesheet" href="web.css?2">
         <link rel="shortcut icon" href="https://doc.rust-lang.org/favicon.ico"/>
         <script src="https://cdn.jsdelivr.net/ace/1.1.9/min/ace.js" charset="utf-8"></script>
         <script src="https://cdn.jsdelivr.net/ace/1.1.9/min/ext-themelist.js" charset="utf-8"></script>
-        <script src="web.js?1"></script>
+        <script src="web.js?2"></script>
     </head>
     <body>
         <form id="control">
@@ -28,16 +28,12 @@
 				><button type=button id=share title="Share a link to your code">Share</button
 			></div
 			><wbr><div class=radios
-				><div title="Select an optimization level:
- · 0: no optimizations; debug assertions on
- · 1: fast optimizations; debug assertions off
- · 2: normal optimizations; debug assertions off
- · 3: all optimizations; debug assertions off">Optimizations</div
+				><div title="Select a build mode:
+ · Debug: no optimizations; debug assertions on
+ · Release: all optimizations; debug assertions off">Mode</div
 				><div
-					><input type=radio name=optimize id=optimize-0 value=0><label for=optimize-0 title="Optimization level 0: no optimizations; debug assertions on. This is the default for rustc and cargo invocations and is good for development.">0</label
-					><input type=radio name=optimize id=optimize-1 value=1><label for=optimize-1 title="Optimization level 1: fast optimizations; debug assertions off">1</label
-					><input type=radio name=optimize id=optimize-2 value=2 checked><label for=optimize-2 title="Optimization level 2: normal (fairly thorough) optimizations; debug assertions off. `rustc -O` and `cargo --release` imply this level.">2</label
-					><input type=radio name=optimize id=optimize-3 value=3><label for=optimize-3 title="Optimization level 3: all available optimizations; debug assertions off">3</label
+					><input type=radio name=optimize id=optimize-0 value=0 checked><label for=optimize-0 title="No optimizations, debug assertions on. This is the default for rustc and cargo invocations and is good for development.">Debug</label
+					><input type=radio name=optimize id=optimize-3 value=3><label for=optimize-3 title="All optimizations, debug assertions off. Equivalent to `rustc -C opt-level 3` or `cargo --release`.">Release</label
 				></div
 			></div
 			><wbr><div class=radios
@@ -68,7 +64,7 @@
             <div id=editor>fn main() {
     println!("Hello, world!");
 }</div>
-            <div id=result></div>
+            <div id=result data-empty><div></div><button type=button id=clear-result title="Close this pane">×</button></div>
         </main>
     </body>
 </html>
