@@ -250,8 +250,8 @@ button.primary:hover, button.primary:focus, button.primary:active {
 }
 
 .radios label:hover,
-.radios:focus label,
-.radios:active label {
+.radios :focus + label,
+.radios :active + label {
     background: rgba(170, 68, 34, 0.4);
 }
 
