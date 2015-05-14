@@ -49,14 +49,31 @@
     color: #a42;
 }
 
+.ace_dark :link {
+    color: #77f;
+}
+
+.ace_dark :visited {
+    color: #f7f;
+}
+
+.ace_dark :link:active,
+.ace_dark :visited:active {
+    color: #f77;
+}
+
 .shortening-link {
-    color: #ddf;
+    color: rgba(127, 127, 255, 0.5);
     position: relative;
     letter-spacing: -1ex;
     -webkit-animation: scrunch-letters 2s;
     -ms-animation: scrunch-letters 2s;
     -o-animation: scrunch-letters 2s;
     animation: scrunch-letters 2s;
+}
+
+.ace_dark .shortening-link {
+    color: rgba(127, 127, 255, 0.25);
 }
 
 @-webkit-keyframes scrunch-letters {
@@ -80,6 +97,10 @@
     position: absolute;
     color: #666;
     letter-spacing: 0;
+}
+
+.ace_dark .shortening-link::before {
+    color: #999;
 }
 
 /*
@@ -469,9 +490,12 @@ button[disabled]:last-child::before {
     #result[data-empty] {
         display: none;
     }
+}
 
-    /* 1600px divided in two allows the editor to be about 80 characters wide */
-    @media screen and (min-width: 1600px) {
+/* 1600px divided in two allows the editor to be about 80 characters wide */
+@media screen and (min-width: 1600px) {
+    /* At the time of writing, @media inside @supports was broken in Chromium; when the viewport width changed, it wouldn’t apply or remove the rules. So we invert the nesting thusly. *Sigh.* Webkit/Blink seem such toys compared with Gecko and Trident. */
+    @supports (display: flex) {
         main {
             flex-flow: row;
         }

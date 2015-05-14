@@ -203,9 +203,9 @@ function share(result, version, code, button) {
                 // Sadly the fun letter-spacing animation can leave artefacts,
                 // so we want to manually trigger a redraw. It doesn’t matter
                 // whether it’s relative or static for now, so we’ll flip that.
-                result.style.position = "relative";
-                result.offsetHeight;
-                result.style.position = "";
+                result.parentNode.style.visibility = "hidden";
+                result.parentNode.offsetHeight;
+                result.parentNode.style.visibility = "";
             } else {
                 set_result(result, "<p class=error>Connection failure" +
                     "<p class=error-explanation>Are you connected to the Internet?");
@@ -231,6 +231,7 @@ function getQueryParameters() {
 function clear_result(result) {
     result.innerHTML = "";
     result.parentNode.setAttribute("data-empty", "");
+	set_result.editor.resize();
 }
 
 function set_result(result, contents) {
@@ -241,6 +242,7 @@ function set_result(result, contents) {
         result.textContent = "";
         result.appendChild(contents);
     }
+    set_result.editor.resize();
 }
 
 function set_keyboard(editor, mode) {
@@ -307,6 +309,7 @@ addEventListener("DOMContentLoaded", function() {
     var keyboard = document.getElementById("keyboard");
     var themes = document.getElementById("themes");
     var editor = ace.edit("editor");
+    set_result.editor = editor;
     var session = editor.getSession();
     var themelist = ace.require("ace/ext/themelist");
 
@@ -355,6 +358,10 @@ addEventListener("DOMContentLoaded", function() {
         evaluate(result, session.getValue(), getRadioValue("version"),
                  getRadioValue("optimize"), evaluateButton);
     }
+
+    addEventListener("resize", function() {
+        editor.resize();
+    });
 
     session.on("change", function() {
         optionalLocalStorageSetItem("code", session.getValue());
