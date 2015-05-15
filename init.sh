@@ -29,17 +29,15 @@ arch-chroot root-nightly.new useradd -m rust
 install -m755 bin/* root-nightly.new/usr/local/bin
 
 rm -rf root-beta.new
+rm -rf root-stable.new
 cp -a root-nightly.new root-beta.new
+cp -a root-nightly.new root-stable.new
 
 curl -O https://static.rust-lang.org/rustup.sh
-sh rustup.sh --prefix=root-nightly.new --channel=nightly
-sh rustup.sh --prefix=root-beta.new --channel=beta
+for channel in stable beta nightly; do
+	sh rustup.sh --prefix=root-${channel}.new --channel=$channel
+	[[ -d root-$channel ]] && mv root-$channel root-${channel}.old
+	mv root-${channel}.new root-$channel
+	[[ -d root-${channel}.old ]] && rm -rf root-${channel}.old
+done
 rm rustup.sh
-
-[[ -d root-nightly ]] && mv root-nightly root-nightly.old
-mv root-nightly.new root-nightly
-[[ -d root-nightly.old ]] && rm -rf root-nightly.old
-
-[[ -d root-beta ]] && mv root-beta root-beta.old
-mv root-beta.new root-beta
-[[ -d root-beta.old ]] && rm -rf root-beta.old
