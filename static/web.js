@@ -313,6 +313,8 @@ addEventListener("DOMContentLoaded", function() {
     var session = editor.getSession();
     var themelist = ace.require("ace/ext/themelist");
 
+    editor.focus();
+
     build_themes(themelist);
 
     editor.renderer.on('themeChange', function(e) {
