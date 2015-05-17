@@ -120,6 +120,15 @@ function rehighlight(pygmentized, language) {
     });
 }
 
+function redrawResult(result) {
+    // Sadly the fun letter-spacing animation can leave artefacts,
+    // so we want to manually trigger a redraw. It doesn’t matter
+    // whether it’s relative or static for now, so we’ll flip that.
+    result.parentNode.style.visibility = "hidden";
+    result.parentNode.offsetHeight;
+    result.parentNode.style.visibility = "";
+}
+
 function evaluate(result, code, version, optimize, button) {
     send("evaluate.json", {code: code, version: version, optimize: optimize, separate_output: true},
         function(object) {
@@ -169,6 +178,31 @@ function format(result, session, version, button) {
     }, button, "Formatting…", result);
 }
 
+function httpRequest(method, url, data, expect, on_success, on_fail) {
+    var req = new XMLHttpRequest();
+
+    req.open(method, url, true);
+    req.onreadystatechange = function() {
+        if (req.readyState == XMLHttpRequest.DONE) {
+            if (req.status == expect) {
+                if (on_success) {
+                    on_success(req.responseText);
+                }
+            } else {
+                if (on_fail) {
+                    on_fail(req.status, req.responseText);
+                }
+            }
+        }
+    };
+
+    if (method === "GET") {
+        req.send();
+    } else if (method === "POST") {
+        req.send(data);
+    }
+}
+
 function share(result, version, code, button) {
     var playurl = "https://play.rust-lang.org?code=" + encodeURIComponent(code);
     playurl += "&version=" + encodeURIComponent(version);
@@ -184,8 +218,6 @@ function share(result, version, code, button) {
     var url = "https://is.gd/create.php?format=json&url=" + encodeURIComponent(playurl);
 
     button.disabled = true;
-    var request = new XMLHttpRequest();
-    request.open("GET", url, true);
 
     set_result(result, "<p>Short URL: ");
     var link = document.createElement("a");
@@ -201,24 +233,30 @@ function share(result, version, code, button) {
         result.parentNode.offsetHeight;
         result.parentNode.style.visibility = "";
     }
-    var repainter = setInterval(repaint, 50);
-    request.onreadystatechange = function() {
-        button.disabled = false;
-        if (request.readyState == 4) {
-            clearInterval(repainter);
-            if (request.status == 200) {
-                var link = result.firstChild.firstElementChild;
-                link.className = "";
-                link.href = link.textContent = JSON.parse(request.responseText)['shorturl'];
-            } else {
-                set_result(result, "<p class=error>Connection failure" +
-                    "<p class=error-explanation>Are you connected to the Internet?");
-            }
-            repaint();
-        }
-    }
 
-    request.send();
+    var repainter = setInterval(repaint, 50);
+    httpRequest("GET", url, null, 200,
+                function(response) {
+                    clearInterval(repainter);
+
+                    var link = result.firstChild.firstElementChild;
+                    link.className = "";
+                    link.href = link.textContent = JSON.parse(response)['shorturl'];
+
+                    repaint();
+                },
+                function(status, response) {
+                    clearInterval(repainter);
+
+                    set_result(result, "<p class=error>Connection failure" +
+                        "<p class=error-explanation>Are you connected to the Internet?");
+
+                    repaint();
+                }
+    );
+}
+>>>>>>> Add separate HTTP request function and refactor share()
+
 }
 
 function getQueryParameters() {
