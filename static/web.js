@@ -369,7 +369,7 @@ addEventListener("DOMContentLoaded", function() {
         optionalLocalStorageSetItem("code", session.getValue());
     });
 
-    keyboard.onchange = function() {
+    keyboard.onkeyup = keyboard.onchange = function() {
         var mode = keyboard.options[keyboard.selectedIndex].value;
         optionalLocalStorageSetItem("keyboard", mode);
         set_keyboard(editor, mode);
@@ -422,7 +422,7 @@ addEventListener("DOMContentLoaded", function() {
         clear_result(result);
     };
 
-    themes.onchange = function () {
+    themes.onkeyup = themes.onchange = function () {
         set_theme(editor, themelist, themes.selectedOptions[0].text);
     }
 
