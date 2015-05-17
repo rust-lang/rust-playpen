@@ -203,6 +203,68 @@ function httpRequest(method, url, data, expect, on_success, on_fail) {
     }
 }
 
+function shareGist(result, version, code, button) {
+    // only needed for the "shrinking" animation
+    var full_url = "https://play.rust-lang.org/?code=" + encodeURIComponent(code) +
+                   "&version=" + encodeURIComponent(version);
+    var url = "https://api.github.com/gists";
+    button.disabled = true;
+
+    set_result(result, "<p>Playground URL: </p><p>Gist URL: </p>");
+    var link = document.createElement("a");
+    link.href = link.textContent = full_url;
+    link.className = "shortening-link";
+    result.firstChild.appendChild(link);
+
+    link = document.createElement("a");
+    link.href = link.textContent = full_url;
+    link.className = "shortening-link";
+    result.lastChild.appendChild(link);
+
+    httpRequest("POST", "https://api.github.com/gists",
+                JSON.stringify({
+                    "description": "Shared via Rust Playground",
+                    "public": true,
+                    "files": {
+                        "playground.rs": {
+                            "content": code
+                        }
+                    }
+                }),
+                201, // expect "Created"
+                // on success
+                function(response) {
+                    button.disabled = false;
+
+                    response = JSON.parse(response);
+
+                    var gist_id = response['id'];
+                    var gist_url = response['html_url'];
+
+                    var play_url = "https://play.rust-lang.org/?gist=" +
+                                   encodeURIComponent(gist_id) + "&version=" +
+                                   encodeURIComponent(version);
+
+
+                    var link = result.firstChild.firstElementChild;
+                    link.className = "";
+                    link.href = link.textContent = play_url;
+
+                    link = result.lastChild.firstElementChild;
+                    link.className = "";
+                    link.href = link.textContent = gist_url;
+
+                    redrawResult(result);
+                },
+                // on fail
+                function(status, response) {
+                    button.disabled = false;
+                    set_result(result, "<p class=error>Gist Creation Failed" +
+                               "<p class=error-explanation>Are you connected to the Internet?");
+                }
+    );
+}
+
 function share(result, version, code, button) {
     var playurl = "https://play.rust-lang.org?code=" + encodeURIComponent(code);
     playurl += "&version=" + encodeURIComponent(version);
@@ -255,6 +317,28 @@ function share(result, version, code, button) {
 
                     repaint();
                 }
+    );
+}
+
+function fetchGist(session, result, gist_id) {
+    session.setValue("// Loading Gist: https://gist.github.com/" + gist_id + " ...");
+    httpRequest("GET", "https://api.github.com/gists/" + gist_id, null, 200,
+      function(response) {
+          response = JSON.parse(response);
+          if (response) {
+              var files = response.files;
+              for (var name in files) {
+                  if (files.hasOwnProperty(name)) {
+                    session.setValue(files[name].content);
+                    break;
+                  }
+              }
+          }
+      },
+      function(status, response) {
+          set_result(result, "<p class=error>Failed to fetch Gist" +
+              "<p class=error-explanation>Are you connected to the Internet?");
+      }
     );
 }
 
@@ -345,6 +429,7 @@ addEventListener("DOMContentLoaded", function() {
     var irButton = document.getElementById("llvm-ir");
     // var formatButton = document.getElementById("format");
     var shareButton = document.getElementById("share");
+    var gistButton = document.getElementById("gist");
     var configureEditorButton = document.getElementById("configure-editor");
     var result = document.getElementById("result").firstChild;
     var clearResultButton = document.getElementById("clear-result");
@@ -384,6 +469,8 @@ addEventListener("DOMContentLoaded", function() {
     var query = getQueryParameters();
     if ("code" in query) {
         session.setValue(query["code"]);
+    } else if ("gist" in query) {
+        fetchGist(session, result, query["gist"]);
     } else {
         var code = optionalLocalStorageGetItem("code");
         if (code !== null) {
@@ -454,6 +541,10 @@ addEventListener("DOMContentLoaded", function() {
     shareButton.onclick = function() {
         share(result, getRadioValue("version"), session.getValue(), shareButton);
     };
+
+    gistButton.onclick = function() {
+        shareGist(result, getRadioValue("version"), session.getValue(), gistButton);
+    }
 
     configureEditorButton.onclick = function() {
         var dropdown = configureEditorButton.nextElementSibling;
