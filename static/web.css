@@ -250,7 +250,6 @@ button.primary:hover, button.primary:focus, button.primary:active {
     right: 0.8em;
     top: -1em;
     background-color: white;
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
     transform: translateY(0.414214em) rotate(45deg);
 }
 
