@@ -238,6 +238,7 @@ function share(result, version, code, button) {
     httpRequest("GET", url, null, 200,
                 function(response) {
                     clearInterval(repainter);
+                    button.disabled = false;
 
                     var link = result.firstChild.firstElementChild;
                     link.className = "";
@@ -247,6 +248,7 @@ function share(result, version, code, button) {
                 },
                 function(status, response) {
                     clearInterval(repainter);
+                    button.disabled = false;
 
                     set_result(result, "<p class=error>Connection failure" +
                         "<p class=error-explanation>Are you connected to the Internet?");
@@ -254,9 +256,6 @@ function share(result, version, code, button) {
                     repaint();
                 }
     );
-}
->>>>>>> Add separate HTTP request function and refactor share()
-
 }
 
 function getQueryParameters() {
