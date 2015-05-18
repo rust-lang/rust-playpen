@@ -193,23 +193,28 @@ function share(result, version, code, button) {
     link.className = "shortening-link";
     result.firstChild.appendChild(link);
 
+    function repaint() {
+        // Sadly the fun letter-spacing animation can leave artefacts in at
+        // least Firefox, so we want to manually trigger a repaint. It doesn’t
+        // matter whether it’s relative or static for now, so we’ll flip that.
+        result.parentNode.style.visibility = "hidden";
+        result.parentNode.offsetHeight;
+        result.parentNode.style.visibility = "";
+    }
+    var repainter = setInterval(repaint, 50);
     request.onreadystatechange = function() {
         button.disabled = false;
         if (request.readyState == 4) {
+            clearInterval(repainter);
             if (request.status == 200) {
                 var link = result.firstChild.firstElementChild;
                 link.className = "";
                 link.href = link.textContent = JSON.parse(request.responseText)['shorturl'];
-                // Sadly the fun letter-spacing animation can leave artefacts,
-                // so we want to manually trigger a redraw. It doesn’t matter
-                // whether it’s relative or static for now, so we’ll flip that.
-                result.parentNode.style.visibility = "hidden";
-                result.parentNode.offsetHeight;
-                result.parentNode.style.visibility = "";
             } else {
                 set_result(result, "<p class=error>Connection failure" +
                     "<p class=error-explanation>Are you connected to the Internet?");
             }
+            repaint();
         }
     }
 
