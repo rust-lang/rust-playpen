@@ -129,8 +129,8 @@ function redrawResult(result) {
     result.parentNode.style.visibility = "";
 }
 
-function evaluate(result, code, version, optimize, button) {
-    send("evaluate.json", {code: code, version: version, optimize: optimize, separate_output: true},
+function evaluate(result, code, version, optimize, button, test) {
+    send("evaluate.json", {code: code, version: version, optimize: optimize, separate_output: true, test: test},
         function(object) {
             var samp = document.createElement("samp");
             samp.className = ("program" in object) ? "rustc-warnings" : "rustc-errors";
@@ -154,9 +154,9 @@ function evaluate(result, code, version, optimize, button) {
     }, button, "Running…", result);
 }
 
-function compile(emit, result, code, version, optimize, button) {
+function compile(emit, result, code, version, optimize, button, test) {
     send("compile.json", {emit: emit, code: code, version: version, optimize: optimize,
-                          highlight: true}, function(object) {
+                          highlight: true, test: test}, function(object) {
         if ("error" in object) {
             set_result(result, "<pre class=highlight><samp class=rustc-errors></samp></pre>");
             result.firstChild.firstChild.textContent = object["error"];
@@ -520,7 +520,7 @@ addEventListener("DOMContentLoaded", function() {
 
     evaluateButton.onclick = function() {
         evaluate(result, session.getValue(), getRadioValue("version"),
-                 getRadioValue("optimize"), evaluateButton);
+                 getRadioValue("optimize"), evaluateButton, getRadioValue("test")=="test-yes");
     };
 
     editor.commands.addCommand({
@@ -538,12 +538,12 @@ addEventListener("DOMContentLoaded", function() {
 
     asmButton.onclick = function() {
         compile("asm", result, session.getValue(), getRadioValue("version"),
-                 getRadioValue("optimize"), asmButton);
+                 getRadioValue("optimize"), asmButton, getRadioValue("test")=="test-yes");
     };
 
     irButton.onclick = function() {
         compile("llvm-ir", result, session.getValue(), getRadioValue("version"),
-                 getRadioValue("optimize"), irButton);
+                 getRadioValue("optimize"), irButton, getRadioValue("test")=="test-yes");
     };
 
     /*
