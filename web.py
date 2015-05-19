@@ -62,7 +62,12 @@ def extractor(key, default, valid):
 @extractor("version", "stable", ("stable", "beta", "nightly"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 def evaluate(optimize, version):
-    out, _ = execute(version, "/usr/local/bin/evaluate.sh", (optimize,), request.json["code"])
+    if request.json.get("test") is True:
+        options = (optimize,"--test")
+    else:
+        options = (optimize,)
+
+    out, _ = execute(version, "/usr/local/bin/evaluate.sh", options, request.json["code"])
 
     if request.json.get("separate_output") is True:
         split = out.split(b"\xff", 1)
@@ -92,7 +97,12 @@ def format(version):
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 @extractor("emit", "asm", ("asm", "llvm-ir"))
 def compile(emit, optimize, version):
-    out, rc = execute(version, "/usr/local/bin/compile.sh", (optimize, emit), request.json["code"])
+    if request.json.get("test") is True:
+        options = (optimize,emit,"--test")
+    else:
+        options = (optimize,emit)
+
+    out, rc = execute(version, "/usr/local/bin/compile.sh", options, request.json["code"])
     split = out.split(b"\xff", 1)
     if rc:
         return {"error": split[0].decode()}
