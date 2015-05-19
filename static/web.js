@@ -120,6 +120,15 @@ function rehighlight(pygmentized, language) {
     });
 }
 
+function redrawResult(result) {
+    // Sadly the fun letter-spacing animation can leave artefacts,
+    // so we want to manually trigger a redraw. It doesn’t matter
+    // whether it’s relative or static for now, so we’ll flip that.
+    result.parentNode.style.visibility = "hidden";
+    result.parentNode.offsetHeight;
+    result.parentNode.style.visibility = "";
+}
+
 function evaluate(result, code, version, optimize, button) {
     send("evaluate.json", {code: code, version: version, optimize: optimize, separate_output: true},
         function(object) {
@@ -169,6 +178,108 @@ function format(result, session, version, button) {
     }, button, "Formatting…", result);
 }
 
+function httpRequest(method, url, data, expect, on_success, on_fail) {
+    var req = new XMLHttpRequest();
+
+    req.open(method, url, true);
+    req.onreadystatechange = function() {
+        if (req.readyState == XMLHttpRequest.DONE) {
+            if (req.status == expect) {
+                if (on_success) {
+                    on_success(req.responseText);
+                }
+            } else {
+                if (on_fail) {
+                    on_fail(req.status, req.responseText);
+                }
+            }
+        }
+    };
+
+    if (method === "GET") {
+        req.send();
+    } else if (method === "POST") {
+        req.send(data);
+    }
+}
+
+function repaintResult() {
+    // Sadly the fun letter-spacing animation can leave artefacts in at
+    // least Firefox, so we want to manually trigger a repaint. It doesn’t
+    // matter whether it’s relative or static for now, so we’ll flip that.
+    result.parentNode.style.visibility = "hidden";
+    result.parentNode.offsetHeight;
+    result.parentNode.style.visibility = "";
+}
+
+function shareGist(result, version, code, button) {
+    // only needed for the "shrinking" animation
+    var full_url = "https://play.rust-lang.org/?code=" + encodeURIComponent(code) +
+                   "&version=" + encodeURIComponent(version);
+    var url = "https://api.github.com/gists";
+    button.disabled = true;
+
+    set_result(result, "<p>Playground URL: </p><p>Gist URL: </p>");
+    var link = document.createElement("a");
+    link.href = link.textContent = full_url;
+    link.className = "shortening-link";
+    result.firstChild.appendChild(link);
+
+    link = document.createElement("a");
+    link.href = link.textContent = full_url;
+    link.className = "shortening-link";
+    result.lastChild.appendChild(link);
+
+    var repainter = setInterval(repaintResult, 50);
+    httpRequest("POST", "https://api.github.com/gists",
+                JSON.stringify({
+                    "description": "Shared via Rust Playground",
+                    "public": true,
+                    "files": {
+                        "playground.rs": {
+                            "content": code
+                        }
+                    }
+                }),
+                201, // expect "Created"
+                // on success
+                function(response) {
+                    button.disabled = false;
+                    clearInterval(repainter);
+
+                    response = JSON.parse(response);
+
+                    var gist_id = response['id'];
+                    var gist_url = response['html_url'];
+
+                    var play_url = "https://play.rust-lang.org/?gist=" +
+                                   encodeURIComponent(gist_id) + "&version=" +
+                                   encodeURIComponent(version);
+
+
+                    var link = result.firstChild.firstElementChild;
+                    link.className = "";
+                    link.href = link.textContent = play_url;
+
+                    link = result.lastChild.firstElementChild;
+                    link.className = "";
+                    link.href = link.textContent = gist_url;
+
+                    repaintResult();
+                },
+                // on fail
+                function(status, response) {
+                    button.disabled = false;
+                    clearInterval(repainter);
+
+                    set_result(result, "<p class=error>Gist Creation Failed" +
+                               "<p class=error-explanation>Are you connected to the Internet?");
+
+                    repaintResult();
+                }
+    );
+}
+
 function share(result, version, code, button) {
     var playurl = "https://play.rust-lang.org?code=" + encodeURIComponent(code);
     playurl += "&version=" + encodeURIComponent(version);
@@ -184,8 +295,6 @@ function share(result, version, code, button) {
     var url = "https://is.gd/create.php?format=json&url=" + encodeURIComponent(playurl);
 
     button.disabled = true;
-    var request = new XMLHttpRequest();
-    request.open("GET", url, true);
 
     set_result(result, "<p>Short URL: ");
     var link = document.createElement("a");
@@ -193,32 +302,51 @@ function share(result, version, code, button) {
     link.className = "shortening-link";
     result.firstChild.appendChild(link);
 
-    function repaint() {
-        // Sadly the fun letter-spacing animation can leave artefacts in at
-        // least Firefox, so we want to manually trigger a repaint. It doesn’t
-        // matter whether it’s relative or static for now, so we’ll flip that.
-        result.parentNode.style.visibility = "hidden";
-        result.parentNode.offsetHeight;
-        result.parentNode.style.visibility = "";
-    }
-    var repainter = setInterval(repaint, 50);
-    request.onreadystatechange = function() {
-        button.disabled = false;
-        if (request.readyState == 4) {
-            clearInterval(repainter);
-            if (request.status == 200) {
-                var link = result.firstChild.firstElementChild;
-                link.className = "";
-                link.href = link.textContent = JSON.parse(request.responseText)['shorturl'];
-            } else {
-                set_result(result, "<p class=error>Connection failure" +
-                    "<p class=error-explanation>Are you connected to the Internet?");
-            }
-            repaint();
-        }
-    }
 
-    request.send();
+    var repainter = setInterval(repaintResult, 50);
+    httpRequest("GET", url, null, 200,
+                function(response) {
+                    clearInterval(repainter);
+                    button.disabled = false;
+
+                    var link = result.firstChild.firstElementChild;
+                    link.className = "";
+                    link.href = link.textContent = JSON.parse(response)['shorturl'];
+
+                    repaintResult();
+                },
+                function(status, response) {
+                    clearInterval(repainter);
+                    button.disabled = false;
+
+                    set_result(result, "<p class=error>Connection failure" +
+                        "<p class=error-explanation>Are you connected to the Internet?");
+
+                    repaintResult();
+                }
+    );
+}
+
+function fetchGist(session, result, gist_id) {
+    session.setValue("// Loading Gist: https://gist.github.com/" + gist_id + " ...");
+    httpRequest("GET", "https://api.github.com/gists/" + gist_id, null, 200,
+      function(response) {
+          response = JSON.parse(response);
+          if (response) {
+              var files = response.files;
+              for (var name in files) {
+                  if (files.hasOwnProperty(name)) {
+                    session.setValue(files[name].content);
+                    break;
+                  }
+              }
+          }
+      },
+      function(status, response) {
+          set_result(result, "<p class=error>Failed to fetch Gist" +
+              "<p class=error-explanation>Are you connected to the Internet?");
+      }
+    );
 }
 
 function getQueryParameters() {
@@ -308,6 +436,7 @@ addEventListener("DOMContentLoaded", function() {
     var irButton = document.getElementById("llvm-ir");
     // var formatButton = document.getElementById("format");
     var shareButton = document.getElementById("share");
+    var gistButton = document.getElementById("gist");
     var configureEditorButton = document.getElementById("configure-editor");
     var result = document.getElementById("result").firstChild;
     var clearResultButton = document.getElementById("clear-result");
@@ -347,6 +476,8 @@ addEventListener("DOMContentLoaded", function() {
     var query = getQueryParameters();
     if ("code" in query) {
         session.setValue(query["code"]);
+    } else if ("gist" in query) {
+        fetchGist(session, result, query["gist"]);
     } else {
         var code = optionalLocalStorageGetItem("code");
         if (code !== null) {
@@ -417,6 +548,10 @@ addEventListener("DOMContentLoaded", function() {
     shareButton.onclick = function() {
         share(result, getRadioValue("version"), session.getValue(), shareButton);
     };
+
+    gistButton.onclick = function() {
+        shareGist(result, getRadioValue("version"), session.getValue(), gistButton);
+    }
 
     configureEditorButton.onclick = function() {
         var dropdown = configureEditorButton.nextElementSibling;
