@@ -203,6 +203,15 @@ function httpRequest(method, url, data, expect, on_success, on_fail) {
     }
 }
 
+function repaintResult() {
+    // Sadly the fun letter-spacing animation can leave artefacts in at
+    // least Firefox, so we want to manually trigger a repaint. It doesn’t
+    // matter whether it’s relative or static for now, so we’ll flip that.
+    result.parentNode.style.visibility = "hidden";
+    result.parentNode.offsetHeight;
+    result.parentNode.style.visibility = "";
+}
+
 function shareGist(result, version, code, button) {
     // only needed for the "shrinking" animation
     var full_url = "https://play.rust-lang.org/?code=" + encodeURIComponent(code) +
@@ -221,6 +230,7 @@ function shareGist(result, version, code, button) {
     link.className = "shortening-link";
     result.lastChild.appendChild(link);
 
+    var repainter = setInterval(repaintResult, 50);
     httpRequest("POST", "https://api.github.com/gists",
                 JSON.stringify({
                     "description": "Shared via Rust Playground",
@@ -235,6 +245,7 @@ function shareGist(result, version, code, button) {
                 // on success
                 function(response) {
                     button.disabled = false;
+                    clearInterval(repainter);
 
                     response = JSON.parse(response);
 
@@ -254,13 +265,17 @@ function shareGist(result, version, code, button) {
                     link.className = "";
                     link.href = link.textContent = gist_url;
 
-                    redrawResult(result);
+                    repaintResult();
                 },
                 // on fail
                 function(status, response) {
                     button.disabled = false;
+                    clearInterval(repainter);
+
                     set_result(result, "<p class=error>Gist Creation Failed" +
                                "<p class=error-explanation>Are you connected to the Internet?");
+
+                    repaintResult();
                 }
     );
 }
@@ -287,16 +302,8 @@ function share(result, version, code, button) {
     link.className = "shortening-link";
     result.firstChild.appendChild(link);
 
-    function repaint() {
-        // Sadly the fun letter-spacing animation can leave artefacts in at
-        // least Firefox, so we want to manually trigger a repaint. It doesn’t
-        // matter whether it’s relative or static for now, so we’ll flip that.
-        result.parentNode.style.visibility = "hidden";
-        result.parentNode.offsetHeight;
-        result.parentNode.style.visibility = "";
-    }
 
-    var repainter = setInterval(repaint, 50);
+    var repainter = setInterval(repaintResult, 50);
     httpRequest("GET", url, null, 200,
                 function(response) {
                     clearInterval(repainter);
@@ -306,7 +313,7 @@ function share(result, version, code, button) {
                     link.className = "";
                     link.href = link.textContent = JSON.parse(response)['shorturl'];
 
-                    repaint();
+                    repaintResult();
                 },
                 function(status, response) {
                     clearInterval(repainter);
@@ -315,7 +322,7 @@ function share(result, version, code, button) {
                     set_result(result, "<p class=error>Connection failure" +
                         "<p class=error-explanation>Are you connected to the Internet?");
 
-                    repaint();
+                    repaintResult();
                 }
     );
 }
