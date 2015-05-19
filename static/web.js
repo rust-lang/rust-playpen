@@ -327,7 +327,7 @@ function share(result, version, code, button) {
     );
 }
 
-function fetchGist(session, result, gist_id) {
+function fetchGist(session, result, gist_id, do_evaluate, evaluateButton) {
     session.setValue("// Loading Gist: https://gist.github.com/" + gist_id + " ...");
     httpRequest("GET", "https://api.github.com/gists/" + gist_id, null, 200,
       function(response) {
@@ -336,8 +336,13 @@ function fetchGist(session, result, gist_id) {
               var files = response.files;
               for (var name in files) {
                   if (files.hasOwnProperty(name)) {
-                    session.setValue(files[name].content);
-                    break;
+                      session.setValue(files[name].content);
+
+                      if (do_evaluate) {
+                          evaluate(result, session.getValue(), getRadioValue("version"),
+                                   getRadioValue("optimize"), evaluateButton);
+                      }
+                      break;
                   }
               }
           }
@@ -477,7 +482,9 @@ addEventListener("DOMContentLoaded", function() {
     if ("code" in query) {
         session.setValue(query["code"]);
     } else if ("gist" in query) {
-        fetchGist(session, result, query["gist"]);
+        // fetchGist() must defer evaluation until after the content has been loaded
+        fetchGist(session, result, query["gist"], query["run"] === "1", evaluateButton);
+        query["run"] = 0; 
     } else {
         var code = optionalLocalStorageGetItem("code");
         if (code !== null) {
