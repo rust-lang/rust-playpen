@@ -126,7 +126,7 @@
       // so we want to manually trigger a redraw. It doesn’t matter
       // whether it’s relative or static for now, so we’ll flip that.
       result.parentNode.style.visibility = "hidden";
-      // result.parentNode.offsetHeight;
+      var _ = result.parentNode.offsetHeight;  // This empty assignment is intentional
       result.parentNode.style.visibility = "";
   }
 
@@ -209,7 +209,7 @@
       // least Firefox, so we want to manually trigger a repaint. It doesn’t
       // matter whether it’s relative or static for now, so we’ll flip that.
       result.parentNode.style.visibility = "hidden";
-      // result.parentNode.offsetHeight;
+      var _ = result.parentNode.offsetHeight;  // This empty assignment is intentional
       result.parentNode.style.visibility = "";
   }
 
