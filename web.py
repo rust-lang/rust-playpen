@@ -61,8 +61,14 @@ def extractor(key, default, valid):
 @enable_post_cors
 @extractor("version", "stable", ("stable", "beta", "nightly"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
-def evaluate(optimize, version):
-    out, _ = execute(version, "/usr/local/bin/evaluate.sh", (optimize,), request.json["code"])
+@extractor("test", True, (True, False))
+def evaluate(optimize, version, test):
+    if test:
+        args = optimize, "--test"
+    else:
+        args = optimize,
+
+    out, _ = execute(version, "/usr/local/bin/evaluate.sh", args, request.json["code"])
 
     if request.json.get("separate_output") is True:
         split = out.split(b"\xff", 1)
