@@ -64,7 +64,7 @@ def extractor(key, default, valid):
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 def evaluate(optimize, version, test):
     if test:
-        args = optimize, "--test"
+        args = optimize, "--test", "--test"
     else:
         args = optimize,
 
