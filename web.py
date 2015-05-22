@@ -59,9 +59,9 @@ def extractor(key, default, valid):
 
 @route("/evaluate.json", method=["POST", "OPTIONS"])
 @enable_post_cors
+@extractor("test", True, (True, False))
 @extractor("version", "stable", ("stable", "beta", "nightly"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
-@extractor("test", True, (True, False))
 def evaluate(optimize, version, test):
     if test:
         args = optimize, "--test"
