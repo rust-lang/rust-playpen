@@ -66,9 +66,12 @@
 
                 if (request.status == 200) {
                     callback(json);
-                } else {
+                } else if (request.status === 0) {
                     set_result(result, "<p class=error>Connection failure" +
                         "<p class=error-explanation>Are you connected to the Internet?");
+                } else {
+                    set_result(result, "<p class=error>Something went wrong" +
+                        "<p class=error-explanation>The HTTP request produced a response with status code " + request.status + ".");
                 }
             }
         };
@@ -131,14 +134,22 @@
     }
 
     function evaluate(result, code, version, optimize, button, test) {
-        send("evaluate.json", {code: code, version: version, optimize: optimize, test: !!test, separate_output: true},
+        send("evaluate.json", {code: code, version: version, optimize: optimize, test: !!test, separate_output: true, color: true},
             function(object) {
-                var samp = document.createElement("samp");
-                samp.className = ("program" in object) ? "rustc-warnings" : "rustc-errors";
-                samp.textContent = object.rustc;
-                var pre = document.createElement("pre");
-                pre.appendChild(samp);
-                set_result(result, pre);
+                var samp, pre;
+                set_result(result);
+                if (object.rustc) {
+                    samp = document.createElement("samp");
+                    samp.innerHTML = formatCompilerOutput(object.rustc);
+                    pre = document.createElement("pre");
+                    pre.className = "rustc-output " + (("program" in object) ? "rustc-warnings" : "rustc-errors");
+                    pre.appendChild(samp);
+                    result.appendChild(pre);
+                }
+
+                var div = document.createElement("p");
+                div.className = "message";
+                div.textContent = "Program ended.";
                 if ("program" in object) {
                     samp = document.createElement("samp");
                     samp.className = "output";
@@ -146,21 +157,20 @@
                     pre = document.createElement("pre");
                     pre.appendChild(samp);
                     result.appendChild(pre);
-
-                    var div = document.createElement("p");
-                    div.className = "message";
                     div.textContent = "Program ended.";
-                    result.appendChild(div);
+                } else {
+                    div.textContent = "Compilation failed.";
                 }
+                result.appendChild(div);
         }, button, test ? "Running tests…" : "Running…", result);
     }
 
     function compile(emit, result, code, version, optimize, button) {
         send("compile.json", {emit: emit, code: code, version: version, optimize: optimize,
-                              highlight: true}, function(object) {
+                              color: true, highlight: true}, function(object) {
             if ("error" in object) {
-                set_result(result, "<pre class=highlight><samp class=rustc-errors></samp></pre>");
-                result.firstChild.firstChild.textContent = object.error;
+                set_result(result, "<pre class=\"rustc-output rustc-errors\"><samp></samp></pre>");
+                result.firstChild.firstChild.innerHTML = formatCompilerOutput(object.error);
             } else {
                 set_result(result, "<pre class=highlight><code>" + rehighlight(object.result, emit) + "</code></pre>");
             }
@@ -171,7 +181,7 @@
         send("format.json", {code: session.getValue(), version: version}, function(object) {
             if ("error" in object) {
                 set_result(result, "<pre class=highlight><samp class=rustc-errors></samp></pre>");
-                result.firstChild.firstChild.textContent = object.error;
+                result.firstChild.firstChild.innerHTML = formatCompilerOutput(object.error);
             } else {
                 clear_result();
                 session.setValue(object.result);
@@ -320,8 +330,13 @@
                         clearInterval(repainter);
                         button.disabled = false;
 
-                        set_result(result, "<p class=error>Connection failure" +
-                            "<p class=error-explanation>Are you connected to the Internet?");
+                        if (request.status === 0) {
+                            set_result(result, "<p class=error>Connection failure" +
+                                "<p class=error-explanation>Are you connected to the Internet?");
+                        } else {
+                            set_result(result, "<p class=error>Something went wrong" +
+                                "<p class=error-explanation>The HTTP request produced a response with status code " + status + ".");
+                        }
 
                         repaintResult();
                     }
@@ -374,7 +389,9 @@
 
     function set_result(result, contents) {
         result.parentNode.removeAttribute("data-empty");
-        if (typeof contents == "string") {
+        if (contents === undefined) {
+            result.textContent = "";
+        } else if (typeof contents == "string") {
             result.innerHTML = contents;
         } else {
             result.textContent = "";
@@ -475,6 +492,46 @@
         evaluate(result, session.getValue(), getRadioValue("version"),
                  getRadioValue("optimize"), evaluateButton,
                  evaluateAction === "test");
+    }
+
+    var COLOR_CODES = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'];
+
+    // A simple function to decode ANSI escape codes into HTML.
+    // This is very basic, with lots of very obvious omissions and holes;
+    // it’s designed purely to cope with rustc output.
+    //
+    // rustc uses:
+    //
+    // - bug/fatal/error = bright red
+    // - warning = bright yellow
+    // - note = bright green
+    // - help = bright cyan
+    // - error code = bright magenta
+    // - bold
+    function ansi2html(text) {
+        return text.replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\x1b\[38;5;(\d+)m([^\x1b]*)\x1b\[m(?:\x1b\(B)?/g, function(original, colorCode, text) {
+                colorCode = +colorCode;
+                if (colorCode < 8) {
+                    return '<span class=ansi-' + colorCode + '>' + text + '</span>';
+                } else if (colorCode < 16) {
+                    return '<span class="ansi-bright ansi-' + COLOR_CODES[colorCode - 8] + '">' + text + '</span>';
+                } else {
+                    return original;
+                }
+            }).replace(/\x1b\[1m([^\x1b]*)\x1b\[m(?:\x1b\(B)?/g, function(original, text) {
+                return "<strong>" + text + "</strong>";
+            });
+    }
+
+    function formatCompilerOutput(text) {
+        return ansi2html(text).replace(/\[(E\d\d\d\d)\]/g, function(text, code) {
+            return "[<a href=https://doc.rust-lang.org/error-index.html#" + code + ">" + code + "</a>]";
+        }).replace(/run `rustc --explain (E\d\d\d\d)` to see a detailed explanation/g, function(text, code) {
+            return "see the <a href=https://doc.rust-lang.org/error-index.html#" + code + ">detailed explanation for " + code + "</a>";
+        });
     }
 
     addEventListener("DOMContentLoaded", function() {
