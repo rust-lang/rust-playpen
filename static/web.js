@@ -149,19 +149,28 @@
 
                 var div = document.createElement("p");
                 div.className = "message";
-                div.textContent = "Program ended.";
                 if ("program" in object) {
                     samp = document.createElement("samp");
                     samp.className = "output";
-                    samp.textContent = object.program;
+                    if (test) {
+                        samp.innerHTML = ansi2html(object.program);
+                    } else {
+                        samp.textContent = object.program;
+                    }
                     pre = document.createElement("pre");
                     pre.appendChild(samp);
                     result.appendChild(pre);
-                    div.textContent = "Program ended.";
+                    if (test) {
+                        div = null;
+                    } else {
+                        div.textContent = "Program ended.";
+                    }
                 } else {
                     div.textContent = "Compilation failed.";
                 }
-                result.appendChild(div);
+                if (div) {
+                    result.appendChild(div);
+                }
         }, button, test ? "Running tests…" : "Running…", result);
     }
 
