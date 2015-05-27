@@ -35,7 +35,7 @@ cp -a root-nightly.new root-stable.new
 
 curl -O https://static.rust-lang.org/rustup.sh
 for channel in stable beta nightly; do
-	sh rustup.sh --prefix=root-${channel}.new --channel=$channel
+	sh rustup.sh --prefix=root-${channel}.new --channel=$channel --yes
 	[[ -d root-$channel ]] && mv root-$channel root-${channel}.old
 	mv root-${channel}.new root-$channel
 	[[ -d root-${channel}.old ]] && rm -rf root-${channel}.old
