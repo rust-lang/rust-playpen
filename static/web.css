@@ -36,16 +36,8 @@
     color: #931;
 }
 
-.rustc-errors {
-    color: #931;
-}
-
-.rustc-warnings {
-    color: #971;
-}
-
 /* #971 works well enough on light or dark, but #931 is just a bit too icky on Solarized Dark */
-.ace_dark .error, .ace_dark .rustc-errors {
+.ace_dark .error {
     color: #a42;
 }
 
@@ -532,3 +524,30 @@ button[disabled]:last-child::before {
 :root .ace-github .ace_marker-layer .ace_stack { background: rgba(164, 229, 101, 0.8); }
 :root .ace-github .ace_marker-layer .ace_selected-word { background: rgba(245, 245, 255, 0.5); }
 :root .ace-github .ace_print-margin { background: rgba(209, 209, 209, 0.5); }
+
+/* rustc output. bright versions of red, yellow, green, cyan and magenta are used, but black, blue and gray could theoretically be added with dim versions of them. */
+.rustc-output {
+	white-space: pre-wrap;
+	padding-bottom: 1em;
+	border-bottom: 1px dashed rgba(0, 0, 0, 0.25);
+}
+
+.ace_dark .rustc-output {
+	border-bottom-color: rgba(255, 255, 255, 0.25);
+}
+
+.rustc-output:last-child {
+	border-bottom: none;
+	padding-bottom: none;
+}
+
+.ansi-red     { color: #a00; }
+.ansi-green   { color: #0a0; }
+.ansi-yellow  { color: #980; }
+.ansi-magenta { color: #a0a; }
+.ansi-cyan    { color: #096; }
+.ace_dark .ansi-red     { color: #f55; }
+.ace_dark .ansi-green   { color: #5f5; }
+.ace_dark .ansi-yellow  { color: #ff5; }
+.ace_dark .ansi-magenta { color: #f5f; }
+.ace_dark .ansi-cyan    { color: #5ff; }

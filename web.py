@@ -59,11 +59,14 @@ def extractor(key, default, valid):
 
 @route("/evaluate.json", method=["POST", "OPTIONS"])
 @enable_post_cors
+@extractor("color", False, (True, False))
 @extractor("test", False, (True, False))
 @extractor("version", "stable", ("stable", "beta", "nightly"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
-def evaluate(optimize, version, test):
-    args = [optimize]
+def evaluate(optimize, version, test, color):
+    args = ["-C", "opt-level=" + optimize]
+    if color:
+        args.append("--color=always")
     if test:
         args.append("--test")
 
@@ -93,15 +96,28 @@ def format(version):
 
 @route("/compile.json", method=["POST", "OPTIONS"])
 @enable_post_cors
+@extractor("color", False, (True, False))
 @extractor("version", "stable", ("stable", "beta", "nightly"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 @extractor("emit", "asm", ("asm", "llvm-ir"))
-def compile(emit, optimize, version):
-    out, rc = execute(version, "/usr/local/bin/compile.sh", (optimize, emit), request.json["code"])
+def compile(emit, optimize, version, color):
+    args = ["-C", "opt-level=" + optimize, "--emit=" + emit]
+    if color:
+        args.append("--color=always")
+    out, _ = execute(version, "/usr/local/bin/compile.sh", tuple(args), request.json["code"])
     split = out.split(b"\xff", 1)
-    if rc:
-        return {"error": split[0].decode()}
+    if len(split) == 2:
+        rustc_output = split[0].decode()
+        emitted = split[1].decode()
     else:
+        rustc_output = split[0].decode()
+        emitted = None
+    if emitted is None:
+        return {"error": rustc_output}
+    else:
+        # You know, it might be good to include the rustc output in the same
+        # way evaluate.json does rather than this different way. Ah well.
+        # Compatibility and all that. Do we care? I really don't know!
         if request.json.get("highlight") is not True:
             return {"result": split[1].decode()}
         if emit == "asm":
