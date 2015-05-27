@@ -49,7 +49,8 @@ def evaluate(code, nickname):
                                      ("-c", "--", "rustc -V | head -1 | tr -d '\n'"))
         code = irc_template % {"version": version.decode(), "input": code}
 
-    out, _ = playpen.execute("stable", "/usr/local/bin/evaluate.sh", ("2",), code)
+    out, _ = playpen.execute("stable", "/usr/local/bin/evaluate.sh",
+                             ("-C","opt-level=2",), code)
 
     if len(out) > 5000:
         return "more than 5000 bytes of output; bailing out"
