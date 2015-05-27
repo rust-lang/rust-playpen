@@ -500,28 +500,21 @@
     // This is very basic, with lots of very obvious omissions and holes;
     // it’s designed purely to cope with rustc output.
     //
-    // rustc uses:
+    // TERM=xterm rustc uses these:
     //
-    // - bug/fatal/error = bright red
-    // - warning = bright yellow
-    // - note = bright green
-    // - help = bright cyan
-    // - error code = bright magenta
+    // - bug/fatal/error = red
+    // - warning = yellow
+    // - note = green
+    // - help = cyan
+    // - error code = magenta
     // - bold
     function ansi2html(text) {
         return text.replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
-            .replace(/\x1b\[38;5;(\d+)m([^\x1b]*)\x1b\[m(?:\x1b\(B)?/g, function(original, colorCode, text) {
-                colorCode = +colorCode;
-                if (colorCode < 8) {
-                    return '<span class=ansi-' + colorCode + '>' + text + '</span>';
-                } else if (colorCode < 16) {
-                    return '<span class="ansi-bright ansi-' + COLOR_CODES[colorCode - 8] + '">' + text + '</span>';
-                } else {
-                    return original;
-                }
-            }).replace(/\x1b\[1m([^\x1b]*)\x1b\[m(?:\x1b\(B)?/g, function(original, text) {
+            .replace(/\x1b\[3([0-7])m([^\x1b]*)(?:\x1b\(B)?\x1b\[m/g, function(original, colorCode, text) {
+                return '<span class=ansi-' + COLOR_CODES[+colorCode] + '>' + text + '</span>';
+            }).replace(/\x1b\[1m([^\x1b]*)(?:\x1b\(B)?\x1b\[m/g, function(original, text) {
                 return "<strong>" + text + "</strong>";
             });
     }
