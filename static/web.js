@@ -130,8 +130,8 @@
         result.parentNode.style.visibility = "";
     }
 
-    function evaluate(result, code, version, optimize, button) {
-        send("evaluate.json", {code: code, version: version, optimize: optimize, separate_output: true},
+    function evaluate(result, code, version, optimize, button, test) {
+        send("evaluate.json", {code: code, version: version, optimize: optimize, test: !!test, separate_output: true},
             function(object) {
                 var samp = document.createElement("samp");
                 samp.className = ("program" in object) ? "rustc-warnings" : "rustc-errors";
@@ -152,7 +152,7 @@
                     div.textContent = "Program ended.";
                     result.appendChild(div);
                 }
-        }, button, "Running…", result);
+        }, button, test ? "Running tests…" : "Running…", result);
     }
 
     function compile(emit, result, code, version, optimize, button) {
@@ -340,8 +340,7 @@
                           session.setValue(files[name].content);
 
                           if (do_evaluate) {
-                              evaluate(result, session.getValue(), getRadioValue("version"),
-                                       getRadioValue("optimize"), evaluateButton);
+                              doEvaluate();
                           }
                           break;
                       }
@@ -436,22 +435,64 @@
         }
     }
 
+    var evaluateButton;
+    var asmButton;
+    var irButton;
+    // var formatButton;
+    var shareButton;
+    var gistButton;
+    var configureEditorButton;
+    var result;
+    var clearResultButton;
+    var keyboard;
+    var themes;
+    var editor;
+    var session;
+    var themelist;
+    var evaluateAction = "run";
+    var theme;
+    var mode;
+    var query;
+
+    function updateEvaluateAction(code) {
+        // A very simple pair of heuristics; there’s no point in doing more, IMO.
+        if (code.indexOf("fn main()") === -1 && code.indexOf("#[test]") !== -1) {
+            evaluateButton.textContent = "Test";
+            evaluateAction = "test";
+        } else {
+            evaluateButton.textContent = "Run";
+            evaluateAction = "run";
+        }
+    }
+
+    function doEvaluate(skipActionGuessing) {
+        var code = session.getValue();
+        if (!skipActionGuessing) {
+            // If we have called this since the last change in the editor,
+            // this would be a waste of time
+            updateEvaluateAction(code);
+        }
+        evaluate(result, session.getValue(), getRadioValue("version"),
+                 getRadioValue("optimize"), evaluateButton,
+                 evaluateAction === "test");
+    }
+
     addEventListener("DOMContentLoaded", function() {
-        var evaluateButton = document.getElementById("evaluate");
-        var asmButton = document.getElementById("asm");
-        var irButton = document.getElementById("llvm-ir");
-        // var formatButton = document.getElementById("format");
-        var shareButton = document.getElementById("share");
-        var gistButton = document.getElementById("gist");
-        var configureEditorButton = document.getElementById("configure-editor");
-        var result = document.getElementById("result").firstChild;
-        var clearResultButton = document.getElementById("clear-result");
-        var keyboard = document.getElementById("keyboard");
-        var themes = document.getElementById("themes");
-        var editor = ace.edit("editor");
+        evaluateButton = document.getElementById("evaluate");
+        asmButton = document.getElementById("asm");
+        irButton = document.getElementById("llvm-ir");
+        // formatButton = document.getElementById("format");
+        shareButton = document.getElementById("share");
+        gistButton = document.getElementById("gist");
+        configureEditorButton = document.getElementById("configure-editor");
+        result = document.getElementById("result").firstChild;
+        clearResultButton = document.getElementById("clear-result");
+        keyboard = document.getElementById("keyboard");
+        themes = document.getElementById("themes");
+        editor = ace.edit("editor");
         set_result.editor = editor;
-        var session = editor.getSession();
-        var themelist = ace.require("ace/ext/themelist");
+        session = editor.getSession();
+        themelist = ace.require("ace/ext/themelist");
 
         editor.focus();
 
@@ -464,7 +505,7 @@
             });
         });
 
-        var theme = optionalLocalStorageGetItem("theme");
+        theme = optionalLocalStorageGetItem("theme");
         if (theme === null) {
             set_theme(editor, themelist, "GitHub");
         } else {
@@ -473,13 +514,13 @@
 
         session.setMode("ace/mode/rust");
 
-        var mode = optionalLocalStorageGetItem("keyboard");
+        mode = optionalLocalStorageGetItem("keyboard");
         if (mode !== null) {
             set_keyboard(editor, mode);
             keyboard.value = mode;
         }
 
-        var query = getQueryParameters();
+        query = getQueryParameters();
         if ("code" in query) {
             session.setValue(query.code);
         } else if ("gist" in query) {
@@ -501,8 +542,9 @@
         }
 
         if (query.run === "1") {
-            evaluate(result, session.getValue(), getRadioValue("version"),
-                     getRadioValue("optimize"), evaluateButton);
+            doEvaluate();
+        } else {
+            updateEvaluateAction(session.getValue());
         }
 
         addEventListener("resize", function() {
@@ -510,7 +552,9 @@
         });
 
         session.on("change", function() {
-            optionalLocalStorageSetItem("code", session.getValue());
+            var code = session.getValue();
+            optionalLocalStorageSetItem("code", code);
+            updateEvaluateAction(code);
         });
 
         keyboard.onkeyup = keyboard.onchange = function() {
@@ -520,8 +564,7 @@
         };
 
         evaluateButton.onclick = function() {
-            evaluate(result, session.getValue(), getRadioValue("version"),
-                     getRadioValue("optimize"), evaluateButton);
+            doEvaluate(true);
         };
 
         editor.commands.addCommand({
