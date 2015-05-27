@@ -2,6 +2,6 @@
 
 set -o errexit
 
-rustc - -o ./out "$@"
+TERM=xterm rustc - -o ./out "$@"
 printf '\377' # 255 in octal
 exec cat out
