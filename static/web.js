@@ -166,8 +166,9 @@
     }
 
     function compile(emit, result, code, version, optimize, button) {
+        var syntax = $('#asm-syntax').value;
         send("compile.json", {emit: emit, code: code, version: version, optimize: optimize,
-                              color: true, highlight: true}, function(object) {
+                              color: true, highlight: true, syntax: syntax}, function(object) {
             if ("error" in object) {
                 set_result(result, "<pre class=\"rustc-output rustc-errors\"><samp></samp></pre>");
                 result.firstChild.firstChild.innerHTML = formatCompilerOutput(object.error);
