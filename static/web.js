@@ -166,7 +166,7 @@
     }
 
     function compile(emit, result, code, version, optimize, button) {
-        var syntax = $('#asm-syntax').value;
+        var syntax = document.getElementById('asm-flavor').value;
         send("compile.json", {emit: emit, code: code, version: version, optimize: optimize,
                               color: true, highlight: true, syntax: syntax}, function(object) {
             if ("error" in object) {
