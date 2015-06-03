@@ -96,14 +96,18 @@ def format(version):
 
 @route("/compile.json", method=["POST", "OPTIONS"])
 @enable_post_cors
+@extractor("syntax", "att", ("att", "intel"))
 @extractor("color", False, (True, False))
 @extractor("version", "stable", ("stable", "beta", "nightly"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 @extractor("emit", "asm", ("asm", "llvm-ir"))
-def compile(emit, optimize, version, color):
+def compile(emit, optimize, version, color, syntax):
     args = ["-C", "opt-level=" + optimize, "--emit=" + emit]
     if color:
         args.append("--color=always")
+    if syntax:
+        args.append("-C")
+        args.append("llvm-args=-x86-asm-syntax=%s" % syntax)
     out, _ = execute(version, "/usr/local/bin/compile.sh", tuple(args), request.json["code"])
     split = out.split(b"\xff", 1)
     if len(split) == 2:
