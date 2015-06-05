@@ -665,7 +665,7 @@
         };
 
         themes.onkeyup = themes.onchange = function () {
-            set_theme(editor, themelist, themes.selectedOptions[0].text);
+            set_theme(editor, themelist, themes.options[themes.selectedIndex].text);
         };
 
     }, false);
