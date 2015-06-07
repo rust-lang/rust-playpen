@@ -471,6 +471,7 @@
     var theme;
     var mode;
     var query;
+    var asm_flavor;
 
     function updateEvaluateAction(code) {
         // A very simple pair of heuristics; there’s no point in doing more, IMO.
@@ -539,6 +540,7 @@
         result = document.getElementById("result").firstChild;
         clearResultButton = document.getElementById("clear-result");
         keyboard = document.getElementById("keyboard");
+        asm_flavor = document.getElementById("asm-flavor");
         themes = document.getElementById("themes");
         editor = ace.edit("editor");
         set_result.editor = editor;
@@ -569,6 +571,11 @@
         if (mode !== null) {
             set_keyboard(editor, mode);
             keyboard.value = mode;
+        }
+
+        var flavor = optionalLocalStorageGetItem("asm_flavor");
+        if (flavor !== null) {
+            asm_flavor.value = flavor;
         }
 
         query = getQueryParameters();
@@ -612,6 +619,11 @@
             var mode = keyboard.options[keyboard.selectedIndex].value;
             optionalLocalStorageSetItem("keyboard", mode);
             set_keyboard(editor, mode);
+        };
+
+        asm_flavor.onkeyup = asm_flavor.onchange = function() {
+            var flavor = asm_flavor.options[asm_flavor.selectedIndex].value;
+            optionalLocalStorageSetItem("asm_flavor", flavor);
         };
 
         evaluateButton.onclick = function() {
