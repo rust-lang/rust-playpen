@@ -293,7 +293,7 @@
     }
 
     function share(result, version, code, button) {
-        var playurl = "https://play.rust-lang.org?code=" + encodeURIComponent(code);
+        var playurl = "https://play.rust-lang.org/?code=" + encodeURIComponent(code);
         playurl += "&version=" + encodeURIComponent(version);
         if (playurl.length > 5000) {
             set_result(result, "<p class=error>Sorry, your code is too long to share this way." +
