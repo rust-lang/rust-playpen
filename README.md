@@ -33,7 +33,7 @@ dependencies are installed system-wide. Get the latest versions of `pyyaml`,
 
 #### Create `shorten_key.py`
 
-The bot uses [bitly](http://bitly.com) as a URL shortener. Get an API key, and put it
+The bot uses [bitly](http://bitly.com) as a URL shortener. Get an OAuth access token, and put it
 into a file called `shorten_key.py`, in the same directory as `bot.py`.
 `shorten_key.py` just needs one line, of the form:
 
