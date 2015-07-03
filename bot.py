@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import re
 import itertools
 import subprocess
 import sys
@@ -16,6 +17,7 @@ import playpen
 import shorten_key
 
 irc_template = """\
+%(features)s
 #![allow(dead_code, unused_variables)]
 
 static VERSION: &'static str = "%(version)s";
@@ -27,6 +29,8 @@ fn main() {
         %(input)s
     });
 }"""
+
+features = ""
 
 def pastebin(command):
     bitly = "https://api-ssl.bitly.com/v3/shorten"
@@ -43,13 +47,16 @@ def pastebin(command):
     else:
         return "failed to shorten url"
 
-def evaluate(code, nickname):
-    if nickname == "rusti" or nickname == "playbot":
-        version, _ = playpen.execute("stable", "/bin/dash",
+def evaluate(code, channel, with_template):
+    if with_template:
+        version, _ = playpen.execute(channel, "/bin/dash",
                                      ("-c", "--", "rustc -V | head -1 | tr -d '\n'"))
-        code = irc_template % {"version": version.decode(), "input": code}
+        code = irc_template % {
+                "features": features if channel == "nightly" else "",
+                "version": version.decode(),
+                "input": code }
 
-    out, _ = playpen.execute("stable", "/usr/local/bin/evaluate.sh",
+    out, _ = playpen.execute(channel, "/usr/local/bin/evaluate.sh",
                              ("-C","opt-level=2",), code)
 
     if len(out) > 5000:
@@ -69,17 +76,18 @@ def evaluate(code, nickname):
     return out
 
 class RustEvalbot(irc.client.SimpleIRCClient):
-    def __init__(self, nickname, channels, keys):
+    def __init__(self, nickname, channels, keys, triggers):
         irc.client.SimpleIRCClient.__init__(self)
         irc.client.ServerConnection.buffer_class = irc.buffer.LenientDecodingLineBuffer
         self.nickname = nickname
         self.channels = channels
         self.keys = keys
+        self.triggers = [(re.compile(r), c, wt) for (r, c, wt) in triggers]
 
-    def _run(self, channel, code, nick):
-        result = evaluate(code, nick)
+    def _run(self, irc_channel, code, rust_channel, with_template):
+        result = evaluate(code, rust_channel, with_template)
         for line in result.splitlines():
-            self.connection.notice(channel, line)
+            self.connection.notice(irc_channel, line)
 
     def on_welcome(self, connection, event):
         for channel, key in zip(self.channels, self.keys):
@@ -90,24 +98,24 @@ class RustEvalbot(irc.client.SimpleIRCClient):
 
     def on_pubmsg(self, connection, event):
         msg = event.arguments[0]
-        self.handle_pubmsg(event, msg, self.nickname)
-        if self.nickname == 'playbot':
-            self.handle_pubmsg(event, msg, 'rusti')
-        else:
-            self.handle_pubmsg(event, msg, 'rustilite')
+        for (trigger, channel, with_template) in self.triggers:
+            res = trigger.match(msg)
+            if res:
+                code = res.group(1)
+                self.handle_pubmsg(event, code, channel, with_template)
+                # Only one match per message
+                return
 
-    def handle_pubmsg(self, event, msg, my_nick):
+    def handle_pubmsg(self, event, code, channel, with_template):
         nickname = event.source.split("!")[0]
-        if msg.startswith(my_nick + ": ") or msg.startswith(my_nick + ", "):
-            print("{} {}: {}".format(event.target, nickname, msg))
-            i = len(my_nick) + 2
-            self._run(event.target, msg[i:], my_nick)
+        print("{} {}: {}".format(event.target, self.nickname, code))
+        self._run(event.target, code, channel, with_template)
 
     def on_privmsg(self, connection, event):
         nickname = event.source.split("!")[0]
         msg = event.arguments[0]
         print("{} {}: {}".format(event.target, nickname, msg))
-        self._run(nickname, msg, self.nickname)
+        self._run(nickname, msg, "nightly", True)
 
     def on_disconnect(self, connection, event):
         sleep(10)
@@ -121,8 +129,8 @@ class RustEvalbot(irc.client.SimpleIRCClient):
         else:
             connection.join(channel, key)
 
-def start(nickname, server, port, channels, keys):
-    client = RustEvalbot(nickname, channels, keys)
+def start(nickname, server, port, channels, keys, triggers):
+    client = RustEvalbot(nickname, channels, keys, triggers)
     try:
         client.connect(server, port, nickname)
         client.connection.set_keepalive(30)
@@ -137,13 +145,14 @@ def main():
     with open("irc.yaml") as f:
         cfg = yaml.load(f.read())
 
-    for c, nickname in itertools.product(cfg, ("playbot", "playbot-mini")):
-        thread = threading.Thread(target=start, args=(nickname,
-                                                      c["server"],
-                                                      c["port"],
-                                                      c["channels"],
-                                                      c["keys"]))
-        thread.start()
+    cfg = cfg[0]
+    thread = threading.Thread(target=start, args=(cfg["nickname"],
+                                                  cfg["server"],
+                                                  cfg["port"],
+                                                  cfg["channels"],
+                                                  cfg["keys"],
+                                                  cfg["triggers"]))
+    thread.start()
 
 if __name__ == "__main__":
     main()
