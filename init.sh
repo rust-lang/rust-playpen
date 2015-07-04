@@ -41,3 +41,13 @@ for channel in stable beta nightly; do
 	[[ -d root-${channel}.old ]] && rm -rf root-${channel}.old
 done
 rm rustup.sh
+
+git clone --single-branch https://github.com/rust-lang/rust/
+V=`sudo playpen root-nightly -S whitelist --mount-proc -- rustc -V | sed -e 's/rustc.*\?(\(\w*\).*)/\1/'`
+cd rust
+git checkout $V
+cd ..
+# forgive me
+echo -n 'features = "#![allow(stable_features, unused_features)]\n#![feature(' > features.py
+python featureck.py rust/src | grep 'unstable' | sed 's/^\* //;s/ .*$//' | tr -t '\n' ',' >> features.py
+echo ')]"' >> features.py

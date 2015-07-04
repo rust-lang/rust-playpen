@@ -7,7 +7,7 @@ import subprocess
 import sys
 import threading
 from time import sleep
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote
 
 import irc.client
 import requests
@@ -17,7 +17,6 @@ import playpen
 import shorten_key
 
 irc_template = """\
-%(features)s
 #![allow(dead_code, unused_variables)]
 
 static VERSION: &'static str = "%(version)s";
@@ -30,14 +29,13 @@ fn main() {
     });
 }"""
 
-features = ""
-
-def pastebin(command):
+def bitly(command):
     bitly = "https://api-ssl.bitly.com/v3/shorten"
     server = "http://play.rust-lang.org/?"
 
     params = urlencode({"code": command, "run": 1})
     url = server + params
+
     r = requests.get(bitly,
                      params={"access_token": shorten_key.key, "longUrl": url})
     response = r.json()
@@ -45,14 +43,45 @@ def pastebin(command):
     if response["status_txt"] == "OK":
         return "output truncated; full output at: " + response["data"]["url"]
     else:
+        print(response)
         return "failed to shorten url"
+
+def gist(version, code):
+    url = "https://api.github.com/gists"
+
+    r = requests.post("https://api.github.com/gists",
+            json = {
+                "description": "Shared via Rust Playground",
+                "public": True,
+                "files": {
+                    "playbot.rs": {
+                        "content": code
+                    }
+                }
+            })
+
+    if r.status_code == 201:
+        response = r.json()
+
+        gist_id = response["id"]
+        gist_url = response["html_url"]
+
+        play_url = "https://play.rust-lang.org/?gist=" + quote(gist_id) + "&version=" + version
+        return "output truncated; full output at: " + play_url
+    else:
+        return "failed to shorten url"
+
+def pastebin(channel, code):
+    if channel == "nightly":
+        return gist(channel, code)
+    else:
+        return bitly(code)
 
 def evaluate(code, channel, with_template):
     if with_template:
         version, _ = playpen.execute(channel, "/bin/dash",
                                      ("-c", "--", "rustc -V | head -1 | tr -d '\n'"))
         code = irc_template % {
-                "features": features if channel == "nightly" else "",
                 "version": version.decode(),
                 "input": code }
 
@@ -67,11 +96,11 @@ def evaluate(code, channel, with_template):
 
     for line in lines:
         if len(line) > 150:
-            return pastebin(code)
+            pastebin(channel, code)
 
     limit = 3
     if len(lines) > limit:
-        return "\n".join(lines[:limit - 1] + [pastebin(code)])
+        return "\n".join(lines[:limit - 1] + [pastebin(channel, code)])
 
     return out
 
