@@ -96,7 +96,7 @@ def evaluate(code, channel, with_template):
 
     for line in lines:
         if len(line) > 150:
-            pastebin(channel, code)
+            return pastebin(channel, code)
 
     limit = 3
     if len(lines) > limit:
@@ -144,7 +144,17 @@ class RustEvalbot(irc.client.SimpleIRCClient):
         nickname = event.source.split("!")[0]
         msg = event.arguments[0]
         print("{} {}: {}".format(event.target, nickname, msg))
-        self._run(nickname, msg, "nightly", True)
+        # Allow for the same triggers like in channels,
+        # but fallback to stable with template.
+        for (trigger, channel, with_template) in self.triggers:
+            res = trigger.match(msg)
+            if res:
+                code = res.group(1)
+                self._run(nickname, code, channel, with_template)
+                # Only one match per message
+                return
+
+        self._run(nickname, msg, "stable", True)
 
     def on_disconnect(self, connection, event):
         sleep(10)
