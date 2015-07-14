@@ -37,7 +37,7 @@ def bitly(command):
     url = server + params
 
     r = requests.get(bitly,
-                     params={"access_token": shorten_key.key, "longUrl": url})
+                     params={"access_token": shorten_key.bitly, "longUrl": url})
     response = r.json()
 
     if response["status_txt"] == "OK":
@@ -50,6 +50,7 @@ def gist(version, code):
     url = "https://api.github.com/gists"
 
     r = requests.post("https://api.github.com/gists",
+            params = {"access_token": shorten_key.github},
             json = {
                 "description": "Shared via Rust Playground",
                 "public": True,
