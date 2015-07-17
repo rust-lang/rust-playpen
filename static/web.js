@@ -531,12 +531,14 @@
     }
 
     function jumpToLine(text, r1) {
-        return "<a href=\"javascript:editLine(" + r1 + ")\">" + text + "</a>";
+        return "<a onclick=\"javascript:editGo(" + r1 + ",1)\"" +
+            " onmouseover=\"javascript:editShowLine("+r1+")\"" +
+            " onmouseout=\"javascript:editRestore()\">" + text + "</a>";
     }
 
     function jumpToRegion(text, r1,c1, r2,c2) {
-        return "<a href=\"javascript:editGo("+r1+","+c1+")\"" +
-            " onmouseover=\"javascript:editShow("+r1+","+c1+", "+r2+","+c2+")\"" +
+        return "<a onclick=\"javascript:editGo("+r1+","+c1+")\"" +
+            " onmouseover=\"javascript:editShowRegion("+r1+","+c1+", "+r2+","+c2+")\"" +
             " onmouseout=\"javascript:editRestore()\">" + text + "</a>";
     }
 
@@ -552,7 +554,7 @@
                              + ">detailed explanation for " + code + "</a>";
                      })
             .replace(/^&lt;anon&gt;:(\d+):(\d+):\s+(\d+):(\d+)/mg, jumpToRegion)
-            .replace(/^&lt;anon&gt;:(\d+) /mg, jumpToLine);
+            .replace(/^&lt;anon&gt;:(\d+)/mg, jumpToLine);
     }
 
     addEventListener("DOMContentLoaded", function() {
@@ -713,33 +715,37 @@
 // called via javascript:fn events from formatCompilerOutput
 var old_range;
 
-function editSel() {
-    return window.ace.edit("editor").selection;
+function editorGet() {
+    return window.ace.edit("editor");
 }
 
 function editGo(r1,c1) {
-    var e = editSel();
-    e.moveCursorTo(r1-1,c1-1,false);
+    var e = editorGet();
     old_range = undefined;
+    e.focus();
+    e.selection.clearSelection();
+    e.selection.moveCursorTo(r1-1, c1-1, false);
 }
 
 function editRestore() {
     if (old_range) {
-        editSel().setSelectionRange(old_range, false);
+        editorGet().selection.setSelectionRange(old_range, false);
     }
 }
 
-function editShow(r1,c1, r2,c2) {
-    var e = editSel();
-    old_range = e.getRange();
-    e.clearSelection();
-    e.setSelectionAnchor(r1-1,c1-1);
-    e.selectTo(r2-1,c2-1);
+function editShowRegion(r1,c1, r2,c2) {
+    var es = editorGet().selection;
+    old_range = es.getRange();
+    es.clearSelection();
+    es.setSelectionAnchor(r1-1, c1-1);
+    es.selectTo(r2-1, c2-1);
 }
 
-function editLine(r1) {
-    var e = editSel();
-    e.clearSelection();
-    e.setSelectionAnchor(r1-1,0);
-    e.selectLine();
+function editShowLine(r1) {
+    var es = editorGet().selection;
+    old_range = es.getRange();
+    es.clearSelection();
+    es.moveCursorTo(r1-1, 0);
+    es.moveCursorLineEnd();
+    es.selectTo(r1-1, 0);
 }
