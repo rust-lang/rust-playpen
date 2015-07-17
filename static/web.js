@@ -723,3 +723,12 @@
 
     }, false);
 }());
+
+
+// called via javascript:fn events from formatCompilerOutput
+var old_range;
+function editSel() { return window.ace.edit("editor").selection; }
+function editRestore() { if (old_range) { editSel().setSelectionRange(old_range, false) } }
+function editLine(r1) { var e = editSel(); e.clearSelection(); e.setSelectionAnchor(r1-1,0); e.selectLine() }
+function editShow(r1,c1, r2,c2) { var e = editSel(); old_range = e.getRange(); e.clearSelection(); e.setSelectionAnchor(r1-1,c1-1); e.selectTo(r2-1,c2-1) }
+function editGo(r1,c1) { var e = editSel(); e.moveCursorTo(r1-1,c1-1,false); old_range = undefined }

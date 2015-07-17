@@ -6,15 +6,6 @@
         <!-- Bear in mind with the figure 720 that when the stable channel is added the toolbar will be full, and so any additions beyond that will necessitate change here or there. -->
         <meta name=viewport id=meta-viewport content="width=720">
         <script>if (screen.width > 720) { document.getElementById("meta-viewport").setAttribute('content', 'width=device-width'); }</script>
-        <script>
-            <!-- called on events from web.js -->
-            var old_range;
-            function editSel() { return window.ace.edit("editor").selection; }
-            function editRestore() { if (old_range) { editSel().setSelectionRange(old_range, false) } }
-            function editLine(r1) { var e = editSel(); e.clearSelection(); e.setSelectionAnchor(r1-1,0); e.selectLine() }
-            function editShow(r1,c1, r2,c2) { var e = editSel(); old_range = e.getRange(); e.clearSelection(); e.setSelectionAnchor(r1-1,c1-1); e.selectTo(r2-1,c2-1) }
-            function editGo(r1,c1) { var e = editSel(); e.moveCursorTo(r1-1,c1-1,false); old_range = undefined }
-        </script>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700"/>
         <!-- web.css and web.js need cache busting; increment the numbers when you make changes -->
         <link rel="stylesheet" href="web.css?5">
