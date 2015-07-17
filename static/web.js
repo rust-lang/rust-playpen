@@ -575,6 +575,7 @@
         themes = document.getElementById("themes");
         editor = ace.edit("editor");
         set_result.editor = editor;
+        editor.$blockScrolling = Infinity;
         session = editor.getSession();
         themelist = ace.require("ace/ext/themelist");
 
