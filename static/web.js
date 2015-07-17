@@ -541,6 +541,10 @@
             return "[<a href=https://doc.rust-lang.org/error-index.html#" + code + ">" + code + "</a>]";
         }).replace(/run `rustc --explain (E\d\d\d\d)` to see a detailed explanation/g, function(text, code) {
             return "see the <a href=https://doc.rust-lang.org/error-index.html#" + code + ">detailed explanation for " + code + "</a>";
+        }).replace(/^&lt;anon&gt;:(\d+):(\d+):\s+(\d+):(\d+)/mg, function(text, r1,c1, r2,c2) {
+            return "<a onmouseout=\"javascript:editRestore()\" onmouseover=\"javascript:editShow("+r1+","+c1+", "+r2+","+c2+")\" href=\"javascript:editGo("+r1+","+c1+")\">" + text + "</a>";
+        }).replace(/^&lt;anon&gt;:(\d+) /mg, function (text, r1) {
+            return "<a href=\"javascript:editLine(" + r1 + ")\">" + text + "</a>";
         });
     }
 
