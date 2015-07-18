@@ -559,7 +559,7 @@
             .replace(/run `rustc --explain (E\d\d\d\d)` to see a detailed explanation/g,
                      function(text, code) {
                          return "see the <a href=https://doc.rust-lang.org/error-index.html#" + code +
-			     ">detailed explanation for " + code + "</a>";
+                             ">detailed explanation for " + code + "</a>";
                      })
             .replace(/&lt;anon&gt;:(\d+)$/mg, jumpToLine) // panicked at 'foo', $&
             .replace(/^&lt;anon&gt;:(\d+):(\d+):\s+(\d+):(\d+)/mg, jumpToRegion)
@@ -584,6 +584,7 @@
         editor = ace.edit("editor");
         set_result.editor = editor;
         editor.$blockScrolling = Infinity;
+        editor.setAnimatedScroll(true);
         session = editor.getSession();
         themelist = ace.require("ace/ext/themelist");
 
@@ -756,27 +757,43 @@ function editGo(r1,c1) {
     old_range = undefined;
     e.focus();
     e.selection.clearSelection();
+    e.scrollToLine(r1-1, true, true);
     e.selection.moveCursorTo(r1-1, c1-1, false);
 }
 
 function editRestore() {
     if (old_range) {
-        editorGet().selection.setSelectionRange(old_range, false);
+        var e = editorGet();
+        e.selection.setSelectionRange(old_range, false);
+        var mid = (e.getFirstVisibleRow() + e.getLastVisibleRow()) / 2;
+        var intmid = Math.round(mid);
+        var extra = (intmid - mid)*2 + 2;
+        var up = e.getFirstVisibleRow() - old_range.start.row + extra;
+        var down = old_range.end.row - e.getLastVisibleRow() + extra;
+        if (up > 0) {
+            e.scrollToLine(mid - up, true, true);
+        } else if (down > 0) {
+            e.scrollToLine(mid + down, true, true);
+        } // else visible enough
     }
 }
 
 function editShowRegion(r1,c1, r2,c2) {
-    var es = editorGet().selection;
+    var e = editorGet();
+    var es = e.selection;
     old_range = es.getRange();
     es.clearSelection();
+    e.scrollToLine(Math.round((r1 + r2) / 2), true, true);
     es.setSelectionAnchor(r1-1, c1-1);
     es.selectTo(r2-1, c2-1);
 }
 
 function editShowLine(r1) {
-    var es = editorGet().selection;
+    var e = editorGet();
+    var es = e.selection;
     old_range = es.getRange();
     es.clearSelection();
+    e.scrollToLine(r1, true, true);
     es.moveCursorTo(r1-1, 0);
     es.moveCursorLineEnd();
     es.selectTo(r1-1, 0);
