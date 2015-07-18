@@ -552,8 +552,8 @@
                      })
             .replace(/run `rustc --explain (E\d\d\d\d)` to see a detailed explanation/g,
                      function(text, code) {
-                         return "see the <a href=https://doc.rust-lang.org/error-index.html#" + code
-                             + ">detailed explanation for " + code + "</a>";
+                         return "see the <a href=https://doc.rust-lang.org/error-index.html#" + code +
+			     ">detailed explanation for " + code + "</a>";
                      })
             .replace(/&lt;anon&gt;:(\d+)$/mg, jumpToLine) // panicked at 'foo', $&
             .replace(/^&lt;anon&gt;:(\d+):(\d+):\s+(\d+):(\d+)/mg, jumpToRegion)
