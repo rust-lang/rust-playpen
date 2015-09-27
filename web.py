@@ -65,6 +65,8 @@ def extractor(key, default, valid):
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 def evaluate(optimize, version, test, color):
     args = ["-C", "opt-level=" + optimize]
+    if optimize == "0":
+        args.append("-g")
     if color:
         args.append("--color=always")
     if test:
@@ -103,6 +105,8 @@ def format(version):
 @extractor("emit", "asm", ("asm", "llvm-ir"))
 def compile(emit, optimize, version, color, syntax):
     args = ["-C", "opt-level=" + optimize, "--emit=" + emit]
+    if optimize == "0":
+        args.append("-g")
     if color:
         args.append("--color=always")
     if syntax:
