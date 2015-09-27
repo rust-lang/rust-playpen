@@ -44,6 +44,9 @@ def evaluate(code, channel, template):
     out, _ = playpen.execute(channel, "/usr/local/bin/evaluate.sh",
                              ("-C","opt-level=2",), code)
 
+    if len(out.strip().replace(b"\xff", b"", 1)) == 0:
+        return "<success, but no output>"
+
     if len(out) > 5000:
         return "more than 5000 bytes of output; bailing out"
 
