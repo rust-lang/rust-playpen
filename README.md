@@ -55,8 +55,8 @@ something like this:
       - "#bots"
   keys: [null, "hunter2"]
   password: abc123abc
-  triggers:
-      - template: &template "
+  templates:
+      - &template "
             #![allow(dead_code, unused_variables)]
 
             static VERSION: &'static str = \"%(version)s\";
@@ -68,40 +68,45 @@ something like this:
                     %(input)s
                 });
             }"
+      - &no_template ""
+  default_template: *template
+  triggers:
+      - template: *template
         channel: "stable"
         triggers:
-            - "playbot:(.*)"
-            - "rusti:(.*)"
             - "playbot:(.*)"
             - "rusti:(.*)"
             - ">>(.*)"
             - "s\\s*>>(.*)"
             - "stable\\s*>>(.*)"
+
       - template: *template
         channel: "beta"
         triggers:
             - "b\\s*>>(.*)"
             - "beta\\s*>>(.*)"
+
       - template: *template
         channel: "nightly"
         triggers:
             - "n\\s*>>(.*)"
             - "nightly\\s*>>(.*)"
 
-      - template: &no_template ""
+      - template: *no_template
         channel: "stable"
         triggers:
-            - "playbot-mini:(.*)"
             - "playbot-mini:(.*)"
             - "rusti-mini:(.*)"
             - ">(.*)"
             - "s\\s*>(.*)"
             - "stable\\s*>(.*)"
+
       - template: *no_template
         channel: "beta"
         triggers:
             - "b\\s*>(.*)"
             - "beta\\s*>(.*)"
+
       - template: *no_template
         channel: "nightly"
         triggers:
@@ -109,7 +114,7 @@ something like this:
             - "nightly\\s*>(.*)"
 ```
 
-Note that the channel key is `null` for public channels. 
+Note that the channel key is `null` for public channels.
 
 
 [playpen]: https://github.com/thestinger/playpen

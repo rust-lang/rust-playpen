@@ -33,38 +33,6 @@ def bitly(command):
         print(response)
         return "failed to shorten url"
 
-def gist(version, code):
-    url = "https://api.github.com/gists"
-
-    r = requests.post("https://api.github.com/gists",
-            params = {"access_token": shorten_key.github},
-            json = {
-                "description": "Shared via Rust Playground",
-                "public": True,
-                "files": {
-                    "playbot.rs": {
-                        "content": code
-                    }
-                }
-            })
-
-    if r.status_code == 201:
-        response = r.json()
-
-        gist_id = response["id"]
-        gist_url = response["html_url"]
-
-        play_url = "https://play.rust-lang.org/?gist=" + quote(gist_id) + "&version=" + version
-        return "output truncated; full output at: " + play_url
-    else:
-        return "failed to shorten url"
-
-def pastebin(channel, code):
-    if channel == "nightly":
-        return gist(channel, code)
-    else:
-        return bitly(code)
-
 def evaluate(code, channel, template):
     if "%(version)s" in template and "%(input)s" in template:
         version, _ = playpen.execute(channel, "/bin/dash",
@@ -84,16 +52,16 @@ def evaluate(code, channel, template):
 
     for line in lines:
         if len(line) > 150:
-            return pastebin(channel, code)
+            return bitly(code)
 
     limit = 3
     if len(lines) > limit:
-        return "\n".join(lines[:limit - 1] + [pastebin(channel, code)])
+        return "\n".join(lines[:limit - 1] + [bitly(code)])
 
     return out
 
 class RustEvalbot(irc.client.SimpleIRCClient):
-    def __init__(self, nickname, channels, keys, triggers):
+    def __init__(self, nickname, channels, keys, triggers, default_template):
         irc.client.SimpleIRCClient.__init__(self)
         irc.client.ServerConnection.buffer_class = irc.buffer.LenientDecodingLineBuffer
         self.nickname = nickname
@@ -102,6 +70,7 @@ class RustEvalbot(irc.client.SimpleIRCClient):
         for t in triggers:
             t['triggers'] = [re.compile(s) for s in t['triggers']]
         self.triggers = triggers
+        self.default_template = default_template
 
     def _run(self, irc_channel, code, rust_channel, with_template):
         result = evaluate(code, rust_channel, with_template)
@@ -137,15 +106,16 @@ class RustEvalbot(irc.client.SimpleIRCClient):
         print("{} {}: {}".format(event.target, nickname, msg))
         # Allow for the same triggers like in channels,
         # but fallback to stable with template.
-        for (trigger, channel, with_template) in self.triggers:
-            res = trigger.match(msg)
-            if res:
-                code = res.group(1)
-                self._run(nickname, code, channel, with_template)
-                # Only one match per message
-                return
+        for t in self.triggers:
+            for r in t['triggers']:
+                res = r.match(msg)
+                if res:
+                    code = res.group(1)
+                    self._run(nickname, code, t['channel'], t['template'])
+                    # Only one match per message
+                    return
 
-        self._run(nickname, msg, "stable", True)
+        self._run(nickname, msg, "stable", self.default_template)
 
     def on_disconnect(self, connection, event):
         sleep(10)
@@ -159,8 +129,8 @@ class RustEvalbot(irc.client.SimpleIRCClient):
         else:
             connection.join(channel, key)
 
-def start(nickname, server, port, channels, keys, triggers):
-    client = RustEvalbot(nickname, channels, keys, triggers)
+def start(nickname, server, port, channels, keys, triggers, default_template):
+    client = RustEvalbot(nickname, channels, keys, triggers, default_template)
     try:
         client.connect(server, port, nickname)
         client.connection.set_keepalive(30)
@@ -181,7 +151,8 @@ def main():
                                                   cfg["port"],
                                                   cfg["channels"],
                                                   cfg["keys"],
-                                                  cfg["triggers"]))
+                                                  cfg["triggers"],
+                                                  cfg["default_template"]))
     thread.start()
 
 if __name__ == "__main__":
