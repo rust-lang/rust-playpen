@@ -16,19 +16,6 @@ import yaml
 import playpen
 import shorten_key
 
-irc_template = """\
-#![allow(dead_code, unused_variables)]
-
-static VERSION: &'static str = "%(version)s";
-
-fn show<T: std::fmt::Debug>(e: T) { println!("{:?}", e) }
-
-fn main() {
-    show({
-        %(input)s
-    });
-}"""
-
 def bitly(command):
     bitly = "https://api-ssl.bitly.com/v3/shorten"
     server = "http://play.rust-lang.org/?"
@@ -78,11 +65,11 @@ def pastebin(channel, code):
     else:
         return bitly(code)
 
-def evaluate(code, channel, with_template):
-    if with_template:
+def evaluate(code, channel, template):
+    if "%(version)s" in template and "%(input)s" in template:
         version, _ = playpen.execute(channel, "/bin/dash",
                                      ("-c", "--", "rustc -V | head -1 | tr -d '\n'"))
-        code = irc_template % {
+        code = template % {
                 "version": version.decode(),
                 "input": code }
 
@@ -112,7 +99,9 @@ class RustEvalbot(irc.client.SimpleIRCClient):
         self.nickname = nickname
         self.channels = channels
         self.keys = keys
-        self.triggers = [(re.compile(r), c, wt) for (r, c, wt) in triggers]
+        for t in triggers:
+            t['triggers'] = [re.compile(s) for s in t['triggers']]
+        self.triggers = triggers
 
     def _run(self, irc_channel, code, rust_channel, with_template):
         result = evaluate(code, rust_channel, with_template)
@@ -128,13 +117,14 @@ class RustEvalbot(irc.client.SimpleIRCClient):
 
     def on_pubmsg(self, connection, event):
         msg = event.arguments[0]
-        for (trigger, channel, with_template) in self.triggers:
-            res = trigger.match(msg)
-            if res:
-                code = res.group(1)
-                self.handle_pubmsg(event, code, channel, with_template)
-                # Only one match per message
-                return
+        for t in self.triggers:
+            for r in t['triggers']:
+                res = r.match(msg)
+                if res:
+                    code = res.group(1)
+                    self.handle_pubmsg(event, code, t['channel'], t['template'])
+                    # Only one match per message
+                    return
 
     def handle_pubmsg(self, event, code, channel, with_template):
         nickname = event.source.split("!")[0]

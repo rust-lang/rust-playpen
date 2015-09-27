@@ -37,25 +37,77 @@ The bot uses [bitly](http://bitly.com) as a URL shortener. Get an OAuth access t
 into a file called `shorten_key.py`, in the same directory as `bot.py`.
 `shorten_key.py` just needs one line, of the form:
 
-    key = "123abc123"
+    bitly = "123abc123"
 
 #### Create `irc.yaml`
 
 You'll also need to create the file `irc.yaml` in the same directory as
-`bot.py`. The IRC nick that the bot will use is hard-coded [in
-bot.py][nickname]. This configuration assumes that the bot's nick is
+`bot.py`. This configuration assumes that the bot's nick is
 registered, and includes the nick's password. The `irc.yaml` file will look
 something like this:
 
+```yaml
+- nickname: "playbot-dev"
+  server: irc.mozilla.org
+  port: 6667
+  channels:
+      - "#rust-playbot"
+      - "#bots"
+  keys: [null, "hunter2"]
+  password: abc123abc
+  triggers:
+      - template: &template "
+            #![allow(dead_code, unused_variables)]
+
+            static VERSION: &'static str = \"%(version)s\";
+
+            fn show<T: std::fmt::Debug>(e: T) { println!(\"{:?}\", e) }
+
+            fn main() {
+                show({
+                    %(input)s
+                });
+            }"
+        channel: "stable"
+        triggers:
+            - "playbot:(.*)"
+            - "rusti:(.*)"
+            - "playbot:(.*)"
+            - "rusti:(.*)"
+            - ">>(.*)"
+            - "s\\s*>>(.*)"
+            - "stable\\s*>>(.*)"
+      - template: *template
+        channel: "beta"
+        triggers:
+            - "b\\s*>>(.*)"
+            - "beta\\s*>>(.*)"
+      - template: *template
+        channel: "nightly"
+        triggers:
+            - "n\\s*>>(.*)"
+            - "nightly\\s*>>(.*)"
+
+      - template: &no_template ""
+        channel: "stable"
+        triggers:
+            - "playbot-mini:(.*)"
+            - "playbot-mini:(.*)"
+            - "rusti-mini:(.*)"
+            - ">(.*)"
+            - "s\\s*>(.*)"
+            - "stable\\s*>(.*)"
+      - template: *no_template
+        channel: "beta"
+        triggers:
+            - "b\\s*>(.*)"
+            - "beta\\s*>(.*)"
+      - template: *no_template
+        channel: "nightly"
+        triggers:
+            - "n\\s*>(.*)"
+            - "nightly\\s*>(.*)"
 ```
-   - server: irc.example.org
-      port: 6667
-      channels:
-        - "#bots"
-        - "#secret-clubhouse"
-      keys: [null, "hunter2"]
-      password: abc123abc
-``` 
 
 Note that the channel key is `null` for public channels. 
 
