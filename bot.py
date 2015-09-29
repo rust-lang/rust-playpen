@@ -69,12 +69,13 @@ def evaluate(code, nickname):
     return out
 
 class RustEvalbot(irc.client.SimpleIRCClient):
-    def __init__(self, nickname, channels, keys):
+    def __init__(self, nickname, channels, keys, password):
         irc.client.SimpleIRCClient.__init__(self)
         irc.client.ServerConnection.buffer_class = irc.buffer.LenientDecodingLineBuffer
         self.nickname = nickname
         self.channels = channels
         self.keys = keys
+        self.password = password
 
     def _run(self, channel, code, nick):
         result = evaluate(code, nick)
@@ -82,6 +83,8 @@ class RustEvalbot(irc.client.SimpleIRCClient):
             self.connection.notice(channel, line)
 
     def on_welcome(self, connection, event):
+        if self.password:
+            connection.privmsg('NickServ', 'identify ' + self.password)
         for channel, key in zip(self.channels, self.keys):
             if key is None:
                 connection.join(channel)
@@ -121,8 +124,8 @@ class RustEvalbot(irc.client.SimpleIRCClient):
         else:
             connection.join(channel, key)
 
-def start(nickname, server, port, channels, keys):
-    client = RustEvalbot(nickname, channels, keys)
+def start(nickname, server, port, channels, keys, password):
+    client = RustEvalbot(nickname, channels, keys, password)
     try:
         client.connect(server, port, nickname)
         client.connection.set_keepalive(30)
@@ -142,7 +145,8 @@ def main():
                                                       c["server"],
                                                       c["port"],
                                                       c["channels"],
-                                                      c["keys"]))
+                                                      c["keys"],
+                                                      c["password"]))
         thread.start()
 
 if __name__ == "__main__":
