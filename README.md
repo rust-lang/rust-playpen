@@ -47,71 +47,70 @@ registered, and includes the nick's password. The `irc.yaml` file will look
 something like this:
 
 ```yaml
-- nickname: "playbot-dev"
-  server: irc.mozilla.org
-  port: 6667
-  channels:
-      - "#rust-playbot"
-      - "#bots"
-  keys: [null, "hunter2"]
-  password: abc123abc
-  templates:
-      - &template "
-            #![allow(dead_code, unused_variables)]
+nickname: "playbot-dev"
+server: irc.mozilla.org
+port: 6667
+channels:
+  - "#rust"
+keys: [null, "hunter2"]
+password: abc123abc
+templates:
+  - &template "
+        #![allow(dead_code, unused_variables)]
 
-            static VERSION: &'static str = \"%(version)s\";
+        static VERSION: &'static str = \"%(version)s\";
 
-            fn show<T: std::fmt::Debug>(e: T) { println!(\"{:?}\", e) }
+        fn show<T: std::fmt::Debug>(e: T) { println!(\"{:?}\", e) }
 
-            fn main() {
-                show({
-                    %(input)s
-                });
-            }"
-      - &no_template ""
-  default_template: *template
-  triggers:
-      - template: *template
-        channel: "stable"
-        triggers:
-            - "playbot:(.*)"
-            - "rusti:(.*)"
-            - ">>(.*)"
-            - "s\\s*>>(.*)"
-            - "stable\\s*>>(.*)"
+        fn main() {
+            show({
+                %(input)s
+            });
+        }"
+  - &no_template ""
+default_template: *template
+triggers:
+  - template: *template
+    channel: "stable"
+    triggers:
+        #- "playbot:(.*)"
+        #- "rusti:(.*)"
+        - ">>(.*)"
+        - "s\\s*>>(.*)"
+        - "stable\\s*>>(.*)"
 
-      - template: *template
-        channel: "beta"
-        triggers:
-            - "b\\s*>>(.*)"
-            - "beta\\s*>>(.*)"
+  - template: *template
+    channel: "beta"
+    triggers:
+        - "b\\s*>>(.*)"
+        - "beta\\s*>>(.*)"
 
-      - template: *template
-        channel: "nightly"
-        triggers:
-            - "n\\s*>>(.*)"
-            - "nightly\\s*>>(.*)"
+  - template: *template
+    channel: "nightly"
+    triggers:
+        - "n\\s*>>(.*)"
+        - "nightly\\s*>>(.*)"
 
-      - template: *no_template
-        channel: "stable"
-        triggers:
-            - "playbot-mini:(.*)"
-            - "rusti-mini:(.*)"
-            - ">(.*)"
-            - "s\\s*>(.*)"
-            - "stable\\s*>(.*)"
+  - template: *no_template
+    channel: "stable"
+    triggers:
+        #- "playbot-mini:(.*)"
+        #- "rusti-mini:(.*)"
+        - ">(.*)"
+        - "s\\s*>(.*)"
+        - "stable\\s*>(.*)"
 
-      - template: *no_template
-        channel: "beta"
-        triggers:
-            - "b\\s*>(.*)"
-            - "beta\\s*>(.*)"
+  - template: *no_template
+    channel: "beta"
+    triggers:
+        - "b\\s*>(.*)"
+        - "beta\\s*>(.*)"
 
-      - template: *no_template
-        channel: "nightly"
-        triggers:
-            - "n\\s*>(.*)"
-            - "nightly\\s*>(.*)"
+  - template: *no_template
+    channel: "nightly"
+    triggers:
+        - "n\\s*>(.*)"
+        - "nightly\\s*>(.*)"
 ```
 
 Note that the channel key is `null` for public channels.
