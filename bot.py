@@ -64,7 +64,7 @@ def evaluate(code, channel, template):
     return out
 
 class RustEvalbot(irc.client.SimpleIRCClient):
-    def __init__(self, nickname, channels, keys, triggers, default_template):
+    def __init__(self, nickname, channels, keys, password, triggers, default_template):
         irc.client.SimpleIRCClient.__init__(self)
         irc.client.ServerConnection.buffer_class = irc.buffer.LenientDecodingLineBuffer
         self.nickname = nickname
@@ -74,6 +74,7 @@ class RustEvalbot(irc.client.SimpleIRCClient):
             t['triggers'] = [re.compile(s) for s in t['triggers']]
         self.triggers = triggers
         self.default_template = default_template
+        self.password = password
 
     def _run(self, irc_channel, code, rust_channel, with_template):
         result = evaluate(code, rust_channel, with_template)
@@ -81,6 +82,8 @@ class RustEvalbot(irc.client.SimpleIRCClient):
             self.connection.notice(irc_channel, line)
 
     def on_welcome(self, connection, event):
+        if self.password:
+            connection.privmsg('NickServ', 'identify ' + self.password)
         for channel, key in zip(self.channels, self.keys):
             if key is None:
                 connection.join(channel)
@@ -132,8 +135,8 @@ class RustEvalbot(irc.client.SimpleIRCClient):
         else:
             connection.join(channel, key)
 
-def start(nickname, server, port, channels, keys, triggers, default_template):
-    client = RustEvalbot(nickname, channels, keys, triggers, default_template)
+def start(nickname, server, port, channels, keys, password, triggers, default_template):
+    client = RustEvalbot(nickname, channels, keys, password, triggers, default_template)
     try:
         client.connect(server, port, nickname)
         client.connection.set_keepalive(30)
@@ -148,12 +151,12 @@ def main():
     with open("irc.yaml") as f:
         cfg = yaml.load(f.read())
 
-    cfg = cfg[0]
     thread = threading.Thread(target=start, args=(cfg["nickname"],
                                                   cfg["server"],
                                                   cfg["port"],
                                                   cfg["channels"],
                                                   cfg["keys"],
+                                                  cfg["password"],
                                                   cfg["triggers"],
                                                   cfg["default_template"]))
     thread.start()
