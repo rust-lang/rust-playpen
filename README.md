@@ -1,5 +1,5 @@
 A web interface for running Rust code built using [playpen][playpen]. It is
-hosted at <http://play.rust-lang.org/>.
+hosted at <https://play.rust-lang.org/>.
 
 The interface can also be accessed in most Rust-related channels on
 `irc.mozilla.org`.
@@ -33,7 +33,7 @@ dependencies are installed system-wide. Get the latest versions of `pyyaml`,
 
 #### Create `shorten_key.py`
 
-The bot uses [bitly](http://bitly.com) as a URL shortener. Get an OAuth access token, and put it
+The bot uses [bitly](https://bitly.com) as a URL shortener. Get an OAuth access token, and put it
 into a file called `shorten_key.py`, in the same directory as `bot.py`.
 `shorten_key.py` just needs one line, of the form:
 
