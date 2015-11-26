@@ -474,7 +474,7 @@
                 templates.push(key);
             }
         }
-        return _.sortBy(templates, function(str) { return str.toUpperCase() });
+        return _.sortBy(templates, function(str) { return str.toUpperCase(); });
     }
 
     function renderTemplatesManager(result, session, templatesManagerTemplate) {
@@ -520,7 +520,7 @@
         createButton.onclick = function() {
             var templateName = newTemplateNameInput.value;
             var conditionTemplateExists = existsTemplate(templateName) && !confirm("Template '" + templateName + "' already exists.\nOverwrite it?");
-            var conditionNameEmpty = templateName == "";
+            var conditionNameEmpty = templateName === "";
             if (!conditionNameEmpty && !conditionTemplateExists) {
                 saveTemplate(session, templateName);
                 newTemplateNameInput.value = '';
@@ -788,7 +788,7 @@
 
         templatesButton.onclick = function() {
             var templatesManager = document.getElementById('templates-manager');
-            if (templatesManager == null) {
+            if (templatesManager === null) {
                 renderTemplatesManager(result, session, templatesManagerTemplate);
             } else {
                 clear_result(result);
