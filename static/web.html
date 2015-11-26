@@ -49,6 +49,11 @@
 					><input type=radio name=version id=version-nightly value=nightly><label for=version-nightly title="Use the nightly channel">Nightly</label
 				></div
 			></div
+			><wbr><div
+				><div
+					><button type=button id=templates title="Manage your code templates">Templates</button
+				></div
+			></div
 			><wbr><div class=right-c-e
 				><button type=button id=configure-editor><span>Configure editor</span></button
 				><div class=dropdown>
@@ -74,5 +79,29 @@
 }</div>
             <div id=result data-empty><div></div><button type=button id=clear-result title="Close this pane">×</button></div>
         </main>
+
+		<script type="text/template" id="templates-manager-template"
+			><div id="templates-manager"
+				><h2>Templates</h2
+				><p>Here you can create a library of templates that is stored locally on your computer.</p
+				><div
+	                ><input id="new-template-name" type="text" placeholder="Template name"
+	                ><span><button id="create-template" class="safe" type="button">Create</button></span
+	            ></div
+				><table
+					><% _.each(templates, function(template) {
+						%><tr
+							><td><button type="button" class="primary safe" data-action="load" data-template="<%- template %>"><%- template %></a></td
+							><td
+								><span
+									><button type="button" class="danger" data-action="save" data-template="<%- template %>">Overwrite</button
+									><button type="button" class="danger" data-action="delete" data-template="<%- template %>">Delete</button
+								></span
+							></td
+						></tr
+					><% })
+				%></table
+			></div
+		></script>
     </body>
 </html>
