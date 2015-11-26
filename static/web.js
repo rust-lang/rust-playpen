@@ -462,6 +462,99 @@
         }
     }
 
+    var templatePrefix = "template-";
+
+    function getTemplateNames() {
+        var templates = [];
+        for (var i = 0; i < localStorage.length; i++) {
+            var key = localStorage.key(i);
+            if (_.startsWith(key, templatePrefix)) {
+                // strip prefix
+                key = key.substr(templatePrefix.length);
+                templates.push(key);
+            }
+        }
+        return _.sortBy(templates, function(str) { return str.toUpperCase() });
+    }
+
+    function renderTemplatesManager(result, session, templatesManagerTemplate) {
+        var templates = getTemplateNames();
+
+        set_result(result, templatesManagerTemplate({
+            templates: templates
+        }));
+
+        var actionElems = document.querySelectorAll("#templates-manager *[data-template]");
+        var createButton = document.getElementById("create-template");
+        var newTemplateNameInput = document.getElementById('new-template-name');
+
+        _.each(actionElems, function(elem) {
+            elem.onclick = function() {
+                var action = elem.attributes["data-action"].value;
+                var templateName = elem.attributes["data-template"].value;
+
+                switch (action) {
+                    case "load":
+                        if (confirm("Really LOAD '" + templateName + "'?")) {
+                            loadTemplate(session, templateName);
+                        }
+                        break;
+                    case "save":
+                        if (confirm("Really OVERWRITE '" + templateName + "'?")) {
+                            saveTemplate(session, templateName);
+                        }
+                        break;
+                    case "delete":
+                        if (confirm("Really DELETE '" + templateName + "'?")) {
+                            deleteTemplate(templateName);
+                        }
+
+                        // Rerender
+                        renderTemplatesManager(result, session, templatesManagerTemplate);
+                        break;
+                }
+
+            };
+        });
+
+        createButton.onclick = function() {
+            var templateName = newTemplateNameInput.value;
+            var conditionTemplateExists = existsTemplate(templateName) && !confirm("Template '" + templateName + "' already exists.\nOverwrite it?");
+            var conditionNameEmpty = templateName == "";
+            if (!conditionNameEmpty && !conditionTemplateExists) {
+                saveTemplate(session, templateName);
+                newTemplateNameInput.value = '';
+                // Rerender
+                renderTemplatesManager(result, session, templatesManagerTemplate);
+            }
+        };
+
+        newTemplateNameInput.onkeyup = function(event) {
+            if (event.keyCode == 13) {
+                createButton.click();
+            }
+        };
+
+    }
+
+    function loadTemplate(session, templateName) {
+        var code = optionalLocalStorageGetItem(templatePrefix + templateName);
+        session.setValue(code);
+    }
+
+    function saveTemplate(session, templateName) {
+        var code = session.getValue();
+        optionalLocalStorageSetItem(templatePrefix + templateName, code);
+    }
+
+    function deleteTemplate(templateName) {
+            localStorage.removeItem(templatePrefix + templateName);
+    }
+
+    function existsTemplate(templateName) {
+        return typeof localStorage.getItem(templatePrefix + templateName) === "string";
+    }
+
     var evaluateButton;
     var asmButton;
     var irButton;
@@ -473,6 +566,8 @@
     var clearResultButton;
     var keyboard;
     var themes;
+    var templatesManagerTemplate;
+    var templatesButton;
     var editor;
     var session;
     var themelist;
@@ -551,6 +646,8 @@
         keyboard = document.getElementById("keyboard");
         asm_flavor = document.getElementById("asm-flavor");
         themes = document.getElementById("themes");
+        templatesManagerTemplate = _.template(document.getElementById("templates-manager-template").innerHTML);
+        templatesButton = document.getElementById("templates");
         editor = ace.edit("editor");
         set_result.editor = editor;
         session = editor.getSession();
@@ -687,6 +784,15 @@
 
         themes.onkeyup = themes.onchange = function () {
             set_theme(editor, themelist, themes.options[themes.selectedIndex].text);
+        };
+
+        templatesButton.onclick = function() {
+            var templatesManager = document.getElementById('templates-manager');
+            if (templatesManager == null) {
+                renderTemplatesManager(result, session, templatesManagerTemplate);
+            } else {
+                clear_result(result);
+            }
         };
 
     }, false);
