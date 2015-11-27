@@ -497,7 +497,7 @@
         var createButton = document.getElementById("create-template");
         var newTemplateNameInput = document.getElementById('new-template-name');
 
-        _.each(actionElems, function(elem) {
+        _.forEach(actionElems, function(elem) {
             elem.onclick = function() {
                 var action = elem.attributes["data-action"].value;
                 var templateName = elem.attributes["data-template"].value;

@@ -89,7 +89,7 @@
 	                ><span><button id="create-template" class="safe" type="button">Create</button></span
 	            ></div
 				><table
-					><% _.each(templates, function(template) {
+					><% _.forEach(templates, function(template) {
 						%><tr
 							><td><button type="button" class="primary safe" data-action="load" data-template="<%- template %>"><%- template %></a></td
 							><td
