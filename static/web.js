@@ -22,6 +22,11 @@
         }
     }
 
+    function isLocalStorageAccessible() {
+        optionalLocalStorageSetItem("___TEST___", "42");
+        return "42" === optionalLocalStorageGetItem("___TEST___");
+    }
+
     function build_themes(themelist) {
         // Load all ace themes, sorted by their proper name.
         var themes = themelist.themes;
@@ -808,6 +813,10 @@
                 clear_result(result);
             }
         };
+
+        if (!isLocalStorageAccessible()) {
+            templatesButton.parentNode.removeChild(templatesButton);
+        }
 
     }, false);
 }());
