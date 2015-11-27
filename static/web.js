@@ -468,15 +468,15 @@
             if (_.isPlainObject(templates)) {
                 return templates;
             } else {
-                return {}
+                return {};
             }
         } catch(e) {
-            return {}
+            return {};
         }
     }
 
     function storeTemplates(templates) {
-        optionalLocalStorageSetItem("templates", JSON.stringify(templates))
+        optionalLocalStorageSetItem("templates", JSON.stringify(templates));
     }
 
     function getTemplateNames() {
