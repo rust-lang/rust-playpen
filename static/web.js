@@ -462,19 +462,28 @@
         }
     }
 
-    var templatePrefix = "template-";
+    function retrieveTemplates() {
+        try {
+            var templates = JSON.parse(optionalLocalStorageGetItem("templates"));
+            if (_.isPlainObject(templates)) {
+                return templates;
+            } else {
+                return {}
+            }
+        } catch(e) {
+            return {}
+        }
+    }
+
+    function storeTemplates(templates) {
+        optionalLocalStorageSetItem("templates", JSON.stringify(templates))
+    }
 
     function getTemplateNames() {
-        var templates = [];
-        for (var i = 0; i < localStorage.length; i++) {
-            var key = localStorage.key(i);
-            if (_.startsWith(key, templatePrefix)) {
-                // strip prefix
-                key = key.substr(templatePrefix.length);
-                templates.push(key);
-            }
-        }
-        return _.sortBy(templates, function(str) { return str.toUpperCase(); });
+        return _.chain(retrieveTemplates())
+                .keys()
+                .sortBy(function(name) { return name.toUpperCase(); })
+                .value();
     }
 
     function renderTemplatesManager(result, session, templatesManagerTemplate) {
@@ -538,21 +547,26 @@
     }
 
     function loadTemplate(session, templateName) {
-        var code = optionalLocalStorageGetItem(templatePrefix + templateName);
-        session.setValue(code);
+        var templates = retrieveTemplates();
+        session.setValue(templates[templateName]);
     }
 
     function saveTemplate(session, templateName) {
+        var templates = retrieveTemplates();
         var code = session.getValue();
-        optionalLocalStorageSetItem(templatePrefix + templateName, code);
+        templates[templateName] = code;
+        storeTemplates(templates);
     }
 
     function deleteTemplate(templateName) {
-            localStorage.removeItem(templatePrefix + templateName);
+        var templates = retrieveTemplates();
+        delete templates[templateName];
+        storeTemplates(templates);
     }
 
     function existsTemplate(templateName) {
-        return typeof localStorage.getItem(templatePrefix + templateName) === "string";
+        var templates = retrieveTemplates();
+        return templateName in templates;
     }
 
     var evaluateButton;
