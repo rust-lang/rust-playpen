@@ -523,9 +523,9 @@
         return text.replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
-            .replace(/\x1b\[3([0-7])m([^\x1b]*)(?:\x1b\(B)?\x1b\[m/g, function(original, colorCode, text) {
+            .replace(/\x1b\[3([0-7])m([^\x1b]*)(?:\x1b\(B)?\x1b\[0?m/g, function(original, colorCode, text) {
                 return '<span class=ansi-' + COLOR_CODES[+colorCode] + '>' + text + '</span>';
-            }).replace(/\x1b\[1m([^\x1b]*)(?:\x1b\(B)?\x1b\[m/g, function(original, text) {
+            }).replace(/\x1b\[1m([^\x1b]*)(?:\x1b\(B)?\x1b\[0?m/g, function(original, text) {
                 return "<strong>" + text + "</strong>";
             });
     }
