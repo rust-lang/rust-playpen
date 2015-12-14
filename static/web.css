@@ -17,11 +17,11 @@
     display: block;
 }
 
-:root, button {
+:root, button, input[type=text] {
     line-height: 1.4;
 }
 
-:root, button, label {
+:root, button, label, input[type=text] {
     font-family: sans-serif;
     font-size: 1rem;
 }
@@ -131,7 +131,8 @@ button:last-child {
     border-bottom-right-radius: 4px;
 }
 
-button {
+
+button, input[type=text] {
     color: #333;
     background-color: #fff;
     border: 1px solid rgba(153, 153, 153, 0.5);
@@ -140,6 +141,13 @@ button {
     vertical-align: middle;
     cursor: pointer;
     outline: 0;
+}
+
+input[type=text] {
+    cursor: auto;
+    border-radius: 4px;
+    border-width: 1px;
+    margin-right: 8px;
 }
 
 button::-moz-focus-inner {
@@ -428,6 +436,38 @@ button[disabled]:last-child::before {
 #result[data-empty] {
     bottom: unset;
 }
+
+#templates-manager > * {
+    margin-bottom: 1em;
+}
+
+#templates-manager table button[data-action=load] {
+    width: 100%;
+    margin-right: 0.5em;
+}
+
+
+#templates-manager button.safe {
+    background: rgba(4, 41, 144, 0.7);
+    color: rgba(255, 255, 255, 0.87);
+}
+
+#templates-manager button.safe:hover,
+#templates-manager button.safe:focus,
+#templates-manager button.safe:active {
+    background-color: rgba(4, 41, 144, 0.9);
+}
+
+#templates-manager button.danger {
+    background: rgba(170, 68, 34, 0.5);
+}
+
+#templates-manager button.danger:hover,
+#templates-manager button.danger:focus,
+#templates-manager button.danger:active {
+    background-color: rgba(170, 47, 34, 0.85);
+}
+
 
 @supports (display: flex) {
     /* The position: absolute approach is mostly OK, but flex is better. */

@@ -22,6 +22,11 @@
         }
     }
 
+    function isLocalStorageAccessible() {
+        optionalLocalStorageSetItem("___TEST___", "42");
+        return "42" === optionalLocalStorageGetItem("___TEST___");
+    }
+
     function build_themes(themelist) {
         // Load all ace themes, sorted by their proper name.
         var themes = themelist.themes;
@@ -462,6 +467,113 @@
         }
     }
 
+    function retrieveTemplates() {
+        try {
+            var templates = JSON.parse(optionalLocalStorageGetItem("templates"));
+            if (_.isPlainObject(templates)) {
+                return templates;
+            } else {
+                return {};
+            }
+        } catch(e) {
+            return {};
+        }
+    }
+
+    function storeTemplates(templates) {
+        optionalLocalStorageSetItem("templates", JSON.stringify(templates));
+    }
+
+    function getTemplateNames() {
+        return _.chain(retrieveTemplates())
+                .keys()
+                .sortBy(function(name) { return name.toUpperCase(); })
+                .value();
+    }
+
+    function renderTemplatesManager(result, session, templatesManagerTemplate) {
+        var templates = getTemplateNames();
+
+        set_result(result, templatesManagerTemplate({
+            templates: templates
+        }));
+
+        var actionElems = document.querySelectorAll("#templates-manager *[data-template]");
+        var createButton = document.getElementById("create-template");
+        var newTemplateNameInput = document.getElementById('new-template-name');
+
+        _.forEach(actionElems, function(elem) {
+            elem.onclick = function() {
+                var action = elem.attributes["data-action"].value;
+                var templateName = elem.attributes["data-template"].value;
+
+                switch (action) {
+                    case "load":
+                        if (confirm("Really LOAD '" + templateName + "'?")) {
+                            loadTemplate(session, templateName);
+                        }
+                        break;
+                    case "save":
+                        if (confirm("Really OVERWRITE '" + templateName + "'?")) {
+                            saveTemplate(session, templateName);
+                        }
+                        break;
+                    case "delete":
+                        if (confirm("Really DELETE '" + templateName + "'?")) {
+                            deleteTemplate(templateName);
+                        }
+
+                        // Rerender
+                        renderTemplatesManager(result, session, templatesManagerTemplate);
+                        break;
+                }
+
+            };
+        });
+
+        createButton.onclick = function() {
+            var templateName = newTemplateNameInput.value;
+            var conditionTemplateExists = existsTemplate(templateName) && !confirm("Template '" + templateName + "' already exists.\nOverwrite it?");
+            var conditionNameEmpty = templateName === "";
+            if (!conditionNameEmpty && !conditionTemplateExists) {
+                saveTemplate(session, templateName);
+                newTemplateNameInput.value = '';
+                // Rerender
+                renderTemplatesManager(result, session, templatesManagerTemplate);
+            }
+        };
+
+        newTemplateNameInput.onkeyup = function(event) {
+            if (event.keyCode == 13) {
+                createButton.click();
+            }
+        };
+
+    }
+
+    function loadTemplate(session, templateName) {
+        var templates = retrieveTemplates();
+        session.setValue(templates[templateName]);
+    }
+
+    function saveTemplate(session, templateName) {
+        var templates = retrieveTemplates();
+        var code = session.getValue();
+        templates[templateName] = code;
+        storeTemplates(templates);
+    }
+
+    function deleteTemplate(templateName) {
+        var templates = retrieveTemplates();
+        delete templates[templateName];
+        storeTemplates(templates);
+    }
+
+    function existsTemplate(templateName) {
+        var templates = retrieveTemplates();
+        return templateName in templates;
+    }
+
     var evaluateButton;
     var asmButton;
     var irButton;
@@ -473,6 +585,8 @@
     var clearResultButton;
     var keyboard;
     var themes;
+    var templatesManagerTemplate;
+    var templatesButton;
     var editor;
     var session;
     var themelist;
@@ -551,6 +665,8 @@
         keyboard = document.getElementById("keyboard");
         asm_flavor = document.getElementById("asm-flavor");
         themes = document.getElementById("themes");
+        templatesManagerTemplate = _.template(document.getElementById("templates-manager-template").innerHTML);
+        templatesButton = document.getElementById("templates");
         editor = ace.edit("editor");
         set_result.editor = editor;
         session = editor.getSession();
@@ -688,6 +804,19 @@
         themes.onkeyup = themes.onchange = function () {
             set_theme(editor, themelist, themes.options[themes.selectedIndex].text);
         };
+
+        templatesButton.onclick = function() {
+            var templatesManager = document.getElementById('templates-manager');
+            if (templatesManager === null) {
+                renderTemplatesManager(result, session, templatesManagerTemplate);
+            } else {
+                clear_result(result);
+            }
+        };
+
+        if (!isLocalStorageAccessible()) {
+            templatesButton.parentNode.removeChild(templatesButton);
+        }
 
     }, false);
 }());
