@@ -505,6 +505,12 @@
                  evaluateAction === "test");
     }
 
+    function addEditedCodeAlert() {
+      window.onbeforeunload = function() {
+        return 'If you leave this page you will lose your changes.';
+      };
+    }
+
     var COLOR_CODES = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'];
 
     // A simple function to decode ANSI escape codes into HTML.
@@ -622,6 +628,7 @@
             var code = session.getValue();
             optionalLocalStorageSetItem("code", code);
             updateEvaluateAction(code);
+            addEditedCodeAlert();
         });
 
         keyboard.onkeyup = keyboard.onchange = function() {
