@@ -59,6 +59,44 @@ something like this:
 
 Note that the channel key is `null` for public channels. 
 
+#### Registering and starting services
+
+The working playpen has the IRC and Web services set up to automatically start at boot:
+
+`/etc/systemd/system/rust-playpen-irc.service`
+
+```
+[Unit]
+Description=Rust code evaluation sandbox (irc bots)
+After=network.target
+
+[Service]
+ExecStart=/root/rust-playpen/bot.py
+
+[Install]
+WantedBy=multi-user.target
+```
+
+`/etc/systemd/system/rust-playpen-web.service`
+
+```
+[Unit]
+Description=Rust code evaluation sandbox (web frontend)
+After=network.target 
+
+[Service]
+ExecStart=/root/rust-playpen/web.py
+
+[Install]
+WantedBy=multi-user.target
+```
+
+If the services fail to start, kick them:
+
+```
+$ systemctl restart rust-playpen-irc.service
+$ systemctl restart rust-playpen-web.service
+```
 
 [playpen]: https://github.com/thestinger/playpen
 [nickname]: https://github.com/rust-lang/rust-playpen/blob/master/bot.py#L140
