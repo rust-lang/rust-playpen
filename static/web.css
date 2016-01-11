@@ -402,8 +402,11 @@ button[disabled]:last-child::before {
 #control, #editor, #result {
     position: absolute;
     box-sizing: border-box;
+    width: initial;
     width: unset;
+    height: initial;
     height: unset;
+    margin: initial;
     margin: unset;
     left: 16px;
     right: 16px;
@@ -426,6 +429,7 @@ button[disabled]:last-child::before {
 }
 
 #result[data-empty] {
+    bottom: initial;
     bottom: unset;
 }
 
@@ -434,9 +438,13 @@ button[disabled]:last-child::before {
 
     #control, #editor, #result {
         position: relative;
+        left: initial;
         left: unset;
+        right: initial;
         right: unset;
+        top: initial;
         top: unset;
+        bottom: initial;
         bottom: unset;
     }
 
