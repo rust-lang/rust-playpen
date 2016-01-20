@@ -91,6 +91,34 @@ ExecStart=/root/rust-playpen/web.py
 WantedBy=multi-user.target
 ```
 
+`/etc/systemd/system/rust-playpen-update.service`
+
+```
+[Unit]
+Description=Playpen sandbox root updater
+
+[Service]
+Type=oneshot
+ExecStart=/root/rust-playpen/init.sh
+Environment=HOME=/root
+```
+
+`/etc/systemd/system/rust-playpen-update.timer`
+
+```
+[Unit]
+Description=Playpen sandbox root update scheduler
+
+[Timer]
+OnBootSec=10min
+OnCalendar=daily
+Persistent=true
+Unit=rust-playpen-update.service
+
+[Install]
+WantedBy=multi-user.target
+```
+
 If the services fail to start, kick them:
 
 ```
