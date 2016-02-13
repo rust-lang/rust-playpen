@@ -193,7 +193,7 @@
                 set_result(result, "<pre class=highlight><samp class=rustc-errors></samp></pre>");
                 result.firstChild.firstChild.innerHTML = formatCompilerOutput(object.error);
             } else {
-                clear_result();
+                clear_result(result);
                 session.setValue(object.result);
             }
         }, button, "Formatting…", result);
@@ -465,7 +465,7 @@
     var evaluateButton;
     var asmButton;
     var irButton;
-    // var formatButton;
+    var formatButton;
     var shareButton;
     var gistButton;
     var configureEditorButton;
@@ -542,7 +542,7 @@
         evaluateButton = document.getElementById("evaluate");
         asmButton = document.getElementById("asm");
         irButton = document.getElementById("llvm-ir");
-        // formatButton = document.getElementById("format");
+        formatButton = document.getElementById("format");
         shareButton = document.getElementById("share");
         gistButton = document.getElementById("gist");
         configureEditorButton = document.getElementById("configure-editor");
@@ -662,11 +662,9 @@
                      getRadioValue("optimize"), irButton);
         };
 
-        /*
         formatButton.onclick = function() {
             format(result, session, getRadioValue("version"), formatButton);
         };
-        */
 
         shareButton.onclick = function() {
             share(result, getRadioValue("version"), session.getValue(), shareButton);
