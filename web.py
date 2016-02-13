@@ -89,12 +89,11 @@ def evaluate(optimize, version, test, color):
 @enable_post_cors
 @extractor("version", "stable", ("stable", "beta", "nightly"))
 def format(version):
-    out, rc = execute(version, "/usr/local/bin/format.sh", (), request.json["code"])
-    split = out.split(b"\xff", 1)
+    out, rc = execute(version, "/usr/bin/rustfmt", (), request.json["code"])
     if rc:
-        return {"error": split[0].decode()}
+        return {"error": out.decode()}
     else:
-        return {"result": split[1][:-1].decode()}
+        return {"result": out.decode()}
 
 @route("/compile.json", method=["POST", "OPTIONS"])
 @enable_post_cors

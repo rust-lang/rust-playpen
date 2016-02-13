@@ -39,5 +39,6 @@ for channel in stable beta nightly; do
 	[[ -d root-$channel ]] && mv root-$channel root-${channel}.old
 	mv root-${channel}.new root-$channel
 	[[ -d root-${channel}.old ]] && rm -rf root-${channel}.old
+	arch-chroot root-$channel cargo install --root /usr rustfmt
 done
 rm rustup.sh
