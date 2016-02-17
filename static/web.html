@@ -12,7 +12,7 @@
         <link rel="shortcut icon" href="https://doc.rust-lang.org/favicon.ico"/>
         <script src="https://cdn.jsdelivr.net/ace/1.1.9/min/ace.js" charset="utf-8"></script>
         <script src="https://cdn.jsdelivr.net/ace/1.1.9/min/ext-themelist.js" charset="utf-8"></script>
-        <script src="web.js?10"></script>
+        <script src="web.js?11"></script>
     </head>
     <body>
         <form id="control">
@@ -20,6 +20,9 @@
                 ><button type=button class=primary id=evaluate title="Execute your code (you can also press Ctrl+Enter when editing code)">Run</button
                 ><button type=button id=asm title="Compile to ASM">ASM</button
                 ><button type=button id=llvm-ir title="Compile to LLVM IR">LLVM IR</button
+                ><button type=button id=mir title="Print compiler-internal MIR of the crate
+
+Note that MIR is an unstable implementation detail that's subject to change">MIR</button
             ></div
             ><wbr><div
                 ><button type=button id=format title="Automatically visually reformat your code">Format</button

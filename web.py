@@ -101,9 +101,9 @@ def format(version):
 @extractor("color", False, (True, False))
 @extractor("version", "stable", ("stable", "beta", "nightly"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
-@extractor("emit", "asm", ("asm", "llvm-ir"))
+@extractor("emit", "asm", ("asm", "llvm-ir", "mir"))
 def compile(emit, optimize, version, color, syntax):
-    args = ["-C", "opt-level=" + optimize, "--emit=" + emit]
+    args = ["-C", "opt-level=" + optimize]
     if optimize == "0":
         args.append("-g")
     if color:
@@ -111,6 +111,13 @@ def compile(emit, optimize, version, color, syntax):
     if syntax:
         args.append("-C")
         args.append("llvm-args=-x86-asm-syntax=%s" % syntax)
+    if emit == "mir":
+        version = "nightly"     # shhh...
+        # (FIXME: remove after --unpretty=mir hits beta/stable)
+        args.append("-Zunstable-options")
+        args.append("--unpretty=mir")
+    else:
+        args.append("--emit=" + emit)
     out, _ = execute(version, "/usr/local/bin/compile.sh", tuple(args), request.json["code"])
     split = out.split(b"\xff", 1)
     if len(split) == 2:
@@ -129,7 +136,10 @@ def compile(emit, optimize, version, color, syntax):
             return {"result": split[1].decode()}
         if emit == "asm":
             return {"result": highlight(split[1].decode(), GasLexer(), HtmlFormatter(nowrap=True))}
-        return {"result": highlight(split[1].decode(), LlvmLexer(), HtmlFormatter(nowrap=True))}
+        elif emit == "llvm-ir":
+            return {"result": highlight(split[1].decode(), LlvmLexer(), HtmlFormatter(nowrap=True))}
+        else:
+            return {"result": split[1].decode()}
 
 os.chdir(sys.path[0])
 run(host='0.0.0.0', port=80, server='cherrypy')

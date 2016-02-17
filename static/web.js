@@ -465,6 +465,7 @@
     var evaluateButton;
     var asmButton;
     var irButton;
+    var mirButton;
     var formatButton;
     var shareButton;
     var gistButton;
@@ -542,6 +543,7 @@
         evaluateButton = document.getElementById("evaluate");
         asmButton = document.getElementById("asm");
         irButton = document.getElementById("llvm-ir");
+        mirButton = document.getElementById("mir");
         formatButton = document.getElementById("format");
         shareButton = document.getElementById("share");
         gistButton = document.getElementById("gist");
@@ -660,6 +662,11 @@
         irButton.onclick = function() {
             compile("llvm-ir", result, session.getValue(), getRadioValue("version"),
                      getRadioValue("optimize"), irButton);
+        };
+
+        mirButton.onclick = function() {
+            compile("mir", result, session.getValue(), getRadioValue("version"),
+                     getRadioValue("optimize"), mirButton);
         };
 
         formatButton.onclick = function() {
