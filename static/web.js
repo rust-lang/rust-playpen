@@ -665,6 +665,7 @@
         };
 
         mirButton.onclick = function() {
+            document.getElementById("version-nightly").checked = true;
             compile("mir", result, session.getValue(), getRadioValue("version"),
                      getRadioValue("optimize"), mirButton);
         };

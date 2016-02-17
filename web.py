@@ -112,8 +112,6 @@ def compile(emit, optimize, version, color, syntax):
         args.append("-C")
         args.append("llvm-args=-x86-asm-syntax=%s" % syntax)
     if emit == "mir":
-        version = "nightly"     # shhh...
-        # (FIXME: remove after --unpretty=mir hits beta/stable)
         args.append("-Zunstable-options")
         args.append("--unpretty=mir")
     else:
