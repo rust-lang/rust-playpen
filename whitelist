@@ -57,12 +57,14 @@ rt_sigaction
 rt_sigprocmask
 rt_sigreturn
 sched_getaffinity
+select
 set_robust_list
 set_tid_address
 setrlimit
 sigaltstack
 stat
 statfs
+sysinfo
 tgkill
 umask
 unlink
