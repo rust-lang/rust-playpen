@@ -1,0 +1,17 @@
+[package]
+name = "rust-playpen"
+version = "0.1.0"
+authors = ["The Rust Project Developers"]
+
+[dependencies]
+iron = "0.2"
+hyper = "0.7"   # same version iron uses
+url = "0.5"     # ditto
+router = "0.1"
+staticfile = "0.1"
+libc = "0.2"
+unicase = "1.0"
+rustc-serialize = "0.3"
+irc = "0.11"
+toml = "0.1"
+serde_json = "0.7"
