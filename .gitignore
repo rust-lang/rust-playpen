@@ -2,3 +2,16 @@ __pycache__
 irc.yaml
 root-*
 shorten_key.py
+
+bin/activate*
+bin/bottle.py
+bin/cherryd
+bin/easy_install*
+bin/pip*
+bin/pygmentize
+bin/python*
+cherrypy/
+lib/
+local/
+
+out
