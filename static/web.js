@@ -1,6 +1,8 @@
 (function () {
     "use strict";
 
+    window.g_versionDict = {}
+
     // For convenience of development
     var PREFIX = location.href.indexOf("/web.html") != -1 ? "https://play.rust-lang.org/" : "/";
 
@@ -205,7 +207,9 @@
         req.open(method, url, true);
         req.onreadystatechange = function() {
             if (req.readyState == XMLHttpRequest.DONE) {
-                if (req.status == expect) {
+                var ok = Array.isArray(expect) ? expect.includes(req.status) :
+                                                 req.status == expect;
+                if (ok) {
                     if (on_success) {
                         on_success(req.responseText);
                     }
@@ -558,6 +562,40 @@
         session = editor.getSession();
         themelist = ace.require("ace/ext/themelist");
 
+        var rustVerDisplay = document.getElementById('rustc-version-text');
+        if (rustVerDisplay) {
+            httpRequest("GET", "/version.json", null, [200, 304],
+                function(response) {
+                    window.g_versionDict = JSON.parse(response);
+                    for (var channel in window.g_versionDict) {
+                        if ( ! window.g_versionDict.hasOwnProperty(channel)) continue;
+                        var rustver = window.g_versionDict[channel].rustc
+
+                        var label = document.getElementById('label-' + channel);
+                        if (label) {
+                            var t = label.title;
+                            if (t) {
+                                label.title = t + ": " + rustver;
+                            }
+                        }
+
+                        var button = document.getElementById('version-' + channel);
+                        if (button) {
+                            button.onclick = (function() {
+                                var rv = rustver;
+                                return function() {
+                                    rustVerDisplay.textContent = rv;
+                                };
+                            })();
+                            if (button.checked)
+                                button.onclick();
+                        }
+                    }
+                }, function(status, response) {
+                    rustVerDisplay.textContent = "Could not fetch rustc version";
+                });
+        }
+
         editor.focus();
 
         build_themes(themelist);
@@ -665,7 +703,7 @@
         };
 
         mirButton.onclick = function() {
-            document.getElementById("version-nightly").checked = true;
+            document.getElementById("version-nightly").onclick();
             compile("mir", result, session.getValue(), getRadioValue("version"),
                      getRadioValue("optimize"), mirButton);
         };

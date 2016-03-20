@@ -3,13 +3,26 @@
 import functools
 import os
 import sys
+import getopt
+import datetime
 
 from bottle import get, request, response, route, run, static_file
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import GasLexer, LlvmLexer
+from wsgiref.handlers import format_date_time
 
 import playpen
+
+g_debug_me = False
+g_skip_playpen = False
+
+CHANNELS = ("stable", "beta", "nightly")
+BOOTTIME = int((datetime.datetime.utcnow() - datetime.datetime.utcfromtimestamp(0)).
+    total_seconds())
+
+# read-only after initialization by init_rustc_version_json_cache()
+g_rustc_version_json_cache = {}
 
 @get("/")
 def serve_index():
@@ -32,9 +45,9 @@ def serve_static(path):
     return static_file(path, root="static")
 
 @functools.lru_cache(maxsize=256)
-def execute(version, command, arguments, code):
-    print("running:", version, command, arguments, file=sys.stderr, flush=True)
-    return playpen.execute(version, command, arguments, code)
+def execute(channel, command, arguments, code):
+    print("running:", channel, command, arguments, file=sys.stderr, flush=True)
+    return playpen.execute(channel, command, arguments, code, g_skip_playpen, g_debug_me)
 
 def enable_post_cors(wrappee):
     def wrapper(*args, **kwargs):
@@ -57,14 +70,42 @@ def extractor(key, default, valid):
         return wrapper
     return decorator
 
+def init_rustc_version_json_cache():  # called only once in main()
+    for channel in CHANNELS:
+        try:
+            rustc_ver, _ = execute(channel, "rustc", ("--version", ), code=None)
+            rustc_ver = str(rustc_ver, "utf-8").strip()
+        except FileNotFoundError:
+            rustc_ver = "Unknown"
+        try:
+            rustfmt_ver, _ = execute(channel, "rustfmt", ("--version", ), code=None)
+            rustfmt_ver = str(rustfmt_ver, "utf-8").strip()
+        except FileNotFoundError:
+            rustfmt_ver = "Unknown"
+        g_rustc_version_json_cache[channel] = \
+            { "rustc": rustc_ver, "rustfmt": rustfmt_ver }
+
+@route("/version.json")
+def evaluate():
+    response.set_header("Last-Modified", format_date_time(BOOTTIME))
+    return g_rustc_version_json_cache
+
 @route("/evaluate.json", method=["POST", "OPTIONS"])
 @enable_post_cors
 @extractor("color", False, (True, False))
 @extractor("test", False, (True, False))
-@extractor("version", "stable", ("stable", "beta", "nightly"))
+@extractor("version", CHANNELS[0], CHANNELS)
 @extractor("optimize", "2", ("0", "1", "2", "3"))
-def evaluate(optimize, version, test, color):
-    args = ["-C", "opt-level=" + optimize]
+def evaluate(optimize, channel, test, color):
+    args = []
+
+    # --evaluatesh=* passed to evaluate.sh itself must precede rustc options
+    if g_debug_me:
+        args.append("--evaluatesh=debug")
+    if test and color:
+        args.append("--evaluatesh=coloredtest")
+
+    args.extend(["-C", "opt-level=" + optimize])
     if optimize == "0":
         args.append("-g")
     if color:
@@ -72,7 +113,7 @@ def evaluate(optimize, version, test, color):
     if test:
         args.append("--test")
 
-    out, _ = execute(version, "/usr/local/bin/evaluate.sh", tuple(args), request.json["code"])
+    out, _ = execute(channel, "bin/evaluate.sh", tuple(args), request.json["code"])
 
     if request.json.get("separate_output") is True:
         split = out.split(b"\xff", 1)
@@ -87,9 +128,9 @@ def evaluate(optimize, version, test, color):
 
 @route("/format.json", method=["POST", "OPTIONS"])
 @enable_post_cors
-@extractor("version", "stable", ("stable", "beta", "nightly"))
-def format(version):
-    out, rc = execute(version, "/usr/bin/rustfmt", (), request.json["code"])
+@extractor("version", CHANNELS[0], CHANNELS)
+def format(channel):
+    out, rc = execute(channel, "rustfmt", (), request.json["code"])
     if rc:
         return {"error": out.decode()}
     else:
@@ -99,11 +140,17 @@ def format(version):
 @enable_post_cors
 @extractor("syntax", "att", ("att", "intel"))
 @extractor("color", False, (True, False))
-@extractor("version", "stable", ("stable", "beta", "nightly"))
+@extractor("version", CHANNELS[0], CHANNELS)
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 @extractor("emit", "asm", ("asm", "llvm-ir", "mir"))
-def compile(emit, optimize, version, color, syntax):
-    args = ["-C", "opt-level=" + optimize]
+def compile(emit, optimize, channel, color, syntax):
+    args = []
+
+    # --compilesh=* passed to compile.sh itself must precede rustc options
+    if g_debug_me:
+        args.append("--compilesh=debug")
+
+    args.extend(["-C", "opt-level=" + optimize])
     if optimize == "0":
         args.append("-g")
     if color:
@@ -116,7 +163,8 @@ def compile(emit, optimize, version, color, syntax):
         args.append("--unpretty=mir")
     else:
         args.append("--emit=" + emit)
-    out, _ = execute(version, "/usr/local/bin/compile.sh", tuple(args), request.json["code"])
+    args.append("--crate-type=lib")
+    out, _ = execute(channel, "bin/compile.sh", tuple(args), request.json["code"])
     split = out.split(b"\xff", 1)
     if len(split) == 2:
         rustc_output = split[0].decode()
@@ -139,5 +187,38 @@ def compile(emit, optimize, version, color, syntax):
         else:
             return {"result": split[1].decode()}
 
-os.chdir(sys.path[0])
-run(host='0.0.0.0', port=80, server='cherrypy')
+def main(args):
+    '''
+    -d: Debugging mode: turn on verbose debugging (and RUST_BACKTRACE=1)
+        Change the listening port to 8080 from the default 80.
+    -S: Skip playpen and direcly run rustc and the output binary.
+        To mitigate the risk, accepts only local connections by default.
+    -a addr, -p port: Directly configure HTTP listening address (default: 0.0.0.0:80)
+    '''
+    opts, args = getopt.getopt(args, "a:p:dSh")
+    listen_port=0
+    listen_addr=None
+    for o,a in opts:
+        if o == "-a":
+            listen_addr = a
+        elif o == "-p":
+            listen_port = a
+        elif o == "-d":
+            global g_debug_me
+            g_debug_me = True
+        elif o == "-S":
+            global g_skip_playpen
+            g_skip_playpen = True
+            listen_addr = "127.0.0.1"
+    if listen_port == 0:
+        listen_port = 8080 if g_debug_me else 80
+    if listen_addr is None:
+        listen_addr = "0.0.0.0"
+
+    os.chdir(sys.path[0])
+    init_rustc_version_json_cache()
+    run(host=listen_addr, port=listen_port, server='cherrypy')
+
+
+if "__main__" == __name__:
+    main(sys.argv[1: ])

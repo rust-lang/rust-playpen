@@ -209,6 +209,16 @@ button.primary:hover, button.primary:focus, button.primary:active {
     margin-top: 1.25em;
 }
 
+#rustc-version {
+    position: absolute;
+    bottom: 1em;
+    right: 1em;
+}
+
+#rustc-version-text {
+    margin: 0px;
+}
+
 #configure-editor span {
     background: url("data:image/svg+xml,%3C?xml version='1.0' standalone='no'?%3E%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' version='1.1'%3E%3Cpath fill='%23a42' stroke='%23931' stroke-width='1' d='M 7,0.5 6.5,1 6.5,3 6,3.5 5.5,3.5 4,2 3,2 2,3 2,4 3.5,5.5 3.5,6 3,6.5 1,6.5 0.5,7 l 0,2 0.5,0.5 2,0 0.5,0.5 0,0.5 -1.5,1.5 0,1 1,1 1,0 1.5,-1.5 0.5,0 0.5,0.5 0,2 0.5,0.5 2,0 0.5,-0.5 0,-2 0.5,-0.5 0.5,0 1.5,1.5 1,0 1,-1 0,-1 -1.5,-1.5 0,-0.5 0.5,-0.5 2,0 L 15.5,9 15.5,7 15,6.5 13,6.5 12.5,6 12.5,5.5 14,4 14,3 13,2 12,2 10.5,3.5 10,3.5 9.5,3 9.5,1 9,0.5 Z m 1,5 c 1.5,0 2.5,1 2.5,2.5 0,1.5 -1,2.5 -2.5,2.5 C 6.5,10.5 5.5,9.5 5.5,8 5.5,6.5 6.5,5.5 8,5.5 Z'/%3E%3C/svg%3E");
     background-size: 100% 100%;
@@ -464,6 +474,7 @@ button[disabled]:last-child::before {
     }
 
     main {
+        position: relative;
         flex: 1;
         display: flex;
         flex-flow: column;
