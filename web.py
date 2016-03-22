@@ -116,6 +116,7 @@ def compile(emit, optimize, version, color, syntax):
         args.append("--unpretty=mir")
     else:
         args.append("--emit=" + emit)
+    args.append("--crate-type=lib")
     out, _ = execute(version, "/usr/local/bin/compile.sh", tuple(args), request.json["code"])
     split = out.split(b"\xff", 1)
     if len(split) == 2:
