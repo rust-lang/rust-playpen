@@ -70,7 +70,7 @@ def evaluate(optimize, version, test, color, backtrace):
         debug = True
     else:
         debug = False
-    #if backtrace==2 then  enable backtrace when Debug, but not when Stable
+    #if backtrace==2 then  enable backtrace when Mode is Debug, but not when it's Release
     if "2" == backtrace:
         if debug:
             backtrace="1"
