@@ -59,13 +59,30 @@ def extractor(key, default, valid):
 
 @route("/evaluate.json", method=["POST", "OPTIONS"])
 @enable_post_cors
+@extractor("backtrace", "2", ("0", "1", "2"))
 @extractor("color", False, (True, False))
 @extractor("test", False, (True, False))
 @extractor("version", "stable", ("stable", "beta", "nightly"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
-def evaluate(optimize, version, test, color):
-    args = ["-C", "opt-level=" + optimize]
-    if optimize == "0":
+def evaluate(optimize, version, test, color, backtrace):
+    args = []
+    if "0" == optimize:
+        debug = True
+    else:
+        debug = False
+    #if backtrace==2 then  enable backtrace when Debug, but not when Stable
+    if "2" == backtrace:
+        if debug:
+            backtrace="1"
+        else:
+            backtrace="0"
+    #if backtrace==1 then enable it, else(eg. 0) do not enable it
+    if "1" == backtrace:
+        args.append("--backtrace")
+    #NB: --backtrace, if existing, must be first in args list!(so it can be removed in eg. evaluate.sh) FIXME: find another way.
+    args.append("-C");
+    args.append("opt-level=" + optimize);
+    if debug:
         args.append("-g")
     if color:
         args.append("--color=always")

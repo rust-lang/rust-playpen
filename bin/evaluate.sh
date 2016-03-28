@@ -2,6 +2,10 @@
 
 set -o errexit
 
+if [ "${*#*--backtrace}" != "$*" ]; then
+  export RUST_BACKTRACE=1
+  shift #--backtrace must always be passed as first arg! because rustc doesn't know about it
+fi
 TERM=xterm rustc - -o ./out "$@"
 printf '\377' # 255 in octal
 if [ "${*#*--test}" != "$*" ] && [ "${*#*--color=always}" != "$*" ]; then

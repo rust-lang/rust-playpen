@@ -134,7 +134,7 @@
     }
 
     function evaluate(result, code, version, optimize, button, test) {
-        send("evaluate.json", {code: code, version: version, optimize: optimize, test: !!test, separate_output: true, color: true},
+        send("evaluate.json", {code: code, version: version, optimize: optimize, test: !!test, separate_output: true, color: true, backtrace: "2"},
             function(object) {
                 var samp, pre;
                 set_result(result);
