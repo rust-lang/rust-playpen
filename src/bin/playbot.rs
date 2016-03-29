@@ -15,6 +15,7 @@ use std::fs::{self, File};
 use std::io::{self, Read};
 use std::iter;
 use std::str;
+use std::u16;
 use std::error::Error;
 
 static DEFAULT_CHANNEL: ReleaseChannel = ReleaseChannel::Stable;
@@ -269,6 +270,11 @@ fn main() {
         nickname: Some(String::from(toml["nick"].as_str().unwrap())),
         nick_password: toml.get("password").map(|val| String::from(val.as_str().unwrap())),
         server: Some(String::from(toml["server"].as_str().unwrap())),
+        port: toml.get("port").map(|val| {
+            let port = val.as_integer().unwrap();
+            assert!(0 < port && port < u16::MAX as i64, "out of range for ports");
+            port as u16
+        }),
         channels: Some(toml["channels"].as_slice().unwrap()
             .iter()
             .map(|val| String::from(val.as_str().unwrap()))
