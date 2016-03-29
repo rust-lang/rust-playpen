@@ -149,7 +149,6 @@ fn compile(req: &mut Request) -> IronResult<Response> {
         format!("opt-level={}", opt.as_u8()),
         String::from("-C"),
         format!("llvm-args=-x86-asm-syntax={}", syntax.as_str()),
-        String::from("--crate-type=lib"),
     ];
     for opt in emit.as_opts() {
         args.push(String::from(*opt));
