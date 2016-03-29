@@ -110,14 +110,27 @@ def format(version):
 
 @route("/compile.json", method=["POST", "OPTIONS"])
 @enable_post_cors
+@extractor("backtrace", "off", ("off", "on", "auto"))
 @extractor("syntax", "att", ("att", "intel"))
 @extractor("color", False, (True, False))
 @extractor("version", "stable", ("stable", "beta", "nightly"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 @extractor("emit", "asm", ("asm", "llvm-ir", "mir"))
-def compile(emit, optimize, version, color, syntax):
+def compile(emit, optimize, version, color, syntax, backtrace):
     args = ["-C", "opt-level=" + optimize]
-    if optimize == "0":
+    if "0" == optimize:
+        debug = True
+    else:
+        debug = False
+    if "auto" == backtrace:
+        if debug:
+            backtrace="on"
+        else:
+            backtrace="off"
+    if "on" == backtrace:
+        args.insert(0, "--backtrace")
+        #XXX: if exists, --backtrace must be the first arg passed to compile.sh
+    if debug:
         args.append("-g")
     if color:
         args.append("--color=always")

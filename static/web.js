@@ -174,10 +174,10 @@
         }, button, test ? "Running tests…" : "Running…", result);
     }
 
-    function compile(emit, result, code, version, optimize, button) {
+    function compile(emit, result, code, version, optimize, button, backtrace) {
         var syntax = document.getElementById('asm-flavor').value;
         send("compile.json", {emit: emit, code: code, version: version, optimize: optimize,
-                              color: true, highlight: true, syntax: syntax}, function(object) {
+                              color: true, highlight: true, syntax: syntax, backtrace: backtrace}, function(object) {
             if ("error" in object) {
                 set_result(result, "<pre class=\"rustc-output rustc-errors\"><samp></samp></pre>");
                 result.firstChild.firstChild.innerHTML = formatCompilerOutput(object.error);
@@ -678,18 +678,18 @@
 
         asmButton.onclick = function() {
             compile("asm", result, session.getValue(), getRadioValue("version"),
-                     getRadioValue("optimize"), asmButton);
+                     getRadioValue("optimize"), asmButton, backtrace.value);
         };
 
         irButton.onclick = function() {
             compile("llvm-ir", result, session.getValue(), getRadioValue("version"),
-                     getRadioValue("optimize"), irButton);
+                     getRadioValue("optimize"), irButton, backtrace.value);
         };
 
         mirButton.onclick = function() {
             document.getElementById("version-nightly").checked = true;
             compile("mir", result, session.getValue(), getRadioValue("version"),
-                     getRadioValue("optimize"), mirButton);
+                     getRadioValue("optimize"), mirButton, backtrace.value);
         };
 
         formatButton.onclick = function() {
