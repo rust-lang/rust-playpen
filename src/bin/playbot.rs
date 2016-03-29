@@ -92,18 +92,10 @@ impl Playbot {
                                                         &[],
                                                         String::from(full_code)));
 
-        let mut split = output.splitn(2, |b| *b == b'\xff');
-        let rustc = String::from_utf8(split.next().unwrap().into()).unwrap();
-
-        match split.next() {
-            Some(out) => {
-                // Compilation succeeded
-                Ok(String::from_utf8_lossy(out).into_owned())
-            }
-            None => {
-                Ok(rustc)
-            }
-        }
+        let output_merged = output.splitn(2, |b| *b == b'\xff')
+                                  .map(|sub| String::from_utf8_lossy(sub).into_owned())
+                                  .collect::<String>();
+        Ok(output_merged)
     }
 
     /// Parse a command sent to playbot (playbot's name needs to be stripped beforehand)
