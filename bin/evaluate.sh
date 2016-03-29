@@ -8,7 +8,7 @@ if [ "$1" = "--backtrace" ]; then
   shift
   #^ this removes --backtrace from args
   #if you get "error: Unrecognized option: 'backtrace'." that's from 'rustc' below and it just means that the caller of this script(web.py) did not pass --backtrace as the first arg as it's required.
-  #technially the caller of this script is 'playpen', web.py is one step above.
+  #technically the caller of this script is 'playpen', 'web.py' is one step above.
 fi
 
 TERM=xterm rustc - -o ./out "$@"
