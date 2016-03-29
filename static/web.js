@@ -133,8 +133,8 @@
         result.parentNode.style.visibility = "";
     }
 
-    function evaluate(result, code, version, optimize, button, test) {
-        send("evaluate.json", {code: code, version: version, optimize: optimize, test: !!test, separate_output: true, color: true, backtrace: document.getElementById('backtrace').value },
+    function evaluate(result, code, version, optimize, button, test, backtrace) {
+        send("evaluate.json", {code: code, version: version, optimize: optimize, test: !!test, separate_output: true, color: true, backtrace: backtrace },
             function(object) {
                 var samp, pre;
                 set_result(result);
@@ -504,7 +504,8 @@
         }
         evaluate(result, session.getValue(), getRadioValue("version"),
                  getRadioValue("optimize"), evaluateButton,
-                 evaluateAction === "test");
+                 evaluateAction === "test",
+                 document.getElementById('backtrace').value);
     }
 
     var COLOR_CODES = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'];
