@@ -1,10 +1,11 @@
 #![feature(process_exec)]
 
 extern crate libc;
+extern crate lru_cache;
+
+use lru_cache::LruCache;
 
 use std::cell::RefCell;
-use std::collections::BTreeMap;
-use std::collections::btree_map::Entry;
 use std::fmt;
 use std::error::Error;
 use std::io::{self, Write};
@@ -33,7 +34,7 @@ impl fmt::Display for StringError {
     }
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
+#[derive(Debug, Hash, PartialEq, Eq, Copy, Clone)]
 pub enum ReleaseChannel {
     Stable = 0,
     Beta = 1,
@@ -59,7 +60,7 @@ pub fn exec(channel: ReleaseChannel,
             args: Vec<String>,
             input: String)
             -> io::Result<(ExitStatus, Vec<u8>)> {
-    #[derive(PartialOrd, Ord, PartialEq, Eq)]
+    #[derive(PartialEq, Eq, Hash)]
     struct CacheKey {
         channel: ReleaseChannel,
         cmd: &'static str,
@@ -68,63 +69,60 @@ pub fn exec(channel: ReleaseChannel,
     }
 
     thread_local! {
-        static CACHE: RefCell<BTreeMap<CacheKey, (ExitStatus, Vec<u8>)>> =
-            RefCell::new(BTreeMap::new())
+        static CACHE: RefCell<LruCache<CacheKey, (ExitStatus, Vec<u8>)>> =
+            RefCell::new(LruCache::new(256))
     }
 
     // Build key to look up
     let key = CacheKey {
         channel: channel,
         cmd: cmd,
-        args: args.clone(),
-        input: input.clone(),
+        args: args,
+        input: input,
     };
     CACHE.with(|cache| {
         let mut cache = cache.borrow_mut();
-        match cache.entry(key) {
-            Entry::Vacant(vacant_entry) => {
-                let chan = match channel {
-                    ReleaseChannel::Stable => "stable",
-                    ReleaseChannel::Beta => "beta",
-                    ReleaseChannel::Nightly => "nightly",
-                };
-
-                let mut command = Command::new("playpen");
-                command.arg(format!("root-{}", chan));
-                command.arg("--mount-proc");
-                command.arg("--user=rust");
-                command.arg("--timeout=5");
-                command.arg("--syscalls-file=whitelist");
-                command.arg("--devices=/dev/urandom:r,/dev/null:rw");
-                command.arg("--memory-limit=128");
-                command.arg("--");
-                command.arg(cmd);
-                command.args(&args);
-                command.stdin(Stdio::piped());
-                command.stdout(Stdio::piped());
-
-                // Before `exec`ing playpen, redirect its stderr to stdout
-                // There seems to be no simpler way of doing `2>&1` in Rust :((
-                command.before_exec(|| {
-                    unsafe {
-                        assert_eq!(libc::dup2(libc::STDOUT_FILENO, libc::STDERR_FILENO), libc::STDERR_FILENO);
-                    }
-                    Ok(())
-                });
-
-                println!("running ({:?}): {} {:?}", channel, cmd, args);
-                let mut child = try!(command.spawn());
-                try!(child.stdin.as_mut().unwrap().write_all(input.as_bytes()));
-
-                let out = try!(child.wait_with_output());
-                println!("=> {}", out.status);
-                vacant_entry.insert((out.status.clone(), out.stdout.clone()));
-                Ok((out.status.clone(), out.stdout.clone()))
-            }
-            Entry::Occupied(occupied_entry) => {
-                Ok(occupied_entry.get().clone())
-            }
+        if let Some(result) = cache.get_mut(&key) {
+            return Ok(result.clone());
         }
+
+        let chan = match channel {
+            ReleaseChannel::Stable => "stable",
+            ReleaseChannel::Beta => "beta",
+            ReleaseChannel::Nightly => "nightly",
+        };
+
+        let mut command = Command::new("playpen");
+        command.arg(format!("root-{}", chan));
+        command.arg("--mount-proc");
+        command.arg("--user=rust");
+        command.arg("--timeout=5");
+        command.arg("--syscalls-file=whitelist");
+        command.arg("--devices=/dev/urandom:r,/dev/null:rw");
+        command.arg("--memory-limit=128");
+        command.arg("--");
+        command.arg(cmd);
+        command.args(&key.args);
+        command.stdin(Stdio::piped());
+        command.stdout(Stdio::piped());
+
+        // Before `exec`ing playpen, redirect its stderr to stdout
+        // There seems to be no simpler way of doing `2>&1` in Rust :((
+        command.before_exec(|| {
+            unsafe {
+                assert_eq!(libc::dup2(libc::STDOUT_FILENO, libc::STDERR_FILENO), libc::STDERR_FILENO);
+            }
+            Ok(())
+        });
+
+        println!("running ({:?}): {} {:?}", channel, cmd, key.args);
+        let mut child = try!(command.spawn());
+        try!(child.stdin.as_mut().unwrap().write_all(key.input.as_bytes()));
+
+        let out = try!(child.wait_with_output());
+        println!("=> {}", out.status);
+        cache.insert(key, (out.status.clone(), out.stdout.clone()));
+        Ok((out.status.clone(), out.stdout.clone()))
     })
 }
 
