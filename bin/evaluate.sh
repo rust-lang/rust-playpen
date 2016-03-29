@@ -2,11 +2,13 @@
 
 set -o errexit
 
-backtrace="--backtrace"
-if [ "${*#*$backtrace}" != "$*" ]; then
-    export RUST_BACKTRACE=1
-    set -- ${*%$backtrace*}${*#*$backtrace}
-    #^ that removes --backtrace from $* but will dup args badly if --backtrace is specified more than once!(which shouldn't normally happen, ever, but does depend on the caller: web.py)
+#if you pass --backtrace at all, ensure it's the first arg! (reason: simplified dash syntax and keeping the args with spaces whole)
+if [ "$1" = "--backtrace" ]; then
+  export RUST_BACKTRACE=1
+  shift
+  #^ this removes --backtrace from args
+  #if you get "error: Unrecognized option: 'backtrace'." that's from 'rustc' below and it just means that the caller of this script(web.py) did not pass --backtrace as the first arg as it's required.
+  #technially the caller of this script is 'playpen', web.py is one step above.
 fi
 
 TERM=xterm rustc - -o ./out "$@"
