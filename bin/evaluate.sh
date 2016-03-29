@@ -6,8 +6,8 @@ backtrace="--backtrace"
 if [ "${*#*$backtrace}" != "$*" ]; then
   export RUST_BACKTRACE=1
   set -- ${*%$backtrace*}${*#*$backtrace}
+  #^ that removes --backtrace from $* but will dup args badly if --backtrace is specified more than once!(which shouldn't normally happen, ever, but does depend on the caller: web.py)
 fi
-#^ that removes --backtrace from $* but will dup args badly if --backtrace is specified more than once!(which shouldn't normally happen, ever, but does depend on the caller: web.py)
 
 TERM=xterm rustc - -o ./out "$@"
 printf '\377' # 255 in octal
