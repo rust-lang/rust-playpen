@@ -17,7 +17,6 @@ use std::iter;
 use std::str;
 use std::error::Error;
 
-static NICK: &'static str = "playbot-rs";
 static DEFAULT_CHANNEL: ReleaseChannel = ReleaseChannel::Stable;
 static TRIGGERS: &'static [&'static str] = &[
     ">>",
@@ -139,7 +138,7 @@ impl Playbot {
 syntax: {} [~attribute1] ... [~attributeN] <Rust code to execute>
 ~stable | ~beta | ~nightly: select the Rust version to use
 ~mini: don't wrap the code in an `fn main` and print the result
-", NICK));
+", self.conn.current_nickname()));
                 }
                 unknown => {
                     return Ok(format!("unknown attribute '{}' (try '~help' for a list)", unknown));
@@ -275,13 +274,13 @@ fn main() {
     let toml = toml::Parser::new(&config).parse().unwrap();
 
     let conf = Config {
-        nickname: Some(String::from(NICK)),
+        nickname: Some(String::from(toml["nick"].as_str().unwrap())),
+        nick_password: toml.get("password").map(|val| String::from(val.as_str().unwrap())),
         server: Some(String::from(toml["server"].as_str().unwrap())),
         channels: Some(toml["channels"].as_slice().unwrap()
             .iter()
             .map(|val| String::from(val.as_str().unwrap()))
             .collect()),
-        password: toml.get("password").map(|val| String::from(val.as_str().unwrap())),
         ..Config::default()
     };
 

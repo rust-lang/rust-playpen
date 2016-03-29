@@ -1,5 +1,6 @@
 # Playbot's (default) configuration file
 
+nick = "playbot-rs"
 server = "irc.mozilla.org"
 channels = ["#rust"]
 #password = "1234"
