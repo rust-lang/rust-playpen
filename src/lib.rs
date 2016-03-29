@@ -2,6 +2,9 @@
 
 extern crate libc;
 
+use std::cell::RefCell;
+use std::collections::BTreeMap;
+use std::collections::btree_map::Entry;
 use std::fmt;
 use std::error::Error;
 use std::io::{self, Write};
@@ -30,7 +33,7 @@ impl fmt::Display for StringError {
     }
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
 pub enum ReleaseChannel {
     Stable = 0,
     Beta = 1,
@@ -52,47 +55,77 @@ impl FromStr for ReleaseChannel {
 
 /// Helper method for safely invoking a command inside a playpen
 pub fn exec(channel: ReleaseChannel,
+            cmd: &'static str,
+            args: Vec<String>,
+            input: String)
+            -> io::Result<(ExitStatus, Vec<u8>)> {
+    #[derive(PartialOrd, Ord, PartialEq, Eq)]
+    struct CacheKey {
+        channel: ReleaseChannel,
         cmd: &'static str,
-        args: &[String],
-        input: String)
-        -> io::Result<(ExitStatus, Vec<u8>)> {
-    // TODO LRU cache this!
-    let chan = match channel {
-        ReleaseChannel::Stable => "stable",
-        ReleaseChannel::Beta => "beta",
-        ReleaseChannel::Nightly => "nightly",
+        args: Vec<String>,
+        input: String,
+    }
+
+    thread_local! {
+        static CACHE: RefCell<BTreeMap<CacheKey, (ExitStatus, Vec<u8>)>> =
+            RefCell::new(BTreeMap::new())
+    }
+
+    // Build key to look up
+    let key = CacheKey {
+        channel: channel,
+        cmd: cmd,
+        args: args.clone(),
+        input: input.clone(),
     };
+    CACHE.with(|cache| {
+        let mut cache = cache.borrow_mut();
+        match cache.entry(key) {
+            Entry::Vacant(vacant_entry) => {
+                let chan = match channel {
+                    ReleaseChannel::Stable => "stable",
+                    ReleaseChannel::Beta => "beta",
+                    ReleaseChannel::Nightly => "nightly",
+                };
 
-    let mut command = Command::new("playpen");
-    command.arg(format!("root-{}", chan));
-    command.arg("--mount-proc");
-    command.arg("--user=rust");
-    command.arg("--timeout=5");
-    command.arg("--syscalls-file=whitelist");
-    command.arg("--devices=/dev/urandom:r,/dev/null:rw");
-    command.arg("--memory-limit=128");
-    command.arg("--");
-    command.arg(cmd);
-    command.args(&args);
-    command.stdin(Stdio::piped());
-    command.stdout(Stdio::piped());
+                let mut command = Command::new("playpen");
+                command.arg(format!("root-{}", chan));
+                command.arg("--mount-proc");
+                command.arg("--user=rust");
+                command.arg("--timeout=5");
+                command.arg("--syscalls-file=whitelist");
+                command.arg("--devices=/dev/urandom:r,/dev/null:rw");
+                command.arg("--memory-limit=128");
+                command.arg("--");
+                command.arg(cmd);
+                command.args(&args);
+                command.stdin(Stdio::piped());
+                command.stdout(Stdio::piped());
 
-    // Before `exec`ing playpen, redirect its stderr to stdout
-    // There seems to be no simpler way of doing `2>&1` in Rust :((
-    command.before_exec(|| {
-        unsafe {
-            assert_eq!(libc::dup2(libc::STDOUT_FILENO, libc::STDERR_FILENO), libc::STDERR_FILENO);
+                // Before `exec`ing playpen, redirect its stderr to stdout
+                // There seems to be no simpler way of doing `2>&1` in Rust :((
+                command.before_exec(|| {
+                    unsafe {
+                        assert_eq!(libc::dup2(libc::STDOUT_FILENO, libc::STDERR_FILENO), libc::STDERR_FILENO);
+                    }
+                    Ok(())
+                });
+
+                println!("running ({:?}): {} {:?}", channel, cmd, args);
+                let mut child = try!(command.spawn());
+                try!(child.stdin.as_mut().unwrap().write_all(input.as_bytes()));
+
+                let out = try!(child.wait_with_output());
+                println!("=> {}", out.status);
+                vacant_entry.insert((out.status.clone(), out.stdout.clone()));
+                Ok((out.status.clone(), out.stdout.clone()))
+            }
+            Entry::Occupied(occupied_entry) => {
+                Ok(occupied_entry.get().clone())
+            }
         }
-        Ok(())
-    });
-
-    println!("running ({:?}): {} {:?}", channel, cmd, args);
-    let mut child = try!(command.spawn());
-    try!(child.stdin.as_mut().unwrap().write_all(input.as_bytes()));
-
-    let out = try!(child.wait_with_output());
-    println!("=> {}", out.status);
-    Ok((out.status, out.stdout))
+    })
 }
 
 pub enum AsmFlavor {

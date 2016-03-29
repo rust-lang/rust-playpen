@@ -99,7 +99,7 @@ fn evaluate(req: &mut Request) -> IronResult<Response> {
     }
 
     let (_status, output) = itry!(
-        rust_playpen::exec(version, "/usr/local/bin/evaluate.sh", &args, data.code));
+        rust_playpen::exec(version, "/usr/local/bin/evaluate.sh", args, data.code));
 
     if separate_output {
         // {"rustc": "...", "program": "..."}
@@ -161,7 +161,7 @@ fn compile(req: &mut Request) -> IronResult<Response> {
     }
 
     let (_status, output) = itry!(
-        rust_playpen::exec(version, "/usr/local/bin/compile.sh", &args, data.code));
+        rust_playpen::exec(version, "/usr/local/bin/compile.sh", args, data.code));
     let mut split = output.splitn(2, |b| *b == b'\xff');
     let rustc = String::from_utf8(split.next().unwrap().into()).unwrap();
 
@@ -194,7 +194,8 @@ fn format(req: &mut Request) -> IronResult<Response> {
     let data: FormatReq = itry!(json::decode(&body));
     let version = itry!(data.version.map(|v| v.parse()).unwrap_or(Ok(ReleaseChannel::Stable)));
 
-    let (status, output) = itry!(rust_playpen::exec(version, "/usr/bin/rustfmt", &[], data.code));
+    let (status, output) = itry!(
+        rust_playpen::exec(version, "/usr/bin/rustfmt", Vec::new(), data.code));
     let output = String::from_utf8(output).unwrap();
     let mut response_obj = json::Object::new();
     if status.success() {

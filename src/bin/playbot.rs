@@ -35,7 +35,7 @@ impl Playbot {
                          ReleaseChannel::Nightly] {
             let (status, output) = rust_playpen::exec(*channel,
                                                       "rustc",
-                                                      &[String::from("-V")],
+                                                      vec![String::from("-V")],
                                                       String::new()).unwrap();
             assert!(status.success(), "couldn't get version (this currently needs to run as root)");
             let version = str::from_utf8(&output).unwrap();
@@ -89,7 +89,7 @@ impl Playbot {
                 -> io::Result<String> {
         let (_status, output) = try!(rust_playpen::exec(channel,
                                                         "/usr/local/bin/evaluate.sh",
-                                                        &[],
+                                                        Vec::new(),
                                                         String::from(full_code)));
 
         let output_merged = output.splitn(2, |b| *b == b'\xff')
