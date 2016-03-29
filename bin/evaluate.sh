@@ -2,7 +2,7 @@
 
 set -o errexit
 
-#if you pass --backtrace at all, ensure it's the first arg! (reason: simplified dash syntax and keeping the args with spaces whole)
+#if you pass --backtrace at all, ensure it's the first arg! (reason: simplified dash syntax and keeping the args-with-spaces whole)
 if [ "$1" = "--backtrace" ]; then
   export RUST_BACKTRACE=1
   shift
