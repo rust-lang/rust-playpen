@@ -3,8 +3,8 @@
 set -o errexit
 
 if [ "$1" = "--backtrace" ]; then
-  export RUST_BACKTRACE=1
-  shift
+    export RUST_BACKTRACE=1
+    shift
 fi
 
 TERM=xterm rustc - -o ./out "$@"
