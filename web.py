@@ -59,7 +59,7 @@ def extractor(key, default, valid):
 
 @route("/evaluate.json", method=["POST", "OPTIONS"])
 @enable_post_cors
-@extractor("backtrace", "off", ("off", "on", "auto"))
+@extractor("backtrace", "0", ("0", "1", "2"))
 @extractor("color", False, (True, False))
 @extractor("test", False, (True, False))
 @extractor("version", "stable", ("stable", "beta", "nightly"))
@@ -70,12 +70,12 @@ def evaluate(optimize, version, test, color, backtrace):
         debug = True
     else:
         debug = False
-    if "auto" == backtrace:
+    if "2" == backtrace:
         if debug:
-            backtrace="on"
+            backtrace="1"
         else:
-            backtrace="off"
-    if "on" == backtrace:
+            backtrace="0"
+    if "1" == backtrace:
         args.insert(0, "--backtrace")
         #XXX: if exists, --backtrace must be the first arg passed to evaluate.sh
     if debug:
@@ -110,7 +110,7 @@ def format(version):
 
 @route("/compile.json", method=["POST", "OPTIONS"])
 @enable_post_cors
-@extractor("backtrace", "off", ("off", "on", "auto"))
+@extractor("backtrace", "0", ("0", "1", "2"))
 @extractor("syntax", "att", ("att", "intel"))
 @extractor("color", False, (True, False))
 @extractor("version", "stable", ("stable", "beta", "nightly"))
@@ -122,12 +122,12 @@ def compile(emit, optimize, version, color, syntax, backtrace):
         debug = True
     else:
         debug = False
-    if "auto" == backtrace:
+    if "2" == backtrace:
         if debug:
-            backtrace="on"
+            backtrace="1"
         else:
-            backtrace="off"
-    if "on" == backtrace:
+            backtrace="0"
+    if "1" == backtrace:
         args.insert(0, "--backtrace")
         #XXX: if exists, --backtrace must be the first arg passed to compile.sh
     if debug:
