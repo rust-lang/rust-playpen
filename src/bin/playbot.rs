@@ -18,21 +18,16 @@ use std::str;
 use std::error::Error;
 
 static DEFAULT_CHANNEL: ReleaseChannel = ReleaseChannel::Stable;
-static TRIGGERS: &'static [&'static str] = &[
-    ">>",
-    "playbot-rs ",
-    "playbot-rs,",
-    "playbot-rs:",
-];
 
 struct Playbot {
     conn: IrcServer,
     rust_versions: Vec<String>,
     shorten_key: String,
+    triggers: Vec<String>,
 }
 
 impl Playbot {
-    fn new(s: IrcServer) -> Self {
+    fn new(s: IrcServer, triggers: Vec<String>) -> Self {
         let mut versions = Vec::new();
         // Note: Keep these in the same order as their discriminant values
         for channel in &[ReleaseChannel::Stable,
@@ -60,6 +55,7 @@ impl Playbot {
             conn: s,
             rust_versions: versions,
             shorten_key: key,
+            triggers: triggers,
         }
     }
 
@@ -210,14 +206,18 @@ fn main() {{
 
     /// Called when any user writes a public message
     fn handle_pubmsg(&mut self, from: &str, chan: &str, mut msg: &str) {
-        for trig in TRIGGERS {
+        let mut handle_command = false;
+        for trig in &self.triggers {
             if msg.starts_with(trig) {
                 msg = &msg[trig.len()..].trim();
-
-                println!("<{}> {}", from, msg);
-                self.handle_cmd(chan, msg);
-                return;
+                handle_command = true;
+                break;
             }
+        }
+
+        if handle_command {
+            println!("<{}> {}", from, msg);
+            self.handle_cmd(chan, msg);
         }
     }
 
@@ -284,7 +284,12 @@ fn main() {
         ..Config::default()
     };
 
+    let triggers = toml["triggers"].as_slice().unwrap()
+        .iter()
+        .map(|val| String::from(val.as_str().unwrap()))
+        .collect();
+
     let server = IrcServer::from_config(conf).unwrap();
     server.identify().unwrap();
-    Playbot::new(server).main_loop();
+    Playbot::new(server, triggers).main_loop();
 }
