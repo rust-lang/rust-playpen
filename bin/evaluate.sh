@@ -2,10 +2,13 @@
 
 set -o errexit
 
-if [ "${*#*--backtrace}" != "$*" ]; then
+backtrace="--backtrace"
+if [ "${*#*$backtrace}" != "$*" ]; then
   export RUST_BACKTRACE=1
-  shift #--backtrace must always be passed as first arg! because rustc doesn't know about it
 fi
+set -- ${*%$backtrace*}${*#*$backtrace}
+#^ that removes --backtrace from $* but will dup args badly if --backtrace is specified more than once!(which shouldn't normally happen, ever, but does depend on the caller: web.py)
+
 TERM=xterm rustc - -o ./out "$@"
 printf '\377' # 255 in octal
 if [ "${*#*--test}" != "$*" ] && [ "${*#*--color=always}" != "$*" ]; then

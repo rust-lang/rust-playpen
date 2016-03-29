@@ -65,7 +65,7 @@ def extractor(key, default, valid):
 @extractor("version", "stable", ("stable", "beta", "nightly"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 def evaluate(optimize, version, test, color, backtrace):
-    args = []
+    args = [ "-C", "opt-level=" + optimize ]
     if "0" == optimize:
         debug = True
     else:
@@ -79,9 +79,6 @@ def evaluate(optimize, version, test, color, backtrace):
     #if backtrace==1 then enable it, else(eg. 0) do not enable it
     if "1" == backtrace:
         args.append("--backtrace")
-    #NB: --backtrace, if existing, must be first in args list!(so it can be removed in eg. evaluate.sh) FIXME: find another way.
-    args.append("-C");
-    args.append("opt-level=" + optimize);
     if debug:
         args.append("-g")
     if color:
