@@ -233,10 +233,11 @@
         result.parentNode.style.visibility = "";
     }
 
-    function shareGist(result, version, code, button) {
+    function shareGist(result, version, code, button, backtraceval) {
         // only needed for the "shrinking" animation
         var full_url = "https://play.rust-lang.org/?code=" + encodeURIComponent(code) +
-                       "&version=" + encodeURIComponent(version);
+                       "&version=" + encodeURIComponent(version) +
+                       "&backtrace=" + encodeURIComponent(backtraceval);
         var url = "https://api.github.com/gists";
         button.disabled = true;
 
@@ -275,7 +276,8 @@
 
                         var play_url = "https://play.rust-lang.org/?gist=" +
                                        encodeURIComponent(gist_id) + "&version=" +
-                                       encodeURIComponent(version);
+                                       encodeURIComponent(version) +
+                       "&backtrace=" + encodeURIComponent(backtraceval);
 
 
                         var link = result.firstChild.firstElementChild;
@@ -301,9 +303,10 @@
         );
     }
 
-    function share(result, version, code, button) {
+    function share(result, version, code, button, backtraceval) {
         var playurl = "https://play.rust-lang.org/?code=" + encodeURIComponent(code);
         playurl += "&version=" + encodeURIComponent(version);
+        playurl += "&backtrace=" + encodeURIComponent(backtraceval);
         if (playurl.length > 5000) {
             set_result(result, "<p class=error>Sorry, your code is too long to share this way." +
                 "<p class=error-explanation>At present, sharing produces a link containing the" +
@@ -505,7 +508,7 @@
         evaluate(result, session.getValue(), getRadioValue("version"),
                  getRadioValue("optimize"), evaluateButton,
                  evaluateAction === "test",
-                 document.getElementById('backtrace').value);
+                 backtrace.value);
     }
 
     var COLOR_CODES = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'];
@@ -618,6 +621,12 @@
             }
         }
 
+        if ("backtrace" in query) {
+            if (backtrace !== null) {
+                backtrace.value = query.backtrace;
+            }
+        }
+
         if (query.run === "1") {
             doEvaluate();
         } else {
@@ -688,11 +697,11 @@
         };
 
         shareButton.onclick = function() {
-            share(result, getRadioValue("version"), session.getValue(), shareButton);
+            share(result, getRadioValue("version"), session.getValue(), shareButton, backtrace.value);
         };
 
         gistButton.onclick = function() {
-            shareGist(result, getRadioValue("version"), session.getValue(), gistButton);
+            shareGist(result, getRadioValue("version"), session.getValue(), gistButton, backtrace.value);
         };
 
         configureEditorButton.onclick = function() {
