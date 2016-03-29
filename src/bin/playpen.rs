@@ -101,12 +101,12 @@ fn evaluate(req: &mut Request) -> IronResult<Response> {
     let (_status, output) = itry!(
         rust_playpen::exec(version, "/usr/local/bin/evaluate.sh", args, data.code));
 
+    let mut obj = json::Object::new();
     if separate_output {
         // {"rustc": "...", "program": "..."}
         let mut split = output.splitn(2, |b| *b == b'\xff');
         let rustc = String::from_utf8(split.next().unwrap().into()).unwrap();
 
-        let mut obj = json::Object::new();
         obj.insert(String::from("rustc"), json::Json::String(rustc));
 
         if let Some(program) = split.next() {
@@ -114,13 +114,16 @@ fn evaluate(req: &mut Request) -> IronResult<Response> {
             let output = String::from_utf8_lossy(program).into_owned();
             obj.insert(String::from("program"), json::Json::String(output));
         }
-
-        Ok(Response::with((status::Ok, format!("{}", json::Json::Object(obj)))))
     } else {
-        // {"result": "..."}
-        // TODO
-        unimplemented!()
+        // {"result": "...""}
+        let result = output.splitn(2, |b| *b == b'\xff')
+                           .map(|sub| String::from_utf8_lossy(sub).into_owned())
+                           .collect::<String>();
+
+        obj.insert(String::from("result"), json::Json::String(result));
     }
+
+    Ok(Response::with((status::Ok, format!("{}", json::Json::Object(obj)))))
 }
 
 #[derive(RustcDecodable)]
