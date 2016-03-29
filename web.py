@@ -59,7 +59,7 @@ def extractor(key, default, valid):
 
 @route("/evaluate.json", method=["POST", "OPTIONS"])
 @enable_post_cors
-@extractor("backtrace", "2", ("0", "1", "2"))
+@extractor("backtrace", "off", ("off", "on", "auto"))
 @extractor("color", False, (True, False))
 @extractor("test", False, (True, False))
 @extractor("version", "stable", ("stable", "beta", "nightly"))
@@ -70,14 +70,12 @@ def evaluate(optimize, version, test, color, backtrace):
         debug = True
     else:
         debug = False
-    #if backtrace==2 then  enable backtrace when Mode is Debug, but not when it's Release
-    if "2" == backtrace:
+    if "auto" == backtrace:
         if debug:
-            backtrace="1"
+            backtrace="on"
         else:
-            backtrace="0"
-    #if backtrace==1 then enable it, else(eg. 0) do not enable it
-    if "1" == backtrace:
+            backtrace="off"
+    if "on" == backtrace:
         args.append("--backtrace")
     if debug:
         args.append("-g")

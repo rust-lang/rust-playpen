@@ -134,7 +134,7 @@
     }
 
     function evaluate(result, code, version, optimize, button, test) {
-        send("evaluate.json", {code: code, version: version, optimize: optimize, test: !!test, separate_output: true, color: true, backtrace: "2"},
+        send("evaluate.json", {code: code, version: version, optimize: optimize, test: !!test, separate_output: true, color: true, backtrace: document.getElementById('backtrace').value },
             function(object) {
                 var samp, pre;
                 set_result(result);
@@ -482,6 +482,7 @@
     var mode;
     var query;
     var asm_flavor;
+    var backtrace;
 
     function updateEvaluateAction(code) {
         // A very simple pair of heuristics; there’s no point in doing more, IMO.
@@ -552,6 +553,7 @@
         clearResultButton = document.getElementById("clear-result");
         keyboard = document.getElementById("keyboard");
         asm_flavor = document.getElementById("asm-flavor");
+        backtrace = document.getElementById("backtrace");
         themes = document.getElementById("themes");
         editor = ace.edit("editor");
         set_result.editor = editor;
@@ -587,6 +589,11 @@
         var flavor = optionalLocalStorageGetItem("asm_flavor");
         if (flavor !== null) {
             asm_flavor.value = flavor;
+        }
+
+        var vbacktrace = optionalLocalStorageGetItem("backtrace");
+        if (vbacktrace !== null) {
+            backtrace.value = vbacktrace;
         }
 
         query = getQueryParameters();
@@ -635,6 +642,11 @@
         asm_flavor.onkeyup = asm_flavor.onchange = function() {
             var flavor = asm_flavor.options[asm_flavor.selectedIndex].value;
             optionalLocalStorageSetItem("asm_flavor", flavor);
+        };
+
+        backtrace.onkeyup = backtrace.onchange = function() {
+            var vbacktrace = backtrace.options[backtrace.selectedIndex].value;
+            optionalLocalStorageSetItem("backtrace", vbacktrace);
         };
 
         evaluateButton.onclick = function() {

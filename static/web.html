@@ -73,6 +73,12 @@ Note that MIR is an unstable implementation detail that's subject to change">MIR
                         <option>att</option>
                         <option>intel</option>
                     </select>
+                    <p><label for=backtrace title="Whether to set the shell environment var RUST_BACKTRACE and thus show the backtrace in the output! eg. to quickly test this run: 'fn main() { panic!(); }'. This setting affects only 'Run'(both when compiling the program via rustc and when executing it) but has no effect when doing ASM / LLVM IR / MIR.">Backtrace:</label>
+                    <select name=backtrace id=backtrace>
+                        <option title="RUST_BACKTRACE is not set">off</option>
+                        <option title="export RUST_BACKTRACE=1">on</option>
+                        <option title="'auto' means turn this on only when Mode: Debug but not when Mode: Release">auto</option>
+                    </select>
                 </div
             ></div>
         </form>
