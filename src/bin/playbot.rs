@@ -13,53 +13,50 @@ use hyper::client::Client;
 
 use std::fs::{self, File};
 use std::io::{self, Read};
-use std::iter;
 use std::str;
 use std::u16;
+use std::thread;
 use std::error::Error;
 
 static DEFAULT_CHANNEL: ReleaseChannel = ReleaseChannel::Stable;
+
+fn get_rust_versions() -> Vec<String> {
+    let mut versions = Vec::new();
+    // Note: Keep these in the same order as their discriminant values
+    for channel in &[ReleaseChannel::Stable,
+                     ReleaseChannel::Beta,
+                     ReleaseChannel::Nightly] {
+        let (status, output) = rust_playpen::exec(*channel,
+                                                  "rustc",
+                                                  vec![String::from("-V")],
+                                                  String::new()).unwrap();
+        assert!(status.success(), "couldn't get version (this currently needs to run as root)");
+        let version = str::from_utf8(&output).unwrap();
+        // Strip the trailing newline
+        let version = String::from(version.lines().next().unwrap());
+        println!("got {:?} Rust version: {}", channel, version);
+        versions.push(version);
+    }
+
+    versions
+}
+
+fn read_bitly_token() -> String {
+    // Read the bitly API token
+    let mut key = String::new();
+    File::open("bitly_key").unwrap().read_to_string(&mut key).unwrap();
+    // Allow trailing newline
+    let key = String::from(key.lines().next().unwrap());
+    key
+}
 
 struct Playbot {
     conn: IrcServer,
     rust_versions: Vec<String>,
     shorten_key: String,
-    triggers: Vec<String>,
 }
 
 impl Playbot {
-    fn new(s: IrcServer, triggers: Vec<String>) -> Self {
-        let mut versions = Vec::new();
-        // Note: Keep these in the same order as their discriminant values
-        for channel in &[ReleaseChannel::Stable,
-                         ReleaseChannel::Beta,
-                         ReleaseChannel::Nightly] {
-            let (status, output) = rust_playpen::exec(*channel,
-                                                      "rustc",
-                                                      vec![String::from("-V")],
-                                                      String::new()).unwrap();
-            assert!(status.success(), "couldn't get version (this currently needs to run as root)");
-            let version = str::from_utf8(&output).unwrap();
-            // Strip the trailing newline
-            let version = String::from(version.lines().next().unwrap());
-            println!("got {:?} Rust version: {}", channel, version);
-            versions.push(version);
-        }
-
-        // Read the bitly API token
-        let mut key = String::new();
-        File::open("bitly_key").unwrap().read_to_string(&mut key).unwrap();
-        // Allow trailing newline
-        let key = String::from(key.lines().next().unwrap());
-
-        Playbot {
-            conn: s,
-            rust_versions: versions,
-            shorten_key: key,
-            triggers: triggers,
-        }
-    }
-
     /// Shortens a playpen URL containing the given code.
     ///
     /// Returns the short URL.
@@ -102,41 +99,8 @@ impl Playbot {
     /// Parse a command sent to playbot (playbot's name needs to be stripped beforehand)
     ///
     /// Returns the response to send to the user (each line is a NOTICE)
-    fn parse_and_run(&mut self, msg: &str) -> io::Result<String> {
-        // Initialize default attributes:
-        let mut channel = DEFAULT_CHANNEL;
-        let mut mini = false;   // don't use a template
-
-        // Parse attributes. Attributes are identifiers in front of the code, prefixed with '~'
-        let mut start = 0;
-        let msg = msg.trim();
-        for attr_end in msg.match_indices(char::is_whitespace)
-                                .map(|(start, _)| start)
-                                .chain(iter::once(msg.len())) {
-            let attr = &msg[start..attr_end];
-            if !attr.starts_with('~') { break; }
-            start = attr_end + 1;
-
-            match attr[1..].trim() {
-                "stable" => channel = ReleaseChannel::Stable,
-                "beta" => channel = ReleaseChannel::Beta,
-                "nightly" => channel = ReleaseChannel::Nightly,
-                "mini" => mini = true,
-                "help" => {
-                    return Ok(format!("\
-syntax: {} [~attribute1] ... [~attributeN] <Rust code to execute>
-~stable | ~beta | ~nightly: select the Rust version to use
-~mini: don't wrap the code in an `fn main` and print the result
-", self.conn.current_nickname()));
-                }
-                unknown => {
-                    return Ok(format!("unknown attribute '{}' (try '~help' for a list)", unknown));
-                }
-            }
-        }
-
-        let code = &msg[start..];
-        let code = if mini {
+    fn parse_and_run(&mut self, code: &str) -> io::Result<String> {
+        let code = if self.conn.current_nickname().contains("mini") {
             String::from(code)
         } else {
             format!(r#"
@@ -151,10 +115,10 @@ fn main() {{
         {code}
     }});
 }}
-"#, version = self.rust_versions[channel as usize], code = code)
+"#, version = self.rust_versions[DEFAULT_CHANNEL as usize], code = code)
         };
 
-        let out = try!(self.run_code(&code, channel));
+        let out = try!(self.run_code(&code, DEFAULT_CHANNEL));
         if out.len() > 5000 {
             return Ok(String::from("output too long, bailing out :("));
         }
@@ -198,19 +162,13 @@ fn main() {{
     }
 
     /// Called when any user writes a public message
-    fn handle_pubmsg(&mut self, from: &str, chan: &str, mut msg: &str) {
-        let mut handle_command = false;
-        for trig in &self.triggers {
-            if msg.starts_with(trig) {
-                msg = &msg[trig.len()..].trim();
-                handle_command = true;
-                break;
-            }
-        }
-
-        if handle_command {
-            println!("<{}> {}", from, msg);
-            self.handle_cmd(chan, msg);
+    fn handle_pubmsg(&mut self, from: &str, chan: &str, msg: &str) {
+        if msg.starts_with(self.conn.current_nickname()) {
+            let command = &msg[self.conn.current_nickname().len()..]
+                .trim_left_matches(|ch| ch == ',' || ch == ':')
+                .trim();
+            println!("<{}> {}", from, command);
+            self.handle_cmd(chan, command);
         }
     }
 
@@ -261,33 +219,51 @@ fn log_error<E: Error>(e: E) {
 fn main() {
     fs::metadata("whitelist").expect("syscall whitelist file not found");
 
+    let bitly_key = read_bitly_token();
+    let rust_versions = get_rust_versions();
+
     // FIXME All these unwraps are pretty bad UX, but they should only panic on misconfiguration
     let mut config = String::new();
     File::open("playbot.toml").unwrap().read_to_string(&mut config).unwrap();
     let toml = toml::Parser::new(&config).parse().unwrap();
 
-    let conf = Config {
-        nickname: Some(String::from(toml["nick"].as_str().unwrap())),
-        nick_password: toml.get("password").map(|val| String::from(val.as_str().unwrap())),
-        server: Some(String::from(toml["server"].as_str().unwrap())),
-        port: toml.get("port").map(|val| {
-            let port = val.as_integer().unwrap();
-            assert!(0 < port && port < u16::MAX as i64, "out of range for ports");
-            port as u16
-        }),
-        channels: Some(toml["channels"].as_slice().unwrap()
-            .iter()
-            .map(|val| String::from(val.as_str().unwrap()))
-            .collect()),
-        ..Config::default()
-    };
+    let mut threads = Vec::new();
+    for server in toml["server"].as_slice().unwrap() {
+        let server = server.as_table().unwrap();
 
-    let triggers = toml["triggers"].as_slice().unwrap()
-        .iter()
-        .map(|val| String::from(val.as_str().unwrap()))
-        .collect();
+        for nick in server["nicks"].as_slice().unwrap() {
+            let conf = Config {
+                nickname: Some(String::from(nick.as_str().unwrap())),
+                nick_password: server.get("password").map(|val| String::from(val.as_str().unwrap())),
+                server: Some(String::from(server["server"].as_str().unwrap())),
+                port: server.get("port").map(|val| {
+                    let port = val.as_integer().unwrap();
+                    assert!(0 < port && port < u16::MAX as i64, "out of range for ports");
+                    port as u16
+                }),
+                channels: Some(server["channels"].as_slice().unwrap()
+                    .iter()
+                    .map(|val| String::from(val.as_str().unwrap()))
+                    .collect()),
+                ..Config::default()
+            };
 
-    let server = IrcServer::from_config(conf).unwrap();
-    server.identify().unwrap();
-    Playbot::new(server, triggers).main_loop();
+            let rust_versions = rust_versions.clone();
+            let bitly_key = bitly_key.clone();
+            threads.push(thread::spawn(move || {
+                let server = IrcServer::from_config(conf).unwrap();
+                server.identify().unwrap();
+
+                Playbot {
+                    conn: server,
+                    rust_versions: rust_versions,
+                    shorten_key: bitly_key,
+                }.main_loop();
+            }));
+        }
+    }
+
+    for thread in threads {
+        thread.join().unwrap();
+    }
 }

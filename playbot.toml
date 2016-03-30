@@ -1,13 +1,15 @@
 # Playbot's (default) configuration file
 
-nick = "playbot-rs"
+[[server]]
+nicks = ["playbot-rs", "playbot-rs-mini"]
 #password = "1234"
 server = "irc.mozilla.org"
 #port = 6667
 channels = ["#rust"]
-triggers = [
-    ">>",
-    "playbot-rs ",
-    "playbot-rs,",
-    "playbot-rs:"
-]
+
+[[server]]
+nicks = ["playbot-rs"]
+#password = "1234"
+server = "irc.mozilla.org"
+#port = 6667
+channels = ["#rust-offtopic"]
