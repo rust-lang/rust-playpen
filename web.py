@@ -57,14 +57,7 @@ def extractor(key, default, valid):
         return wrapper
     return decorator
 
-@route("/evaluate.json", method=["POST", "OPTIONS"])
-@enable_post_cors
-@extractor("backtrace", "0", ("0", "1", "2"))
-@extractor("color", False, (True, False))
-@extractor("test", False, (True, False))
-@extractor("version", "stable", ("stable", "beta", "nightly"))
-@extractor("optimize", "2", ("0", "1", "2", "3"))
-def evaluate(optimize, version, test, color, backtrace):
+def buildargs(optimize, color, backtrace):
     args = ["-C", "opt-level=" + optimize]
     if "0" == optimize:
         debug = True
@@ -77,11 +70,23 @@ def evaluate(optimize, version, test, color, backtrace):
             backtrace="0"
     if "1" == backtrace:
         args.insert(0, "--backtrace")
-        #XXX: if exists, --backtrace must be the first arg passed to evaluate.sh
+        #XXX: If exists, --backtrace must be the first arg
+        #     that is passed to compile.sh and evaluate.sh
     if debug:
         args.append("-g")
     if color:
         args.append("--color=always")
+    return args
+
+@route("/evaluate.json", method=["POST", "OPTIONS"])
+@enable_post_cors
+@extractor("backtrace", "0", ("0", "1", "2"))
+@extractor("color", False, (True, False))
+@extractor("test", False, (True, False))
+@extractor("version", "stable", ("stable", "beta", "nightly"))
+@extractor("optimize", "2", ("0", "1", "2", "3"))
+def evaluate(optimize, version, test, color, backtrace):
+    args = buildargs(optimize, color, backtrace)
     if test:
         args.append("--test")
 
@@ -117,23 +122,7 @@ def format(version):
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 @extractor("emit", "asm", ("asm", "llvm-ir", "mir"))
 def compile(emit, optimize, version, color, syntax, backtrace):
-    args = ["-C", "opt-level=" + optimize]
-    if "0" == optimize:
-        debug = True
-    else:
-        debug = False
-    if "2" == backtrace:
-        if debug:
-            backtrace="1"
-        else:
-            backtrace="0"
-    if "1" == backtrace:
-        args.insert(0, "--backtrace")
-        #XXX: if exists, --backtrace must be the first arg passed to compile.sh
-    if debug:
-        args.append("-g")
-    if color:
-        args.append("--color=always")
+    args = buildargs(optimize, color, backtrace)
     if syntax:
         args.append("-C")
         args.append("llvm-args=-x86-asm-syntax=%s" % syntax)
