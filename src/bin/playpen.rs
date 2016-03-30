@@ -168,7 +168,7 @@ fn compile(req: &mut Request) -> IronResult<Response> {
     let mut split = output.splitn(2, |b| *b == b'\xff');
     let rustc = String::from_utf8(split.next().unwrap().into()).unwrap();
 
-    let mut obj = json::Object::new();;
+    let mut obj = json::Object::new();
     match split.next() {
         Some(program_out) => {
             // Compilation succeeded

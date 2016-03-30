@@ -239,3 +239,41 @@ pub fn highlight(output_format: CompileOutput, output: &str) -> String {
     let output = child.wait_with_output().unwrap();
     String::from_utf8(output.stdout).unwrap()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn eval() {
+        let (status, out) = exec(ReleaseChannel::Nightly, "/usr/local/bin/evaluate.sh", Vec::new(),
+                                 String::from(r#"fn main() { println!("Hello") }"#)).unwrap();
+        assert!(status.success());
+        assert_eq!(out, &[0xff, b'H', b'e', b'l', b'l', b'o', b'\n']);
+    }
+
+    #[test]
+    fn compile() {
+        let (status, out) = exec(ReleaseChannel::Nightly, "/usr/local/bin/compile.sh",
+                                 vec![String::from("--emit=llvm-ir")],
+                                 String::from(r#"fn main() { println!("Hello") }"#)).unwrap();
+        assert!(status.success());
+        let mut split = out.splitn(2, |b| *b == b'\xff');
+        assert_eq!(split.next().unwrap(), &[]);
+        assert!(String::from_utf8(split.next().unwrap().to_vec()).unwrap()
+            .contains("target triple"));
+    }
+
+    #[test]
+    fn fmt() {
+        let (status, out) = exec(ReleaseChannel::Nightly, "/usr/bin/rustfmt", Vec::new(),
+                                 String::from(r#"fn main() { println!("Hello") }"#)).unwrap();
+        assert!(status.success());
+        assert!(String::from_utf8(out).unwrap().contains(r#""Hello""#))
+    }
+
+    #[test]
+    fn pygmentize() {
+        assert!(highlight(CompileOutput::Llvm, "target triple").contains("<span"));
+    }
+}
