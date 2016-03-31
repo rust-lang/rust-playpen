@@ -104,9 +104,12 @@ def evaluate(optimize, version, test, color, backtrace):
 
 @route("/format.json", method=["POST", "OPTIONS"])
 @enable_post_cors
+@extractor("optimize", "2", ("0", "1", "2", "3"))
+@extractor("backtrace", "0", ("0", "1", "2"))
 @extractor("version", "stable", ("stable", "beta", "nightly"))
-def format(version):
-    out, rc = execute(version, "/usr/bin/rustfmt", (), request.json["code"])
+def format(version, backtrace, optimize):
+    _, env_vars = init_args_vars(optimize, None, backtrace)
+    out, rc = execute(version, "/usr/bin/rustfmt", (), request.json["code"], tuple(env_vars))
     if rc:
         return {"error": out.decode()}
     else:
