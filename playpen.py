@@ -10,7 +10,8 @@ def execute(version, command, arguments, data=None, env_vars=None):
     #env_vars can be either a list or a tuple
 
     if env_vars: #this means it's not empty and it's not None
-        #if we have env vars, we need wrap everything around the shell in order to be able to set environment variables eg. dash -c 'envvars cmd args'
+        #if we have env vars, we need wrap everything around the shell in order
+        #to be able to set them eg. dash -c 'envvars cmd args'
         #eg: playpen ppargs -- /usr/bin/dash -c 'RUST_BACKTRACE=1 evaluate.sh -C --test --color=always'
         exported_vars = ""
         for env_var in env_vars:
