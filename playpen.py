@@ -8,6 +8,8 @@ def execute(version, command, arguments, data=None, env_vars=None):
     #Note: arguments and env_vars are expected to be of tuple type, not list,
     # due to: TypeError: unhashable type: 'list'
     #You can still pass a list as: tuple(listhere)
+    #env_vars example: ( "RUST_BACKTRACE=1", "RUST_TEST_NOCAPTURE", "TERM=xterm", "A=", "B=`ls -la`", )
+    #TODO:(I-Easy) Ignore empty elements in env_vars for convenience? I would personally rather have it fail(as it currently does - via raise) rather than have no env.var be set because caller accidentally set an empty value for an element instead of that env.var it wanted.
 
     if env_vars: #this means it's not empty and it's not None
         #if we have env vars, we need wrap everything around the shell in order
@@ -28,9 +30,9 @@ def execute(version, command, arguments, data=None, env_vars=None):
             if not re.match("^[a-zA-Z0-9_]+$", var_name):
                 raise NameError("Bad env.var name, you supplied: \""
                     +env_var+"\"")
-            var_rebuilt = var_name
+            var_rebuilt = var_name + "="
             if None != var_value:
-                var_rebuilt += "=" + shlex.quote(var_value)
+                var_rebuilt += shlex.quote(var_value)
             exported_vars += "export " + var_rebuilt + "; "
             #exportedvars += varrebuilt + " " #this would be without 'export'
             #XXX: Why 'export' instead of without it? to ensure all cases are
