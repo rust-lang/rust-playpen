@@ -32,9 +32,9 @@ def serve_static(path):
     return static_file(path, root="static")
 
 @functools.lru_cache(maxsize=256)
-def execute(version, command, arguments, code):
+def execute(version, command, arguments, code, env_vars=None):
     print("running:", version, command, arguments, file=sys.stderr, flush=True)
-    return playpen.execute(version, command, arguments, code)
+    return playpen.execute(version, command, arguments, code, env_vars)
 
 def enable_post_cors(wrappee):
     def wrapper(*args, **kwargs):
@@ -57,9 +57,10 @@ def extractor(key, default, valid):
         return wrapper
     return decorator
 
-def buildargs(optimize, color, backtrace):
+def init_args_vars(optimize, color, backtrace):
     args = ["-C", "opt-level=" + optimize]
-    if "0" == optimize:
+    env_vars = []
+    if "0" == optimize: #this means Debug, else Release
         debug = True
     else:
         debug = False
@@ -69,14 +70,12 @@ def buildargs(optimize, color, backtrace):
         else:
             backtrace="0"
     if "1" == backtrace:
-        args.insert(0, "--backtrace")
-        #XXX: If exists, --backtrace must be the first arg
-        #     that is passed to compile.sh and evaluate.sh
+        env_vars.append("RUST_BACKTRACE=1")
     if debug:
         args.append("-g")
     if color:
         args.append("--color=always")
-    return args
+    return (args, env_vars)
 
 @route("/evaluate.json", method=["POST", "OPTIONS"])
 @enable_post_cors
@@ -86,11 +85,11 @@ def buildargs(optimize, color, backtrace):
 @extractor("version", "stable", ("stable", "beta", "nightly"))
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 def evaluate(optimize, version, test, color, backtrace):
-    args = buildargs(optimize, color, backtrace)
+    args, env_vars = init_args_vars(optimize, color, backtrace)
     if test:
         args.append("--test")
 
-    out, _ = execute(version, "/usr/local/bin/evaluate.sh", tuple(args), request.json["code"])
+    out, _ = execute(version, "/usr/local/bin/evaluate.sh", tuple(args), request.json["code"], tuple(env_vars))
 
     if request.json.get("separate_output") is True:
         split = out.split(b"\xff", 1)
@@ -122,7 +121,7 @@ def format(version):
 @extractor("optimize", "2", ("0", "1", "2", "3"))
 @extractor("emit", "asm", ("asm", "llvm-ir", "mir"))
 def compile(emit, optimize, version, color, syntax, backtrace):
-    args = buildargs(optimize, color, backtrace)
+    args, env_vars = init_args_vars(optimize, color, backtrace)
     if syntax:
         args.append("-C")
         args.append("llvm-args=-x86-asm-syntax=%s" % syntax)
@@ -131,7 +130,7 @@ def compile(emit, optimize, version, color, syntax, backtrace):
         args.append("--unpretty=mir")
     else:
         args.append("--emit=" + emit)
-    out, _ = execute(version, "/usr/local/bin/compile.sh", tuple(args), request.json["code"])
+    out, _ = execute(version, "/usr/local/bin/compile.sh", tuple(args), request.json["code"], tuple(env_vars))
     split = out.split(b"\xff", 1)
     if len(split) == 2:
         rustc_output = split[0].decode()

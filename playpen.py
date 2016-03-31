@@ -5,14 +5,17 @@ import shlex #for quote() - python3 required
 import re #for re.match()
 
 def execute(version, command, arguments, data=None, env_vars=None):
-    #Note:
-    #arguments is expected to be a tuple!
-    #env_vars can be either a list or a tuple
+    #Note: arguments and env_vars are expected to be of tuple type, not list,
+    # due to: TypeError: unhashable type: 'list'
+    #You can still pass a list as: tuple(listhere)
 
     if env_vars: #this means it's not empty and it's not None
         #if we have env vars, we need wrap everything around the shell in order
         #to be able to set them eg. dash -c 'envvars cmd args'
-        #eg: playpen ppargs -- /usr/bin/dash -c 'RUST_BACKTRACE=1 evaluate.sh -C --test --color=always'
+        #eg: playpen ppargs -- /usr/bin/dash
+        # -c 'export RUST_BACKTRACE=1; evaluate.sh -C --test --color=always'
+        #or without export: playpen ppargs -- /usr/bin/dash -c
+        # 'RUST_BACKTRACE=1 evaluate.sh -C --test --color=always'
         exported_vars = ""
         for env_var in env_vars:
             #eg. RUST_BACKTRACE=1
