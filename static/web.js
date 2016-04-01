@@ -133,8 +133,8 @@
         result.parentNode.style.visibility = "";
     }
 
-    function evaluate(result, code, version, optimize, button, test) {
-        send("evaluate.json", {code: code, version: version, optimize: optimize, test: !!test, separate_output: true, color: true},
+    function evaluate(result, code, version, optimize, button, test, backtrace) {
+        send("evaluate.json", {code: code, version: version, optimize: optimize, test: !!test, separate_output: true, color: true, backtrace: backtrace },
             function(object) {
                 var samp, pre;
                 set_result(result);
@@ -174,10 +174,10 @@
         }, button, test ? "Running tests…" : "Running…", result);
     }
 
-    function compile(emit, result, code, version, optimize, button) {
+    function compile(emit, result, code, version, optimize, button, backtrace) {
         var syntax = document.getElementById('asm-flavor').value;
         send("compile.json", {emit: emit, code: code, version: version, optimize: optimize,
-                              color: true, highlight: true, syntax: syntax}, function(object) {
+                              color: true, highlight: true, syntax: syntax, backtrace: backtrace}, function(object) {
             if ("error" in object) {
                 set_result(result, "<pre class=\"rustc-output rustc-errors\"><samp></samp></pre>");
                 result.firstChild.firstChild.innerHTML = formatCompilerOutput(object.error);
@@ -233,10 +233,11 @@
         result.parentNode.style.visibility = "";
     }
 
-    function shareGist(result, version, code, button) {
+    function shareGist(result, version, code, button, backtraceval) {
         // only needed for the "shrinking" animation
         var full_url = "https://play.rust-lang.org/?code=" + encodeURIComponent(code) +
-                       "&version=" + encodeURIComponent(version);
+                       "&version=" + encodeURIComponent(version) +
+                       "&backtrace=" + encodeURIComponent(backtraceval);
         var url = "https://api.github.com/gists";
         button.disabled = true;
 
@@ -275,7 +276,8 @@
 
                         var play_url = "https://play.rust-lang.org/?gist=" +
                                        encodeURIComponent(gist_id) + "&version=" +
-                                       encodeURIComponent(version);
+                                       encodeURIComponent(version) +
+                       "&backtrace=" + encodeURIComponent(backtraceval);
 
 
                         var link = result.firstChild.firstElementChild;
@@ -301,9 +303,10 @@
         );
     }
 
-    function share(result, version, code, button) {
+    function share(result, version, code, button, backtraceval) {
         var playurl = "https://play.rust-lang.org/?code=" + encodeURIComponent(code);
         playurl += "&version=" + encodeURIComponent(version);
+        playurl += "&backtrace=" + encodeURIComponent(backtraceval);
         if (playurl.length > 5000) {
             set_result(result, "<p class=error>Sorry, your code is too long to share this way." +
                 "<p class=error-explanation>At present, sharing produces a link containing the" +
@@ -482,6 +485,7 @@
     var mode;
     var query;
     var asm_flavor;
+    var backtrace;
 
     function updateEvaluateAction(code) {
         // A very simple pair of heuristics; there’s no point in doing more, IMO.
@@ -503,7 +507,8 @@
         }
         evaluate(result, session.getValue(), getRadioValue("version"),
                  getRadioValue("optimize"), evaluateButton,
-                 evaluateAction === "test");
+                 evaluateAction === "test",
+                 backtrace.value);
     }
 
     var COLOR_CODES = ['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'];
@@ -552,6 +557,7 @@
         clearResultButton = document.getElementById("clear-result");
         keyboard = document.getElementById("keyboard");
         asm_flavor = document.getElementById("asm-flavor");
+        backtrace = document.getElementById("backtrace");
         themes = document.getElementById("themes");
         editor = ace.edit("editor");
         set_result.editor = editor;
@@ -589,6 +595,11 @@
             asm_flavor.value = flavor;
         }
 
+        var vbacktrace = optionalLocalStorageGetItem("backtrace");
+        if (vbacktrace !== null) {
+            backtrace.value = vbacktrace;
+        }
+
         query = getQueryParameters();
         if ("code" in query) {
             session.setValue(query.code);
@@ -607,6 +618,12 @@
             var radio = document.getElementById("version-" + query.version);
             if (radio !== null) {
                 radio.checked = true;
+            }
+        }
+
+        if ("backtrace" in query) {
+            if (backtrace !== null) {
+                backtrace.value = query.backtrace;
             }
         }
 
@@ -637,6 +654,11 @@
             optionalLocalStorageSetItem("asm_flavor", flavor);
         };
 
+        backtrace.onkeyup = backtrace.onchange = function() {
+            var vbacktrace = backtrace.options[backtrace.selectedIndex].value;
+            optionalLocalStorageSetItem("backtrace", vbacktrace);
+        };
+
         evaluateButton.onclick = function() {
             doEvaluate(true);
         };
@@ -656,18 +678,18 @@
 
         asmButton.onclick = function() {
             compile("asm", result, session.getValue(), getRadioValue("version"),
-                     getRadioValue("optimize"), asmButton);
+                     getRadioValue("optimize"), asmButton, backtrace.value);
         };
 
         irButton.onclick = function() {
             compile("llvm-ir", result, session.getValue(), getRadioValue("version"),
-                     getRadioValue("optimize"), irButton);
+                     getRadioValue("optimize"), irButton, backtrace.value);
         };
 
         mirButton.onclick = function() {
             document.getElementById("version-nightly").checked = true;
             compile("mir", result, session.getValue(), getRadioValue("version"),
-                     getRadioValue("optimize"), mirButton);
+                     getRadioValue("optimize"), mirButton, backtrace.value);
         };
 
         formatButton.onclick = function() {
@@ -675,11 +697,11 @@
         };
 
         shareButton.onclick = function() {
-            share(result, getRadioValue("version"), session.getValue(), shareButton);
+            share(result, getRadioValue("version"), session.getValue(), shareButton, backtrace.value);
         };
 
         gistButton.onclick = function() {
-            shareGist(result, getRadioValue("version"), session.getValue(), gistButton);
+            shareGist(result, getRadioValue("version"), session.getValue(), gistButton, backtrace.value);
         };
 
         configureEditorButton.onclick = function() {
