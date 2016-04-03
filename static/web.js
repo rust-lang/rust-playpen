@@ -536,10 +536,13 @@
             });
     }
 
-    //If mouse clicks on eg. "<anon>:3" then cursor is moved to start of that line
-    //If mouse hovers over that, temporarily show that line into view by 
-    //selecting it entirely and cursor move to the beginning of it
-    //moves back to original view when mouse moved away
+    //This affects how mouse acts on the program output.
+    //Screenshots here: https://github.com/rust-lang/rust-playpen/pull/192#issue-145465630
+    //If mouse hovers on eg. "<anon>:3", temporarily show that line(3) into view by 
+    //selecting it entirely and move editor's cursor to the beginning of it;
+    //Moves back to original view when mouse moved away.
+    //If mouse left click on eg. "<anon>:3" then the editor's cursor is moved
+    //to the beginning of that line
     function jumpToLine(text, r1) {
         return "<a onclick=\"javascript:editGo(" + r1 + ",1)\"" +
             " onmouseover=\"javascript:editShowLine("+r1+")\"" +
@@ -548,8 +551,8 @@
     }
 
     //Similarly to jumpToLine, except this one acts on eg. "<anon>:2:31: 2:32"
-    //and thus selects a region on mouse hover, or sets cursor to the beginning
-    //of it when clicked
+    //and thus selects a region on mouse hover, or when clicked sets cursor to
+    //the beginning of region.
     function jumpToRegion(text, r1,c1, r2,c2) {
         return "<a onclick=\"javascript:editGo("+r1+","+c1+")\"" +
             " onmouseover=\"javascript:editShowRegion("+r1+","+c1+", "+r2+","+c2+")\"" +
