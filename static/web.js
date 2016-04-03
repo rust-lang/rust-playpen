@@ -187,8 +187,8 @@
         }, button, "Compiling…", result);
     }
 
-    function format(result, session, version, button) {
-        send("format.json", {code: session.getValue(), version: version}, function(object) {
+    function format(result, session, version, button, optimize, backtrace) {
+        send("format.json", {code: session.getValue(), version: version, optimize: optimize, backtrace: backtrace}, function(object) {
             if ("error" in object) {
                 set_result(result, "<pre class=highlight><samp class=rustc-errors></samp></pre>");
                 result.firstChild.firstChild.innerHTML = formatCompilerOutput(object.error);
@@ -693,7 +693,8 @@
         };
 
         formatButton.onclick = function() {
-            format(result, session, getRadioValue("version"), formatButton);
+            format(result, session, getRadioValue("version"), formatButton,
+                   getRadioValue("optimize"), backtrace.value);
         };
 
         shareButton.onclick = function() {
