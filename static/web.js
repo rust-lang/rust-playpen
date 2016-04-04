@@ -152,11 +152,7 @@
                 if ("program" in object) {
                     samp = document.createElement("samp");
                     samp.className = "output";
-                    if (test) {
-                        samp.innerHTML = ansi2html(object.program);
-                    } else {
-                        samp.textContent = object.program;
-                    }
+                    samp.innerHTML = formatCompilerOutput(object.program);
                     pre = document.createElement("pre");
                     pre.appendChild(samp);
                     result.appendChild(pre);
@@ -536,12 +532,38 @@
             });
     }
 
+    //This affects how mouse acts on the program output.
+    //Screenshots here: https://github.com/rust-lang/rust-playpen/pull/192#issue-145465630
+    //If mouse hovers on eg. "<anon>:3", temporarily show that line(3) into view by 
+    //selecting it entirely and move editor's cursor to the beginning of it;
+    //Moves back to original view when mouse moved away.
+    //If mouse left click on eg. "<anon>:3" then the editor's cursor is moved
+    //to the beginning of that line
+    function jumpToLine(text, r1) {
+        return "<a onclick=\"javascript:editGo(" + r1 + ",1)\"" +
+            " onmouseover=\"javascript:editShowLine("+r1+")\"" +
+            " onmouseout=\"javascript:editRestore()\"" +
+            " class=\"linejump\">" + text + "</a>";
+    }
+
+    //Similarly to jumpToLine, except this one acts on eg. "<anon>:2:31: 2:32"
+    //and thus selects a region on mouse hover, or when clicked sets cursor to
+    //the beginning of region.
+    function jumpToRegion(text, r1,c1, r2,c2) {
+        return "<a onclick=\"javascript:editGo("+r1+","+c1+")\"" +
+            " onmouseover=\"javascript:editShowRegion("+r1+","+c1+", "+r2+","+c2+")\"" +
+            " onmouseout=\"javascript:editRestore()\"" +
+            " class=\"linejump\">" + text + "</a>";
+    }
+
     function formatCompilerOutput(text) {
         return ansi2html(text).replace(/\[(E\d\d\d\d)\]/g, function(text, code) {
             return "[<a href=https://doc.rust-lang.org/error-index.html#" + code + ">" + code + "</a>]";
         }).replace(/run `rustc --explain (E\d\d\d\d)` to see a detailed explanation/g, function(text, code) {
             return "see the <a href=https://doc.rust-lang.org/error-index.html#" + code + ">detailed explanation for " + code + "</a>";
-        });
+        }).replace(/&lt;anon&gt;:(\d+)$/mg, jumpToLine) // panicked at 'foo', $&
+        .replace(/^&lt;anon&gt;:(\d+):(\d+):\s+(\d+):(\d+)/mg, jumpToRegion)
+        .replace(/^&lt;anon&gt;:(\d+)/mg, jumpToLine);
     }
 
     addEventListener("DOMContentLoaded", function() {
@@ -561,6 +583,8 @@
         themes = document.getElementById("themes");
         editor = ace.edit("editor");
         set_result.editor = editor;
+        editor.$blockScrolling = Infinity;
+        editor.setAnimatedScroll(true);
         session = editor.getSession();
         themelist = ace.require("ace/ext/themelist");
 
@@ -720,3 +744,58 @@
 
     }, false);
 }());
+
+
+// called via javascript:fn events from formatCompilerOutput
+var old_range;
+
+function editorGet() {
+    return window.ace.edit("editor");
+}
+
+function editGo(r1,c1) {
+    var e = editorGet();
+    old_range = undefined;
+    e.focus();
+    e.selection.clearSelection();
+    e.scrollToLine(r1-1, true, true);
+    e.selection.moveCursorTo(r1-1, c1-1, false);
+}
+
+function editRestore() {
+    if (old_range) {
+        var e = editorGet();
+        e.selection.setSelectionRange(old_range, false);
+        var mid = (e.getFirstVisibleRow() + e.getLastVisibleRow()) / 2;
+        var intmid = Math.round(mid);
+        var extra = (intmid - mid)*2 + 2;
+        var up = e.getFirstVisibleRow() - old_range.start.row + extra;
+        var down = old_range.end.row - e.getLastVisibleRow() + extra;
+        if (up > 0) {
+            e.scrollToLine(mid - up, true, true);
+        } else if (down > 0) {
+            e.scrollToLine(mid + down, true, true);
+        } // else visible enough
+    }
+}
+
+function editShowRegion(r1,c1, r2,c2) {
+    var e = editorGet();
+    var es = e.selection;
+    old_range = es.getRange();
+    es.clearSelection();
+    e.scrollToLine(Math.round((r1 + r2) / 2), true, true);
+    es.setSelectionAnchor(r1-1, c1-1);
+    es.selectTo(r2-1, c2-1);
+}
+
+function editShowLine(r1) {
+    var e = editorGet();
+    var es = e.selection;
+    old_range = es.getRange();
+    es.clearSelection();
+    e.scrollToLine(r1, true, true);
+    es.moveCursorTo(r1-1, 0);
+    es.moveCursorLineEnd();
+    es.selectTo(r1-1, 0);
+}
