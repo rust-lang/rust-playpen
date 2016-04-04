@@ -661,6 +661,17 @@
             editor.resize();
         });
 
+        //This helps re-focus editor after a Run or any other action that caused
+        //editor to lose focus. Just press Enter or Esc key to focus editor.
+        //Without this, you'd most likely have to LMB somewhere in the editor
+        //area which would change the location of its cursor to where you clicked.
+        addEventListener("keyup", function(e) {
+            if ((document.body == document.activeElement) && //needed to avoid when editor has focus already
+                (13 == e.keyCode || 27 == e.keyCode)) { //Enter or Escape keys
+                editor.focus();
+            }
+        });
+
         session.on("change", function() {
             var code = session.getValue();
             optionalLocalStorageSetItem("code", code);
