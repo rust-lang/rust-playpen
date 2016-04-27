@@ -9,6 +9,7 @@ from bottle import get, request, response, route, run, static_file
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import GasLexer, LlvmLexer
+from mirlexer import RustMirLexer
 
 import playpen
 
@@ -153,7 +154,7 @@ def compile(emit, optimize, version, color, syntax, backtrace_str):
         elif emit == "llvm-ir":
             return {"result": highlight(split[1].decode(), LlvmLexer(), HtmlFormatter(nowrap=True))}
         else:
-            return {"result": split[1].decode()}
+            return {"result": highlight(split[1].decode(), RustMirLexer(), HtmlFormatter(nowrap=True))}
 
 os.chdir(sys.path[0])
 run(host='0.0.0.0', port=80, server='cherrypy')
