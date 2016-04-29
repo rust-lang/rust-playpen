@@ -109,6 +109,24 @@
             'p':            'ace_punctuation', // Punctuation
             's':            'ace_string', // String
             '':             '', // Text
+        },
+        'mir': {
+            'c':            'ace_comment', // Comment
+            'cm':           'ace_comment', // Comment.Multiline
+            'c1':           'ace_comment', // Comment.Single
+            'k':            'ace_keyword', // Keyword
+            'kd':           'ace_keyword', // Keyword.Declaration
+            'kt':           'ace_variable ace_language', // Keyword.Type
+            'kc':           'ace_boolean', // Keyword.Constant
+            'na':           'ace_constant ace_language', // Name.Attribute
+            'nb':           'ace_constant ace_buildin', // Name.Builtin
+            'nf':           'ace_support ace_function', // Name.Function
+            'm':            'ace_constant ace_numeric', // Number
+            'o':            'ace_paren', // Operator
+            'p':            'ace_punctuation', // Punctuation
+            's':            'ace_string', // String
+            'se':           'ace_string', // String.Escape
+            '':             '', // Text
         }
     };
 
