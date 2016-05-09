@@ -576,14 +576,23 @@
             " class=\"linejump\">" + text + "</a>";
     }
 
+    //Similarly to jumpToLine, except this one acts on eg. "<anon>:2:31"
+    function jumpToPoint(text, r1,c1) {
+        return "<a onclick=\"javascript:editGo("+r1+","+c1+")\"" +
+            " onmouseover=\"javascript:editShowPoint("+r1+","+c1+")\"" +
+            " onmouseout=\"javascript:editRestore()\"" +
+            " class=\"linejump\">" + text + "</a>";
+    }
+
     function formatCompilerOutput(text) {
-        return ansi2html(text).replace(/\[(E\d\d\d\d)\]/g, function(text, code) {
-            return "[<a href=https://doc.rust-lang.org/error-index.html#" + code + ">" + code + "</a>]";
+        return ansi2html(text).replace(/\[(--explain )?(E\d\d\d\d)\]/g, function(text, prefix, code) {
+            return "[<a href=https://doc.rust-lang.org/error-index.html#" + code + ">" + prefix + code + "</a>]";
         }).replace(/run `rustc --explain (E\d\d\d\d)` to see a detailed explanation/g, function(text, code) {
             return "see the <a href=https://doc.rust-lang.org/error-index.html#" + code + ">detailed explanation for " + code + "</a>";
         }).replace(/&lt;anon&gt;:(\d+)$/mg, jumpToLine) // panicked at 'foo', $&
         .replace(/^&lt;anon&gt;:(\d+):(\d+):\s+(\d+):(\d+)/mg, jumpToRegion)
-        .replace(/^&lt;anon&gt;:(\d+)/mg, jumpToLine);
+        .replace(/^&lt;anon&gt;:(\d+)/mg, jumpToLine)
+        .replace(/&lt;anon&gt;:(\d+):(\d+)/mg, jumpToPoint);  // new errors
     }
 
     addEventListener("DOMContentLoaded", function() {
@@ -829,4 +838,15 @@ function editShowLine(r1) {
     es.moveCursorTo(r1-1, 0);
     es.moveCursorLineEnd();
     es.selectTo(r1-1, 0);
+}
+
+function editShowPoint(r1,c1) {
+    var e = editorGet();
+    var es = e.selection;
+    old_range = es.getRange();
+    es.clearSelection();
+    e.scrollToLine(r1, true, true);
+    es.moveCursorTo(r1-1, 0);
+    es.moveCursorLineEnd();
+    es.selectTo(r1-1, c1-1);
 }
