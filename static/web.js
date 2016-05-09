@@ -543,11 +543,13 @@
         return text.replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
-            .replace(/\x1b\[3([0-7])m([^\x1b]*)(?:\x1b\(B)?\x1b\[0?m/g, function(original, colorCode, text) {
+            .replace(/\x1b\[1m\x1b\[3([0-7])m([^\x1b]*)(?:\x1b\(B)?\x1b\[0?m/g, function(original, colorCode, text) {
+                return '<span class=ansi-' + COLOR_CODES[+colorCode] + '><strong>' + text + '</strong></span>';
+            }).replace(/\x1b\[3([0-7])m([^\x1b]*)(?:\x1b\(B)?\x1b\[0?m/g, function(original, colorCode, text) {
                 return '<span class=ansi-' + COLOR_CODES[+colorCode] + '>' + text + '</span>';
             }).replace(/\x1b\[1m([^\x1b]*)(?:\x1b\(B)?\x1b\[0?m/g, function(original, text) {
                 return "<strong>" + text + "</strong>";
-            });
+            }).replace(/(?:\x1b\(B)?\x1b\[0m/g, '');
     }
 
     //This affects how mouse acts on the program output.
