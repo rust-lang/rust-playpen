@@ -725,6 +725,7 @@
 
         evaluateButton.onclick = function() {
             doEvaluate(true);
+            editor.focus();
         };
 
         editor.commands.addCommand({
