@@ -586,9 +586,9 @@
 
     function formatCompilerOutput(text) {
         return ansi2html(text).replace(/\[(--explain )?(E\d\d\d\d)\]/g, function(text, prefix, code) {
-            return "[<a href=https://doc.rust-lang.org/error-index.html#" + code + " target=_new>" + (prefix ? prefix : "") + code + "</a>]";
+            return "[<a href=https://doc.rust-lang.org/error-index.html#" + code + " target=_blank>" + (prefix ? prefix : "") + code + "</a>]";
         }).replace(/run `rustc --explain (E\d\d\d\d)` to see a detailed explanation/g, function(text, code) {
-            return "see the <a href=https://doc.rust-lang.org/error-index.html#" + code + " target=_new>detailed explanation for " + code + "</a>";
+            return "see the <a href=https://doc.rust-lang.org/error-index.html#" + code + " target=_blank>detailed explanation for " + code + "</a>";
         }).replace(/&lt;anon&gt;:(\d+)$/mg, jumpToLine) // panicked at 'foo', $&
         .replace(/^&lt;anon&gt;:(\d+):(\d+):\s+(\d+):(\d+)/mg, jumpToRegion)
         .replace(/^&lt;anon&gt;:(\d+)/mg, jumpToLine)
