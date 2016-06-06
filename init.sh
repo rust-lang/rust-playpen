@@ -20,6 +20,10 @@ rm -rf root-stable.new
 cp -a root-nightly.new root-beta.new
 cp -a root-nightly.new root-stable.new
 
+mount -o bind /proc root-stable.new/proc
+mount -o bind /proc root-beta.new/proc
+mount -o bind /proc root-nightly.new/proc
+
 curl -O https://static.rust-lang.org/rustup.sh
 for channel in stable beta nightly; do
     sh rustup.sh --prefix=root-${channel}.new --channel=$channel --yes --disable-sudo
