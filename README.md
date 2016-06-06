@@ -28,7 +28,8 @@ The bot requires python 3, which is the default on Arch.
 ## Installing packages
 
 ```
-apt-get install -y make gcc git libseccompt-dev libsystemd-dev python3 \
+sudo apt-get update
+sudo apt-get install -y make gcc git libseccomp-dev libsystemd-dev python3 \
   python3-pip vim curl strace debootstrap dbus
 ```
 
