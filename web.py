@@ -39,7 +39,7 @@ def execute(version, command, arguments, code, show_backtrace):
         escapedargs=""
         for arg in arguments:
             escapedargs += " " + shlex.quote(arg)
-        arguments = ("-c", "export RUST_BACKTRACE=1; " + command + escapedargs) 
+        arguments = ("-c", "export RUST_BACKTRACE=1; " + command + escapedargs)
         command = "/usr/bin/dash"
     print("running:", version, command, arguments, file=sys.stderr, flush=True)
     return playpen.execute(version, command, arguments, code)
@@ -157,4 +157,4 @@ def compile(emit, optimize, version, color, syntax, backtrace_str):
             return {"result": highlight(split[1].decode(), RustMirLexer(), HtmlFormatter(nowrap=True))}
 
 os.chdir(sys.path[0])
-run(host='0.0.0.0', port=80, server='cherrypy')
+run(host='127.0.0.1', port=8080, server='cherrypy')

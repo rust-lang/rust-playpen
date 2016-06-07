@@ -1,5 +1,20 @@
-language: node_js
+language: python
+sudo: required
+dist: trusty
+services:
+  - docker
+python: 3.4
+
 install:
   - npm install jshint
+  - pip install -r requirements.txt
+
 script:
   - find static/ -iname "*.js" | xargs jshint
+  - docker build -f Dockerfile-stable -t rust-stable .
+  - ./web.py &
+  - while ! nc -q 1 localhost 8080 </dev/null; do sleep 5; done
+  - |
+    curl -sSf -H "Content-Type: application/json" \
+      -d '{"code": "fn main() { println!(\"hello\"); }"}' \
+      localhost:8080/evaluate.json

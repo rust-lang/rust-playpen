@@ -1,0 +1,13 @@
+FROM ubuntu:16.04
+
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends \
+      gcc libc6-dev curl file ca-certificates
+RUN curl https://static.rust-lang.org/rustup.sh | \
+      sh -s -- -y --channel=stable --disable-sudo
+RUN cargo install --debug rustfmt --root /usr/local
+RUN groupadd -r rust && useradd -r -g rust rust
+COPY bin/compile.sh bin/evaluate.sh /usr/local/bin/
+USER rust
+
+WORKDIR /tmp

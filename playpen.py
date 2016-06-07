@@ -3,15 +3,13 @@
 import subprocess
 
 def execute(version, command, arguments, data=None):
-    with subprocess.Popen(("playpen",
-                           "root-" + version,
-                           "--mount-proc",
-                           "--user=rust",
-                           "--timeout=5",
-                           "--syscalls-file=whitelist",
-                           "--devices=/dev/urandom:r,/dev/null:rw",
-                           "--memory-limit=128",
-                           "--",
+    with subprocess.Popen(("docker",
+                           "run",
+                           "--rm",
+                           "--cap-drop=ALL",
+                           "--memory=128m",
+                           "-i",
+                           "rust-" + version,
                            command) + arguments,
                            stdin=subprocess.PIPE,
                            stdout=subprocess.PIPE,
