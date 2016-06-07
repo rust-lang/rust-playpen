@@ -8,6 +8,7 @@ def execute(version, command, arguments, data=None):
                            "--rm",
                            "--cap-drop=ALL",
                            "--memory=128m",
+                           "--net=none",
                            "-i",
                            "rust-" + version,
                            command) + arguments,
