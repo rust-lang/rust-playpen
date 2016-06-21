@@ -33,84 +33,68 @@ To see a list of attributes, use `~help`:
 
 ## System Requirements
 
-Rust-Playpen currently needs to be run on a system with access to Docker.
+Currently needs to be run on a system with access to Docker.
+
+## Running the web server
+
+First, create the Docker images that playpen will use:
+
+```
+sh docker/build.sh
+```
+
+Next, spin up the server.
+
+```
+cargo run --bin playpen
+```
+
+You should now be able to browse http://127.0.0.1:8080 and interact.
 
 ## IRC Bot Setup
 
-#### Create `bitly_key`
+You'll need to move `playbot.toml.example` to `playbot.toml` and then configure
+it appropriately.
 
-The bot uses [bitly](https://bitly.com) as a URL shortener. Get an OAuth access token, and put it into a file called `bitly_key`, in the root directory of `rust-playpen`.
+# Setting up the play.rust-lang.org server
 
-#### Modify `playbot.toml`
+First off, start off with a fresh Ubuntu AMI. These should be listed on
+https://cloud-images.ubuntu.com/locator/ec2/, and the current one is the Xenial
+us-west-1 64-bit hvm ebs-ssd server, ami-08490c68.
 
-You'll also need to change the file `playbot.toml`. This configuration allows
-the bot's nick to be registered, and can include the nick's password.
+* Launch an m3.medium instance
+* Launch into EC2-Classic
+* Protect against accidental termination
+* Make the disk ~100GB
+* Use the existing playground security group
 
-#### Registering and starting services
-
-The working playpen has the IRC and Web services set up to automatically start at boot:
-
-`/etc/systemd/system/rust-playpen-irc.service`
-
-```
-[Unit]
-Description=Rust code evaluation sandbox (irc bots)
-After=network.target
-
-[Service]
-ExecStart=/root/rust-playpen/bot.py
-
-[Install]
-WantedBy=multi-user.target
-```
-
-`/etc/systemd/system/rust-playpen-web.service`
+SSH through the bastion, then:
 
 ```
-[Unit]
-Description=Rust code evaluation sandbox (web frontend)
-After=network.target
+sudo apt-get update
+sudo apt-get install python-pip apt-transport-https ca-certificates
+sudo pip install pygments
 
-[Service]
-ExecStart=/root/rust-playpen/web.py
+curl https://sh.rustup.rs | sh
+git clone https://github.com/rust-lang/rust-playpen
 
-[Install]
-WantedBy=multi-user.target
+# see https://docs.docker.com/engine/installation/linux/ubuntulinux/
+sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+echo 'deb https://apt.dockerproject.org/repo ubuntu-xenial main' | sudo tee /etc/apt/sources.list.d/docker.list
+sudo apt-get update
+sudo apt-get install linux-image-extra-$(uname -r) docker-engine
+sudo service docker start
+sudo usermod -aG docker ubuntu
 ```
 
-`/etc/systemd/system/rust-playpen-update.service`
+Next, configure `playbot.toml` copied from `playbot.toml.example`.
+
+Next, open up a screen window (`screen -R`), and spin up two sessions:
 
 ```
-[Unit]
-Description=Playpen sandbox root updater
-
-[Service]
-Type=oneshot
-ExecStart=/root/rust-playpen/init.sh
-Environment=HOME=/root
+cargo run --release --bin playpen
 ```
 
-`/etc/systemd/system/rust-playpen-update.timer`
-
 ```
-[Unit]
-Description=Playpen sandbox root update scheduler
-
-[Timer]
-OnBootSec=10min
-OnCalendar=daily
-Persistent=true
-Unit=rust-playpen-update.service
-
-[Install]
-WantedBy=multi-user.target
+cargo run --release --bin playbot
 ```
-
-If the services fail to start, kick them:
-
-```
-$ systemctl restart rust-playpen-irc.service
-$ systemctl restart rust-playpen-web.service
-```
-
-[playpen]: https://github.com/thestinger/playpen
