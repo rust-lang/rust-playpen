@@ -6,13 +6,14 @@ extern crate irc;
 extern crate toml;
 extern crate hyper;
 extern crate url;
-extern crate serde_json as json;
+extern crate rustc_serialize;
 
 use rust_playpen::ReleaseChannel;
 
 use irc::client::prelude::*;
 use url::form_urlencoded;
 use hyper::client::Client;
+use rustc_serialize::json;
 
 use std::fs::{self, File};
 use std::io::{self, Read};
@@ -74,10 +75,10 @@ impl Playbot {
         let mut response = try!(client.get(&url).send());
         let mut body = String::new();
         try!(response.read_to_string(&mut body));
-        let value: json::Value = json::from_str(&body).unwrap();
+        let value: json::Json = json::Json::from_str(&body).unwrap();
         let obj = value.as_object().unwrap();
         if obj["status_txt"].as_string().unwrap() == "OK" {
-            Ok(String::from(value.lookup("data.url").unwrap().as_string().unwrap()))
+            Ok(String::from(value.find_path(&["data", "url"]).unwrap().as_string().unwrap()))
         } else {
             Err(io::Error::new(io::ErrorKind::Other,
                                format!("server responded with: {}", body)).into())
@@ -139,7 +140,7 @@ fn main() {{
             Ok(short_url) => response.push_str(&format!("\n(output truncated; full output at {})",
                                                         short_url)),
             Err(e) => {
-                log_error(e);
+                error!("shortening url failed: {}", e);
                 response.push_str("\n(output truncated; shortening URL failed)");
             }
         }
@@ -153,13 +154,13 @@ fn main() {{
                 for line in response.lines() {
                     if !line.is_empty() {
                         if let Err(e) = self.conn.send_notice(response_to, line) {
-                            log_error(e);
+                            error!("couldn't send response: {}", e);
                         }
                     }
                 }
             }
             Err(e) => {
-                log_error(e);
+                error!("{}", e);
             }
         }
     }
@@ -212,11 +213,6 @@ fn main() {{
             }
         }
     }
-}
-
-/// Log and forget an error
-fn log_error<E: Error>(e: E) {
-    println!("[ERROR] {}", e);
 }
 
 fn main() {
