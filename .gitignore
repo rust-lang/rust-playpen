@@ -1,6 +1,2 @@
-__pycache__
-irc.yaml
-root-*
-shorten_key.py
-bitly_key
 target
+playbot.toml
