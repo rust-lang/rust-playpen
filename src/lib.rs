@@ -98,7 +98,7 @@ pub fn exec(channel: ReleaseChannel,
         ReleaseChannel::Beta => "beta",
         ReleaseChannel::Nightly => "nightly",
     };
-    let container = format!("rust-{}", chan);
+    let container = format!("rust-playpen-{}", chan);
 
     let container = try!(Container::new(cmd, &key.args, &container));
 
