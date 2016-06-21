@@ -4,7 +4,7 @@ use std::mem;
 use std::process::{Output, Command, Stdio, ExitStatus};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use wait_timeout::ChildExt;
 
@@ -46,6 +46,7 @@ impl Container {
            .stdout(Stdio::piped())
            .stderr(Stdio::piped());
         debug!("attaching with {:?}", cmd);
+        let start = Instant::now();
         let mut cmd = try!(cmd.spawn());
         try!(cmd.stdin.take().unwrap().write_all(input));
         debug!("input written, now waiting");
@@ -72,6 +73,7 @@ impl Container {
         };
         stdout.join().unwrap();
         stderr.join().unwrap();
+        debug!("timing: {:?}", start.elapsed());
         let mut lock = sink.lock().unwrap();
         let output = mem::replace(&mut *lock, Vec::new());
         debug!("status: {}", status);
@@ -101,7 +103,9 @@ impl Drop for Container {
 
 fn run(cmd: &mut Command) -> io::Result<Output> {
     debug!("spawning: {:?}", cmd);
+    let start = Instant::now();
     let out = try!(cmd.output());
+    debug!("done in: {:?}", start.elapsed());
     debug!("output: {:?}", out);
     if !out.status.success() {
         let msg = format!("process failed: {:?}\n{:?}", cmd, out);
