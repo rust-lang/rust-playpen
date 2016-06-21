@@ -5,14 +5,16 @@ rust: stable
 services:
   - docker
 
+# Install an updated version of docker
 before_install:
-  - docker version
-  - apt-cache madison docker-engine
   - sudo apt-get -o Dpkg::Options::="--force-confnew" install -y docker-engine
 
 install:
+  # needed for linting JS below
   - npm install jshint
+  # this is a dependency of playpen currently
   - sudo pip install pygments
+
 script:
   - find static/ -iname "*.js" | xargs jshint
   - cargo build
