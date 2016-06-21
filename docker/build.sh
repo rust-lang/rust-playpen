@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -ex
+
 for channel in stable beta nightly; do
     docker build \
         --no-cache \
