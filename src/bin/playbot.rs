@@ -1,25 +1,23 @@
-extern crate rust_playpen;
-
 #[macro_use] extern crate log;
 extern crate env_logger;
-extern crate irc;
-extern crate toml;
 extern crate hyper;
-extern crate url;
+extern crate irc;
+extern crate rust_playpen;
 extern crate rustc_serialize;
-
-use rust_playpen::ReleaseChannel;
-
-use irc::client::prelude::*;
-use url::form_urlencoded;
-use hyper::client::Client;
-use rustc_serialize::json;
+extern crate toml;
+extern crate url;
 
 use std::fs::{self, File};
 use std::io::{self, Read};
 use std::str;
 use std::u16;
 use std::thread;
+
+use hyper::client::Client;
+use irc::client::prelude::*;
+use rust_playpen::ReleaseChannel;
+use rustc_serialize::json;
+use url::form_urlencoded;
 
 static DEFAULT_CHANNEL: ReleaseChannel = ReleaseChannel::Stable;
 

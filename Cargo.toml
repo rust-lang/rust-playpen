@@ -16,6 +16,7 @@ staticfile = "0.2.0"
 toml = "0.1.30"
 unicase = "1.4.0"
 url = "1.1.1"
+wait-timeout = "0.1"
 
 [dependencies.irc]
 default-features = false

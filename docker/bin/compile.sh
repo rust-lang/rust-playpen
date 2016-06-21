@@ -1,4 +1,4 @@
-#!/usr/bin/dash
+#!/bin/dash
 
 set -o errexit
 

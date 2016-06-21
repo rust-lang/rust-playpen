@@ -1,13 +1,12 @@
-extern crate rust_playpen;
-
 #[macro_use] extern crate iron;
 #[macro_use] extern crate log;
 extern crate env_logger;
 extern crate hyper;
-extern crate staticfile;
 extern crate router;
-extern crate unicase;
+extern crate rust_playpen;
 extern crate rustc_serialize;
+extern crate staticfile;
+extern crate unicase;
 
 use rust_playpen::*;
 
@@ -100,8 +99,10 @@ fn evaluate(req: &mut Request) -> IronResult<Response> {
         args.push(String::from("--test"));
     }
 
-    let (_status, output) = itry!(
-        rust_playpen::exec(version, "/usr/local/bin/evaluate.sh", args, data.code));
+    let (_status, output) = itry!(rust_playpen::exec(version,
+                                                     "/usr/local/bin/evaluate.sh",
+                                                     args,
+                                                     data.code));
 
     let mut obj = json::Object::new();
     if separate_output {
@@ -200,7 +201,7 @@ fn format(req: &mut Request) -> IronResult<Response> {
     let version = itry!(data.version.map(|v| v.parse()).unwrap_or(Ok(ReleaseChannel::Stable)));
 
     let (status, output) = itry!(
-        rust_playpen::exec(version, "/usr/bin/rustfmt", Vec::new(), data.code));
+        rust_playpen::exec(version, "rustfmt", Vec::new(), data.code));
     let output = String::from_utf8(output).unwrap();
     let mut response_obj = json::Object::new();
     if status.success() {
@@ -244,7 +245,7 @@ fn main() {
     let mut chain = Chain::new(router);
     chain.link_after(EnablePostCors);
 
-    let addr = ("0.0.0.0", 80);
-    info!("listening on {:?}", addr);
+    let addr = ("127.0.0.1", 8080);
+    println!("listening on {:?}", addr);
     Iron::new(chain).http(addr).unwrap();
 }

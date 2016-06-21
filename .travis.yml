@@ -1,8 +1,19 @@
 language: rust
-rust:
-  - nightly
+sudo: required
+dist: trusty
+rust: stable
+services:
+  - docker
+
 install:
   - npm install jshint
+  - pip install pygments
 script:
   - find static/ -iname "*.js" | xargs jshint
   - cargo build
+  - sh docker/build.sh
+  - cargo test
+
+notifications:
+  email:
+    on_success: never
