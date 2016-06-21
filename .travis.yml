@@ -7,7 +7,7 @@ services:
 
 install:
   - npm install jshint
-  - pip install pygments
+  - sudo pip install pygments
 script:
   - find static/ -iname "*.js" | xargs jshint
   - cargo build
