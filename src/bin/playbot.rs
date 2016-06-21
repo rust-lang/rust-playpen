@@ -20,7 +20,6 @@ use std::io::{self, Read};
 use std::str;
 use std::u16;
 use std::thread;
-use std::error::Error;
 
 static DEFAULT_CHANNEL: ReleaseChannel = ReleaseChannel::Stable;
 

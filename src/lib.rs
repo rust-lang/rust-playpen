@@ -225,7 +225,7 @@ pub fn highlight(output_format: CompileOutput, output: &str) -> String {
     let lexer = match output_format {
         CompileOutput::Asm => "gas",
         CompileOutput::Llvm => "llvm",
-        CompileOutput::Mir => return String::from(output),
+        CompileOutput::Mir => "text",
     };
 
     let mut child = Command::new("pygmentize")
