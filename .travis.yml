@@ -5,6 +5,11 @@ rust: stable
 services:
   - docker
 
+before_install:
+  - docker version
+  - apt-cache madison docker-engine
+  - sudo apt-get -o Dpkg::Options::="--force-confnew" install -y docker-engine
+
 install:
   - npm install jshint
   - sudo pip install pygments
