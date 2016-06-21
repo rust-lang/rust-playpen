@@ -1,4 +1,7 @@
 extern crate rust_playpen;
+
+#[macro_use] extern crate log;
+extern crate env_logger;
 extern crate irc;
 extern crate toml;
 extern crate hyper;
@@ -34,7 +37,7 @@ fn get_rust_versions() -> Vec<String> {
         let version = str::from_utf8(&output).unwrap();
         // Strip the trailing newline
         let version = String::from(version.lines().next().unwrap());
-        println!("got {:?} Rust version: {}", channel, version);
+        debug!("got {:?} Rust version: {}", channel, version);
         versions.push(version);
     }
 
@@ -167,19 +170,19 @@ fn main() {{
             let command = &msg[self.conn.current_nickname().len()..]
                 .trim_left_matches(|ch| ch == ',' || ch == ':')
                 .trim();
-            println!("<{}> {}", from, command);
+            info!("<{}> {}", from, command);
             self.handle_cmd(chan, command);
         }
     }
 
     /// Called when receiving a private message from `from` (via `/msg playbot-rs ...`)
     fn handle_privmsg(&mut self, from: &str, msg: &str) {
-        println!("(/msg) <{}> {}", from, msg);
+        info!("(/msg) <{}> {}", from, msg);
         self.handle_cmd(from, msg);
     }
 
     fn main_loop(&mut self) {
-        println!("playbot at your service!");
+        info!("playbot at your service!");
         let cloned = self.conn.clone();
         for msg in cloned.iter() {
             let msg = match msg {
@@ -217,6 +220,8 @@ fn log_error<E: Error>(e: E) {
 }
 
 fn main() {
+    env_logger::init().unwrap();
+
     fs::metadata("whitelist").expect("syscall whitelist file not found");
 
     let bitly_key = read_bitly_token();

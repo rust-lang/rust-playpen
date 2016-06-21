@@ -1,5 +1,6 @@
 #![feature(process_exec)]
 
+#[macro_use] extern crate log;
 extern crate libc;
 extern crate lru_cache;
 
@@ -115,12 +116,12 @@ pub fn exec(channel: ReleaseChannel,
             Ok(())
         });
 
-        println!("running ({:?}): {} {:?}", channel, cmd, key.args);
+        info!("running ({:?}): {} {:?}", channel, cmd, key.args);
         let mut child = try!(command.spawn());
         try!(child.stdin.as_mut().unwrap().write_all(key.input.as_bytes()));
 
         let out = try!(child.wait_with_output());
-        println!("=> {}", out.status);
+        info!("=> {}", out.status);
         cache.insert(key, (out.status.clone(), out.stdout.clone()));
         Ok((out.status.clone(), out.stdout.clone()))
     })

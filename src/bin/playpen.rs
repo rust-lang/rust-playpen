@@ -1,6 +1,8 @@
 extern crate rust_playpen;
 
 #[macro_use] extern crate iron;
+#[macro_use] extern crate log;
+extern crate env_logger;
 extern crate hyper;
 extern crate staticfile;
 extern crate router;
@@ -226,6 +228,8 @@ impl AfterMiddleware for EnablePostCors {
 }
 
 fn main() {
+    env_logger::init().unwrap();
+
     // Make sure pygmentize is installed before starting the server
     Command::new("pygmentize").spawn().unwrap().kill().unwrap();
 
@@ -241,6 +245,6 @@ fn main() {
     chain.link_after(EnablePostCors);
 
     let addr = ("0.0.0.0", 80);
-    println!("listening on {:?}", addr);
+    info!("listening on {:?}", addr);
     Iron::new(chain).http(addr).unwrap();
 }

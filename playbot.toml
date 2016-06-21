@@ -5,11 +5,4 @@ nicks = ["playbot-rs", "playbot-rs-mini"]
 #password = "1234"
 server = "irc.mozilla.org"
 #port = 6667
-channels = ["#rust"]
-
-[[server]]
-nicks = ["playbot-rs"]
-#password = "1234"
-server = "irc.mozilla.org"
-#port = 6667
-channels = ["#rust-offtopic"]
+channels = ["#rust", "#rust-internals"]
