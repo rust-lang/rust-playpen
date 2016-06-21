@@ -1,0 +1,22 @@
+[package]
+authors = ["The Rust Project Developers"]
+name = "rust-playpen"
+version = "0.1.0"
+
+[dependencies]
+env_logger = "0.3.3"
+hyper = "0.8.1"
+iron = "0.3.0"
+libc = "0.2.12"
+log = "0.3.6"
+lru-cache = "0.0.7"
+router = "0.1.1"
+rustc-serialize = "0.3.19"
+staticfile = "0.2.0"
+toml = "0.1.30"
+unicase = "1.4.0"
+url = "1.1.1"
+
+[dependencies.irc]
+default-features = false
+version = "0.11.3"

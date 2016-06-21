@@ -5,59 +5,47 @@ The interface can also be accessed in most Rust-related channels on
 `irc.mozilla.org`.
 
 To use Playbot in a public channel, address your message to it. Playbot
-responds to both `playbot` and `rusti`: 
+responds to both `playbot` and `>>`:
 
     <you> playbot: println!("Hello, World");
     -playbot:#rust-offtopic- Hello, World
     -playbot:#rust-offtopic- ()
+    <you> >> 1+2+3
+    -playbot:#rust-offtopic- 6
 
 You can also private message Playbot your code to have it evaluated. In a
-private message, don't preface the code with playbot's nickname: 
+private message, don't preface the code with playbot's nickname:
 
     /msg playbot println!("Hello, World");
+
+Playbot also understands several attributes to change how the code is compiled
+and run. Examples include `~nightly` and `~beta` to change the release channel,
+as well as `~mini` to execute the code as a standalone Rust file instead of
+evaluating it as an expression. Example:
+
+    <you> playbot, ~nightly ~mini #![feature(inclusive_range_syntax)] fn main() { println!("{:?}", 1...10) }
+
+To see a list of attributes, use `~help`:
+
+    <you> playbot ~help
 
 # Running your own Rust-Playpen
 
 ## System Requirements
 
 Rust-Playpen currently needs to be run on an Arch Linux system that meets
-[playpen's requirements][playpen]. 
+[playpen's requirements][playpen].
 
-The bot requires python 3, which is the default on Arch.
+## IRC Bot Setup
 
-## IRC Bot Setup 
+#### Create `bitly_key`
 
-`playbot` on Mozilla IRC is run from a Rust-Playpen instance where Python
-dependencies are installed system-wide. Get the latest versions of `pyyaml`,
-`requests`, and `irc` from Pip. 
+The bot uses [bitly](https://bitly.com) as a URL shortener. Get an OAuth access token, and put it into a file called `bitly_key`, in the root directory of `rust-playpen`.
 
-#### Create `shorten_key.py`
+#### Modify `playbot.toml`
 
-The bot uses [bitly](https://bitly.com) as a URL shortener. Get an OAuth access token, and put it
-into a file called `shorten_key.py`, in the same directory as `bot.py`.
-`shorten_key.py` just needs one line, of the form:
-
-    key = "123abc123"
-
-#### Create `irc.yaml`
-
-You'll also need to create the file `irc.yaml` in the same directory as
-`bot.py`. The IRC nick that the bot will use is hard-coded [in
-bot.py][nickname]. This configuration assumes that the bot's nick is
-registered, and includes the nick's password. The `irc.yaml` file will look
-something like this:
-
-```
-   - server: irc.example.org
-      port: 6667
-      channels:
-        - "#bots"
-        - "#secret-clubhouse"
-      keys: [null, "hunter2"]
-      password: abc123abc
-``` 
-
-Note that the channel key is `null` for public channels. 
+You'll also need to change the file `playbot.toml`. This configuration allows
+the bot's nick to be registered, and can include the nick's password.
 
 #### Registering and starting services
 
@@ -82,7 +70,7 @@ WantedBy=multi-user.target
 ```
 [Unit]
 Description=Rust code evaluation sandbox (web frontend)
-After=network.target 
+After=network.target
 
 [Service]
 ExecStart=/root/rust-playpen/web.py
@@ -127,5 +115,3 @@ $ systemctl restart rust-playpen-web.service
 ```
 
 [playpen]: https://github.com/thestinger/playpen
-[nickname]: https://github.com/rust-lang/rust-playpen/blob/master/bot.py#L140
-

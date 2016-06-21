@@ -1,5 +1,8 @@
-language: node_js
+language: rust
+rust:
+  - nightly
 install:
   - npm install jshint
 script:
   - find static/ -iname "*.js" | xargs jshint
+  - cargo build
