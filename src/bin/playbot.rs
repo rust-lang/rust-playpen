@@ -8,7 +8,7 @@ extern crate serde_json as json;
 use rust_playpen::ReleaseChannel;
 
 use irc::client::prelude::*;
-use url::percent_encoding::*;
+use url::form_urlencoded;
 use hyper::client::Client;
 
 use std::fs::{self, File};
@@ -62,12 +62,12 @@ impl Playbot {
     /// Returns the short URL.
     fn pastebin(&self, code: &str) -> hyper::Result<String> {
         let playpen_url = format!("https://play.rust-lang.org/?run=1&code={}",
-            utf8_percent_encode(code, FORM_URLENCODED_ENCODE_SET));
+            form_urlencoded::byte_serialize(code.as_bytes()).collect::<String>());
         let client = Client::new();
         let url = format!(
             "https://api-ssl.bitly.com/v3/shorten?access_token={}&longUrl={}",
-            utf8_percent_encode(&self.shorten_key, FORM_URLENCODED_ENCODE_SET),
-            utf8_percent_encode(&playpen_url, FORM_URLENCODED_ENCODE_SET));
+            form_urlencoded::byte_serialize(self.shorten_key.as_bytes()).collect::<String>(),
+            form_urlencoded::byte_serialize(playpen_url.as_bytes()).collect::<String>());
         let mut response = try!(client.get(&url).send());
         let mut body = String::new();
         try!(response.read_to_string(&mut body));

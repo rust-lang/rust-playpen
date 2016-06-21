@@ -4,15 +4,15 @@ version = "0.1.0"
 authors = ["The Rust Project Developers"]
 
 [dependencies]
-iron = "0.2"
-hyper = "0.7"   # same version iron uses
-url = "0.5"     # ditto
-router = "0.1"
-staticfile = "0.1"
-libc = "0.2"
-unicase = "1.0"
-rustc-serialize = "0.3"
-irc = "0.11"
-toml = "0.1"
-serde_json = "0.7"
+iron = "0.3.0"
+hyper = "0.8.1" # same version iron uses
+url = "1.1.1"
+router = "0.1.1"
+staticfile = "0.2.0"
+libc = "0.2.12"
+unicase = "1.4.0"
+rustc-serialize = "0.3.19"
+toml = "0.1.30"
+serde_json = "0.7.1"
 lru-cache = "0.0.7"
+irc = { version = "0.11.3", default-features = false }
