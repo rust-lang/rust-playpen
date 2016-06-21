@@ -33,8 +33,7 @@ To see a list of attributes, use `~help`:
 
 ## System Requirements
 
-Rust-Playpen currently needs to be run on an Arch Linux system that meets
-[playpen's requirements][playpen].
+Rust-Playpen currently needs to be run on a system with access to Docker.
 
 ## IRC Bot Setup
 

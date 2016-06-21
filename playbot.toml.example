@@ -1,5 +1,7 @@
 # Playbot's (default) configuration file
 
+#bitly-key = "..."
+
 [[server]]
 nicks = ["playbot-rs", "playbot-rs-mini"]
 #password = "1234"

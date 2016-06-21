@@ -42,15 +42,6 @@ fn get_rust_versions() -> Vec<String> {
     versions
 }
 
-fn read_bitly_token() -> String {
-    // Read the bitly API token
-    let mut key = String::new();
-    File::open("bitly_key").unwrap().read_to_string(&mut key).unwrap();
-    // Allow trailing newline
-    let key = String::from(key.lines().next().unwrap());
-    key
-}
-
 struct Playbot {
     conn: IrcServer,
     rust_versions: Vec<String>,
@@ -215,15 +206,13 @@ fn main() {{
 fn main() {
     env_logger::init().unwrap();
 
-    fs::metadata("whitelist").expect("syscall whitelist file not found");
-
-    let bitly_key = read_bitly_token();
     let rust_versions = get_rust_versions();
 
     // FIXME All these unwraps are pretty bad UX, but they should only panic on misconfiguration
     let mut config = String::new();
     File::open("playbot.toml").unwrap().read_to_string(&mut config).unwrap();
     let toml = toml::Parser::new(&config).parse().unwrap();
+    let bitly_key = toml["bitly-key"].as_str().unwrap().to_string();
 
     let mut threads = Vec::new();
     for server in toml["server"].as_slice().unwrap() {
