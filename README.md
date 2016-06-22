@@ -17,17 +17,6 @@ private message, don't preface the code with playbot's nickname:
 
     /msg playbot println!("Hello, World");
 
-Playbot also understands several attributes to change how the code is compiled
-and run. Examples include `~nightly` and `~beta` to change the release channel,
-as well as `~mini` to execute the code as a standalone Rust file instead of
-evaluating it as an expression. Example:
-
-    <you> playbot, ~nightly ~mini #![feature(inclusive_range_syntax)] fn main() { println!("{:?}", 1...10) }
-
-To see a list of attributes, use `~help`:
-
-    <you> playbot ~help
-
 # Running your own Rust-Playpen
 
 ## System Requirements
