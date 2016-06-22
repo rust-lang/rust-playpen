@@ -158,9 +158,13 @@ fn main() {{
     /// Called when any user writes a public message
     fn handle_pubmsg(&mut self, from: &str, chan: &str, msg: &str) {
         if msg.starts_with(self.conn.current_nickname()) {
-            let command = &msg[self.conn.current_nickname().len()..]
-                .trim_left_matches(|ch| ch == ',' || ch == ':')
-                .trim();
+            let msg = &msg[self.conn.current_nickname().len()..];
+
+            if msg.len() <= 2 || !msg.starts_with(&[' ', ',', ':'] as &[char]) {
+                return;
+            }
+
+            let command = &msg[1..];
             info!("<{}> {}", from, command);
             self.handle_cmd(chan, command);
         }
