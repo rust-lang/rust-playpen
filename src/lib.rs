@@ -6,13 +6,13 @@ extern crate wait_timeout;
 
 use lru_cache::LruCache;
 
-use std::cell::RefCell;
 use std::error::Error;
 use std::fmt;
 use std::io::Write;
 use std::io;
 use std::process::{Command, ExitStatus, Stdio};
 use std::str::FromStr;
+use std::sync::Mutex;
 use std::time::Duration;
 
 use docker::Container;
@@ -60,57 +60,63 @@ impl FromStr for ReleaseChannel {
     }
 }
 
-/// Helper method for safely invoking a command inside a playpen
-pub fn exec(channel: ReleaseChannel,
-            cmd: &str,
-            args: Vec<String>,
-            input: String)
-            -> io::Result<(ExitStatus, Vec<u8>)> {
-    #[derive(PartialEq, Eq, Hash)]
-    struct CacheKey {
-        channel: ReleaseChannel,
-        cmd: String,
-        args: Vec<String>,
-        input: String,
+pub struct Cache {
+    cache: Mutex<LruCache<CacheKey, (ExitStatus, Vec<u8>)>>,
+}
+
+#[derive(PartialEq, Eq, Hash)]
+struct CacheKey {
+    channel: ReleaseChannel,
+    cmd: String,
+    args: Vec<String>,
+    input: String,
+}
+
+impl Cache {
+    pub fn new() -> Cache {
+        Cache {
+            cache: Mutex::new(LruCache::new(256)),
+        }
     }
 
-    thread_local! {
-        static CACHE: RefCell<LruCache<CacheKey, (ExitStatus, Vec<u8>)>> =
-            RefCell::new(LruCache::new(256))
+    /// Helper method for safely invoking a command inside a playpen
+    pub fn exec(&self,
+                channel: ReleaseChannel,
+                cmd: &str,
+                args: Vec<String>,
+                input: String)
+                -> io::Result<(ExitStatus, Vec<u8>)> {
+        // Build key to look up
+        let key = CacheKey {
+            channel: channel,
+            cmd: cmd.to_string(),
+            args: args,
+            input: input,
+        };
+        let mut cache = self.cache.lock().unwrap();
+        if let Some(prev) = cache.get_mut(&key) {
+            return Ok(prev.clone())
+        }
+        drop(cache);
+
+        let chan = match channel {
+            ReleaseChannel::Stable => "stable",
+            ReleaseChannel::Beta => "beta",
+            ReleaseChannel::Nightly => "nightly",
+        };
+        let container = format!("rust-playpen-{}", chan);
+
+        let container = try!(Container::new(cmd, &key.args, &container));
+
+        let tuple = try!(container.run(key.input.as_bytes(), Duration::new(5, 0)));
+        let (status, mut output, timeout) = tuple;
+        if timeout {
+            output.extend_from_slice(b"\ntimeout triggered!");
+        }
+        let mut cache = self.cache.lock().unwrap();
+        cache.insert(key, (status.clone(), output.clone()));
+        Ok((status, output))
     }
-
-    // Build key to look up
-    let key = CacheKey {
-        channel: channel,
-        cmd: cmd.to_string(),
-        args: args,
-        input: input,
-    };
-    let prev = CACHE.with(|cache| {
-        cache.borrow_mut().get_mut(&key).map(|x| x.clone())
-    });
-    if let Some(prev) = prev {
-        return Ok(prev)
-    }
-
-    let chan = match channel {
-        ReleaseChannel::Stable => "stable",
-        ReleaseChannel::Beta => "beta",
-        ReleaseChannel::Nightly => "nightly",
-    };
-    let container = format!("rust-playpen-{}", chan);
-
-    let container = try!(Container::new(cmd, &key.args, &container));
-
-    let tuple = try!(container.run(key.input.as_bytes(), Duration::new(5, 0)));
-    let (status, mut output, timeout) = tuple;
-    if timeout {
-        output.extend_from_slice(b"\ntimeout triggered!");
-    }
-    CACHE.with(|cache| {
-        cache.borrow_mut().insert(key, (status.clone(), output.clone()));
-    });
-    Ok((status, output))
 }
 
 pub enum AsmFlavor {

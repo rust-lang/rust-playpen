@@ -10,27 +10,28 @@ extern crate url;
 use std::fs::File;
 use std::io::{self, Read};
 use std::str;
-use std::u16;
+use std::sync::Arc;
 use std::thread;
+use std::u16;
 
 use hyper::client::Client;
 use irc::client::prelude::*;
-use rust_playpen::ReleaseChannel;
+use rust_playpen::{ReleaseChannel, Cache};
 use rustc_serialize::json;
 use url::form_urlencoded;
 
 static DEFAULT_CHANNEL: ReleaseChannel = ReleaseChannel::Stable;
 
-fn get_rust_versions() -> Vec<String> {
+fn get_rust_versions(cache: &Cache) -> Vec<String> {
     let mut versions = Vec::new();
     // Note: Keep these in the same order as their discriminant values
     for channel in &[ReleaseChannel::Stable,
                      ReleaseChannel::Beta,
                      ReleaseChannel::Nightly] {
-        let (status, output) = rust_playpen::exec(*channel,
-                                                  "rustc",
-                                                  vec![String::from("-V")],
-                                                  String::new()).unwrap();
+        let (status, output) = cache.exec(*channel,
+                                          "rustc",
+                                          vec![String::from("-V")],
+                                          String::new()).unwrap();
         assert!(status.success(), "couldn't get version (this currently needs to run as root)");
         let version = str::from_utf8(&output).unwrap();
         // Strip the trailing newline
@@ -46,6 +47,7 @@ struct Playbot {
     conn: IrcServer,
     rust_versions: Vec<String>,
     shorten_key: String,
+    cache: Arc<Cache>,
 }
 
 impl Playbot {
@@ -77,10 +79,10 @@ impl Playbot {
                 full_code: &str,
                 channel: ReleaseChannel)
                 -> io::Result<String> {
-        let (_status, output) = try!(rust_playpen::exec(channel,
-                                                        "/usr/local/bin/evaluate.sh",
-                                                        Vec::new(),
-                                                        String::from(full_code)));
+        let (_status, output) = try!(self.cache.exec(channel,
+                                                     "/usr/local/bin/evaluate.sh",
+                                                     Vec::new(),
+                                                     String::from(full_code)));
 
         let output_merged = output.splitn(2, |b| *b == b'\xff')
                                   .map(|sub| String::from_utf8_lossy(sub).into_owned())
@@ -206,7 +208,8 @@ fn main() {{
 fn main() {
     env_logger::init().unwrap();
 
-    let rust_versions = get_rust_versions();
+    let cache = Arc::new(Cache::new());
+    let rust_versions = get_rust_versions(&cache);
 
     // FIXME All these unwraps are pretty bad UX, but they should only panic on misconfiguration
     let mut config = String::new();
@@ -235,17 +238,16 @@ fn main() {
                 ..Config::default()
             };
 
-            let rust_versions = rust_versions.clone();
-            let bitly_key = bitly_key.clone();
+            let server = IrcServer::from_config(conf).unwrap();
+            server.identify().unwrap();
+            let mut bot = Playbot {
+                conn: server,
+                rust_versions: rust_versions.clone(),
+                shorten_key: bitly_key.clone(),
+                cache: cache.clone(),
+            };
             threads.push(thread::spawn(move || {
-                let server = IrcServer::from_config(conf).unwrap();
-                server.identify().unwrap();
-
-                Playbot {
-                    conn: server,
-                    rust_versions: rust_versions,
-                    shorten_key: bitly_key,
-                }.main_loop();
+                bot.main_loop();
             }));
         }
     }

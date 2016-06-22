@@ -8,25 +8,26 @@ extern crate rustc_serialize;
 extern crate staticfile;
 extern crate unicase;
 
-use rust_playpen::*;
-
-use iron::prelude::*;
-use iron::status;
-use iron::headers;
-use iron::middleware::AfterMiddleware;
-use iron::modifiers::Header;
-use iron::method::Method;
-use hyper::header;
-use staticfile::Static;
-use router::Router;
-use unicase::UniCase;
-use rustc_serialize::json;
-
 use std::env;
 use std::fmt;
 use std::io::Read;
 use std::path::Path;
 use std::process::Command;
+use std::sync::Arc;
+
+use hyper::header;
+use iron::headers;
+use iron::method::Method;
+use iron::middleware::{BeforeMiddleware, AfterMiddleware};
+use iron::modifiers::Header;
+use iron::typemap;
+use iron::prelude::*;
+use iron::status;
+use router::Router;
+use rust_playpen::*;
+use rustc_serialize::json;
+use staticfile::Static;
+use unicase::UniCase;
 
 #[derive(Clone, Debug)]
 struct XXssProtection(bool);
@@ -100,10 +101,11 @@ fn evaluate(req: &mut Request) -> IronResult<Response> {
         args.push(String::from("--test"));
     }
 
-    let (_status, output) = itry!(rust_playpen::exec(version,
-                                                     "/usr/local/bin/evaluate.sh",
-                                                     args,
-                                                     data.code));
+    let cache = req.extensions.get::<AddCache>().unwrap();
+    let (_status, output) = itry!(cache.exec(version,
+                                             "/usr/local/bin/evaluate.sh",
+                                             args,
+                                             data.code));
 
     let mut obj = json::Object::new();
     if separate_output {
@@ -167,8 +169,11 @@ fn compile(req: &mut Request) -> IronResult<Response> {
         args.push(String::from("--color=always"));
     }
 
-    let (_status, output) = itry!(
-        rust_playpen::exec(version, "/usr/local/bin/compile.sh", args, data.code));
+    let cache = req.extensions.get::<AddCache>().unwrap();
+    let (_status, output) = itry!(cache.exec(version,
+                                             "/usr/local/bin/compile.sh",
+                                             args,
+                                             data.code));
     let mut split = output.splitn(2, |b| *b == b'\xff');
     let rustc = String::from_utf8(split.next().unwrap().into()).unwrap();
 
@@ -201,8 +206,11 @@ fn format(req: &mut Request) -> IronResult<Response> {
     let data: FormatReq = itry!(json::decode(&body));
     let version = itry!(data.version.map(|v| v.parse()).unwrap_or(Ok(ReleaseChannel::Stable)));
 
-    let (status, output) = itry!(
-        rust_playpen::exec(version, "rustfmt", Vec::new(), data.code));
+    let cache = req.extensions.get::<AddCache>().unwrap();
+    let (status, output) = itry!(cache.exec(version,
+                                            "rustfmt",
+                                            Vec::new(),
+                                            data.code));
     let output = String::from_utf8(output).unwrap();
     let mut response_obj = json::Object::new();
     if status.success() {
@@ -229,6 +237,19 @@ impl AfterMiddleware for EnablePostCors {
     }
 }
 
+struct AddCache {
+    cache: Arc<Cache>,
+}
+
+impl typemap::Key for AddCache { type Value = Arc<Cache>; }
+
+impl BeforeMiddleware for AddCache {
+    fn before(&self, req: &mut Request) -> IronResult<()> {
+        req.extensions.insert::<AddCache>(self.cache.clone());
+        Ok(())
+    }
+}
+
 fn main() {
     env_logger::init().unwrap();
 
@@ -244,6 +265,7 @@ fn main() {
 
     // Use our router as the middleware, and pass the generated response through `EnablePostCors`
     let mut chain = Chain::new(router);
+    chain.link_before(AddCache { cache: Arc::new(Cache::new()) });
     chain.link_after(EnablePostCors);
 
     let addr = env::args().skip(1).next().unwrap_or("127.0.0.1".to_string());
