@@ -1,16 +1,15 @@
-A web interface for running Rust code built using [playpen][playpen]. It is
-hosted at <https://play.rust-lang.org/>.
+A web interface for running Rust code. It is hosted at
+<https://play.rust-lang.org/>.
 
 The interface can also be accessed in most Rust-related channels on
 `irc.mozilla.org`.
 
-To use Playbot in a public channel, address your message to it. Playbot
-responds to both `playbot` and `>>`:
+To use Playbot in a public channel, address your message to it.
 
     <you> playbot: println!("Hello, World");
     -playbot:#rust-offtopic- Hello, World
     -playbot:#rust-offtopic- ()
-    <you> >> 1+2+3
+    <you> playbot: 1+2+3
     -playbot:#rust-offtopic- 6
 
 You can also private message Playbot your code to have it evaluated. In a
