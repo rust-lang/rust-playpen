@@ -244,10 +244,12 @@ mod tests {
     fn eval() {
         drop(env_logger::init());
 
-        let (status, out) = exec(ReleaseChannel::Stable,
-                                 "/usr/local/bin/evaluate.sh",
-                                 Vec::new(),
-                                 String::from(r#"fn main() { println!("Hello") }"#)).unwrap();
+        let cache = Cache::new();
+        let input = r#"fn main() { println!("Hello") }"#;
+        let (status, out) = cache.exec(ReleaseChannel::Stable,
+                                       "/usr/local/bin/evaluate.sh",
+                                       Vec::new(),
+                                       input.to_string()).unwrap();
         assert!(status.success());
         assert_eq!(out, &[0xff, b'H', b'e', b'l', b'l', b'o', b'\n']);
     }
@@ -256,12 +258,16 @@ mod tests {
     fn timeout() {
         drop(env_logger::init());
 
-        let (status, out) = exec(ReleaseChannel::Stable,
-                                 "/usr/local/bin/evaluate.sh",
-                                 Vec::new(),
-                                 String::from(r#"fn main() {
-                                    std::thread::sleep_ms(10_000);
-                                 }"#)).unwrap();
+        let cache = Cache::new();
+        let input = r#"
+            fn main() {
+                std::thread::sleep_ms(10_000);
+            }
+        "#;
+        let (status, out) = cache.exec(ReleaseChannel::Stable,
+                                       "/usr/local/bin/evaluate.sh",
+                                       Vec::new(),
+                                       input.to_string()).unwrap();
         assert!(!status.success());
         assert!(String::from_utf8_lossy(&out).contains("timeout triggered"));
     }
@@ -270,10 +276,13 @@ mod tests {
     fn compile() {
         drop(env_logger::init());
 
-        let (status, out) = exec(ReleaseChannel::Stable,
-                                 "/usr/local/bin/compile.sh",
-                                 vec![String::from("--emit=llvm-ir")],
-                                 String::from(r#"fn main() { println!("Hello") }"#)).unwrap();
+        let cache = Cache::new();
+        let input = r#"fn main() { println!("Hello") }"#;
+        let (status, out) = cache.exec(ReleaseChannel::Stable,
+                                       "/usr/local/bin/compile.sh",
+                                       vec![String::from("--emit=llvm-ir")],
+                                       input.to_string()).unwrap();
+
         assert!(status.success());
         let mut split = out.splitn(2, |b| *b == b'\xff');
         let empty: &[u8] = &[];
@@ -286,10 +295,12 @@ mod tests {
     fn fmt() {
         drop(env_logger::init());
 
-        let (status, out) = exec(ReleaseChannel::Stable,
-                                 "rustfmt",
-                                 Vec::new(),
-                                 String::from(r#"fn main() { println!("Hello") }"#)).unwrap();
+        let cache = Cache::new();
+        let input = r#"fn main() { println!("Hello") }"#;
+        let (status, out) = cache.exec(ReleaseChannel::Stable,
+                                       "rustfmt",
+                                       Vec::new(),
+                                       input.to_string()).unwrap();
         assert!(status.success());
         assert!(String::from_utf8(out).unwrap().contains(r#""Hello""#))
     }
