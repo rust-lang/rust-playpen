@@ -22,9 +22,10 @@ use router::Router;
 use unicase::UniCase;
 use rustc_serialize::json;
 
+use std::env;
 use std::fmt;
-use std::path::Path;
 use std::io::Read;
+use std::path::Path;
 use std::process::Command;
 
 #[derive(Clone, Debug)]
@@ -245,7 +246,8 @@ fn main() {
     let mut chain = Chain::new(router);
     chain.link_after(EnablePostCors);
 
-    let addr = ("127.0.0.1", 8080);
+    let addr = env::args().skip(1).next().unwrap_or("127.0.0.1".to_string());
+    let addr = (&addr[..], 8080);
     println!("listening on {:?}", addr);
     Iron::new(chain).http(addr).unwrap();
 }
