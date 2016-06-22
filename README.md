@@ -91,9 +91,15 @@ Next, configure `playbot.toml` copied from `playbot.toml.example`.
 Next, open up a screen window (`screen -R`), and spin up two sessions:
 
 ```
-cargo run --release --bin playpen
+cargo build --release --bin playpen && RUST_LOG=debug ./target/release/playpen 2>&1 | tee -a $HOME/playpen.log
 ```
 
 ```
-cargo run --release --bin playbot
+cargo build --release --bin playbot && RUST_LOG=debug ./target/release/playbot 2>&1 | tee -a $HOME/playbot.log
+```
+
+Add a cron job to update the containers daily, currently:
+
+```
+* 10 * * * sh -c 'cd $HOME/rust-playpen && sh docker/build.sh' &>> $HOME/build.log
 ```
