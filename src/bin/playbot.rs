@@ -13,6 +13,8 @@ use std::str;
 use std::sync::Arc;
 use std::thread;
 use std::u16;
+use std::panic::{AssertUnwindSafe, catch_unwind};
+use std::process;
 
 use hyper::client::Client;
 use irc::client::prelude::*;
@@ -254,7 +256,13 @@ fn main() {
             threads.push(thread::Builder::new()
                                          .name(format!("{}@{}", nick, server_addr))
                                          .spawn(move || {
-                bot.main_loop();
+                if let Err(e) = catch_unwind(AssertUnwindSafe(|| bot.main_loop())) {
+                    error!("{:?}", e);
+
+                    // Abort the whole process, killing the other threads. This should make
+                    // debugging easier since the other bots don't keep running.
+                    process::exit(101);
+                }
             }).unwrap());
         }
     }
