@@ -226,10 +226,11 @@ fn main() {
         let server = server.as_table().unwrap();
 
         for nick in server["nicks"].as_slice().unwrap() {
+            let server_addr = server["server"].as_str().unwrap();
             let conf = Config {
                 nickname: Some(String::from(nick.as_str().unwrap())),
                 nick_password: server.get("password").map(|val| String::from(val.as_str().unwrap())),
-                server: Some(String::from(server["server"].as_str().unwrap())),
+                server: Some(String::from(server_addr)),
                 port: server.get("port").map(|val| {
                     let port = val.as_integer().unwrap();
                     assert!(0 < port && port < u16::MAX as i64, "out of range for ports");
@@ -250,9 +251,11 @@ fn main() {
                 shorten_key: bitly_key.clone(),
                 cache: cache.clone(),
             };
-            threads.push(thread::spawn(move || {
+            threads.push(thread::Builder::new()
+                                         .name(format!("{}@{}", nick, server_addr))
+                                         .spawn(move || {
                 bot.main_loop();
-            }));
+            }).unwrap());
         }
     }
 
