@@ -167,7 +167,7 @@ fn main() {{
             }
 
             let command = &msg[1..];
-            info!("<{}> {}", from, command);
+            info!("{}: <{}> {}", chan, from, command);
             self.handle_cmd(chan, command);
         }
     }
