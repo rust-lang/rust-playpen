@@ -256,8 +256,8 @@ fn main() {
             threads.push(thread::Builder::new()
                                          .name(format!("{}@{}", nick, server_addr))
                                          .spawn(move || {
-                if let Err(e) = catch_unwind(AssertUnwindSafe(|| bot.main_loop())) {
-                    error!("{:?}", e);
+                if let Err(_) = catch_unwind(AssertUnwindSafe(|| bot.main_loop())) {
+                    error!("killing playbot due to previous error");
 
                     // Abort the whole process, killing the other threads. This should make
                     // debugging easier since the other bots don't keep running.
