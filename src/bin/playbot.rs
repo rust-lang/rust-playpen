@@ -13,6 +13,8 @@ use std::str;
 use std::sync::Arc;
 use std::thread;
 use std::u16;
+use std::panic::{AssertUnwindSafe, catch_unwind};
+use std::process;
 
 use hyper::client::Client;
 use irc::client::prelude::*;
@@ -165,7 +167,7 @@ fn main() {{
             }
 
             let command = &msg[1..];
-            info!("<{}> {}", from, command);
+            info!("{}: <{}> {}", chan, from, command);
             self.handle_cmd(chan, command);
         }
     }
@@ -226,10 +228,11 @@ fn main() {
         let server = server.as_table().unwrap();
 
         for nick in server["nicks"].as_slice().unwrap() {
+            let server_addr = server["server"].as_str().unwrap();
             let conf = Config {
                 nickname: Some(String::from(nick.as_str().unwrap())),
                 nick_password: server.get("password").map(|val| String::from(val.as_str().unwrap())),
-                server: Some(String::from(server["server"].as_str().unwrap())),
+                server: Some(String::from(server_addr)),
                 port: server.get("port").map(|val| {
                     let port = val.as_integer().unwrap();
                     assert!(0 < port && port < u16::MAX as i64, "out of range for ports");
@@ -250,9 +253,17 @@ fn main() {
                 shorten_key: bitly_key.clone(),
                 cache: cache.clone(),
             };
-            threads.push(thread::spawn(move || {
-                bot.main_loop();
-            }));
+            threads.push(thread::Builder::new()
+                                         .name(format!("{}@{}", nick, server_addr))
+                                         .spawn(move || {
+                if let Err(_) = catch_unwind(AssertUnwindSafe(|| bot.main_loop())) {
+                    error!("killing playbot due to previous error");
+
+                    // Abort the whole process, killing the other threads. This should make
+                    // debugging easier since the other bots don't keep running.
+                    process::exit(101);
+                }
+            }).unwrap());
         }
     }
 
