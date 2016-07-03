@@ -162,7 +162,7 @@ fn main() {{
         if msg.starts_with(self.conn.current_nickname()) {
             let msg = &msg[self.conn.current_nickname().len()..];
 
-            if msg.len() <= 2 || !msg.starts_with(&[' ', ',', ':'] as &[char]) {
+            if msg.len() < 2 || !msg.starts_with(&[',', ':'] as &[char]) {
                 return;
             }
 
