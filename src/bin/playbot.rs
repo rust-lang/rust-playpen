@@ -232,6 +232,7 @@ fn main() {
             let conf = Config {
                 nickname: Some(String::from(nick.as_str().unwrap())),
                 nick_password: server.get("password").map(|val| String::from(val.as_str().unwrap())),
+                should_ghost: Some(true),
                 server: Some(String::from(server_addr)),
                 port: server.get("port").map(|val| {
                     let port = val.as_integer().unwrap();
