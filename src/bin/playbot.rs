@@ -205,6 +205,13 @@ fn main() {{
                         self.handle_privmsg(from, &msg);
                     }
                 },
+                Command::INVITE(_, ref to) => {
+                    if cloned.config().channels.as_ref().unwrap().contains(to) {
+                        if let Err(e) = self.conn.send_join(to) {
+                            error!("couldn't join {}: {}", to, e);
+                        }
+                    }
+                },
                 _ => {},
             }
         }
