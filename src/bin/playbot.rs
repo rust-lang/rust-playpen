@@ -104,7 +104,7 @@ impl Playbot {
                 Some("--stable") => { channel = ReleaseChannel::Stable },
                 Some("--beta") => { channel = ReleaseChannel::Beta },
                 Some("--nightly") => { channel = ReleaseChannel::Nightly },
-                _ => (),
+                _ => return Ok(String::from("unrecognized release channel")),
             }
             code = parts.next().unwrap_or("");
         }
