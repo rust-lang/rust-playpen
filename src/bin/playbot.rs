@@ -95,7 +95,20 @@ impl Playbot {
     /// Parse a command sent to playbot (playbot's name needs to be stripped beforehand)
     ///
     /// Returns the response to send to the user (each line is a NOTICE)
-    fn parse_and_run(&mut self, code: &str) -> io::Result<String> {
+    fn parse_and_run(&mut self, mut code: &str) -> io::Result<String> {
+        let mut channel = DEFAULT_CHANNEL;
+
+        if code.starts_with("--") {
+            let mut parts = code.splitn(2, ' ');
+            match parts.next() {
+                Some("--stable") => { channel = ReleaseChannel::Stable },
+                Some("--beta") => { channel = ReleaseChannel::Beta },
+                Some("--nightly") => { channel = ReleaseChannel::Nightly },
+                _ => return Ok(String::from("unrecognized release channel")),
+            }
+            code = parts.next().unwrap_or("");
+        }
+
         let code = if self.conn.current_nickname().contains("mini") {
             String::from(code)
         } else {
@@ -111,10 +124,10 @@ fn main() {{
         {code}
     }});
 }}
-"#, version = self.rust_versions[DEFAULT_CHANNEL as usize], code = code)
+"#, version = self.rust_versions[channel as usize], code = code)
         };
 
-        let out = try!(self.run_code(&code, DEFAULT_CHANNEL));
+        let out = try!(self.run_code(&code, channel));
         if out.len() > 5000 {
             return Ok(String::from("output too long, bailing out :("));
         }
@@ -166,7 +179,7 @@ fn main() {{
                 return;
             }
 
-            let command = &msg[1..];
+            let command = msg[1..].trim();
             info!("{}: <{}> {}", chan, from, command);
             self.handle_cmd(chan, command);
         }
