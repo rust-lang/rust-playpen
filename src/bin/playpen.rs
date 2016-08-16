@@ -64,7 +64,8 @@ impl header::HeaderFormat for XXssProtection {
 }
 
 fn index(_: &mut Request) -> IronResult<Response> {
-    Ok(Response::with((Path::new("static/web.html"),
+    Ok(Response::with((status::Ok,
+                       Path::new("static/web.html"),
                        Header(XXssProtection(false)))))
 }
 
