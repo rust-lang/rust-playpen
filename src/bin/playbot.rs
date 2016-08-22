@@ -248,10 +248,12 @@ fn main() {
         let server = server.as_table().unwrap();
 
         for nick in server["nicks"].as_slice().unwrap() {
+            let nick = nick.as_str().unwrap();
             let server_addr = server["server"].as_str().unwrap();
             let conf = Config {
-                nickname: Some(String::from(nick.as_str().unwrap())),
+                nickname: Some(String::from(nick)),
                 nick_password: server.get("password").map(|val| String::from(val.as_str().unwrap())),
+                alt_nicks: Some(vec![format!("{}_", nick), format!("{}__", nick)]),
                 should_ghost: Some(true),
                 ghost_sequence: Some(vec!["RECOVER".to_string()]),
                 server: Some(String::from(server_addr)),
