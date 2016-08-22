@@ -252,6 +252,7 @@ fn main() {
             let conf = Config {
                 nickname: Some(String::from(nick.as_str().unwrap())),
                 nick_password: server.get("password").map(|val| String::from(val.as_str().unwrap())),
+                alt_nicks: Some(vec!["playbot_".to_owned()]),
                 should_ghost: Some(true),
                 ghost_sequence: Some(vec!["RECOVER".to_string()]),
                 server: Some(String::from(server_addr)),
