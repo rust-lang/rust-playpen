@@ -78,6 +78,7 @@ struct EvaluateReq {
     optimize: Option<String>,
     separate_output: Option<bool>,
     code: String,
+    backtrace: Option<String>,
 }
 
 fn evaluate(req: &mut Request) -> IronResult<Response> {
@@ -90,6 +91,7 @@ fn evaluate(req: &mut Request) -> IronResult<Response> {
     let version = itry!(data.version.map(|v| v.parse()).unwrap_or(Ok(ReleaseChannel::Stable)));
     let opt = itry!(data.optimize.map(|opt| opt.parse()).unwrap_or(Ok(OptLevel::O2)));
     let separate_output = data.separate_output.unwrap_or(false);
+    let backtrace = itry!(data.backtrace.map(|b| b.parse()).unwrap_or(Ok(Backtrace::Auto)));
 
     let mut args = vec![String::from("-C"), format!("opt-level={}", opt.as_u8())];
     if opt == OptLevel::O0 {
@@ -102,10 +104,16 @@ fn evaluate(req: &mut Request) -> IronResult<Response> {
         args.push(String::from("--test"));
     }
 
+    let mut env = vec![];
+    if backtrace.is_requested(opt == OptLevel::O0) {
+        env.push(("RUST_BACKTRACE".into(), "1".into()));
+    }
+
     let cache = req.extensions.get::<AddCache>().unwrap();
     let (_status, output) = itry!(cache.exec(version,
                                              "/usr/local/bin/evaluate.sh",
                                              args,
+                                             env,
                                              data.code));
 
     let mut obj = json::Object::new();
@@ -141,6 +149,7 @@ struct CompileReq {
     optimize: Option<String>,
     emit: Option<String>,
     code: String,
+    backtrace: Option<String>,
 }
 
 fn compile(req: &mut Request) -> IronResult<Response> {
@@ -153,6 +162,7 @@ fn compile(req: &mut Request) -> IronResult<Response> {
     let version = itry!(data.version.map(|v| v.parse()).unwrap_or(Ok(ReleaseChannel::Stable)));
     let opt = itry!(data.optimize.map(|opt| opt.parse()).unwrap_or(Ok(OptLevel::O2)));
     let emit = itry!(data.emit.map(|emit| emit.parse()).unwrap_or(Ok(CompileOutput::Asm)));
+    let backtrace = itry!(data.backtrace.map(|b| b.parse()).unwrap_or(Ok(Backtrace::Auto)));
 
     let mut args = vec![
         String::from("-C"),
@@ -170,10 +180,16 @@ fn compile(req: &mut Request) -> IronResult<Response> {
         args.push(String::from("--color=always"));
     }
 
+    let mut env = vec![];
+    if backtrace.is_requested(opt == OptLevel::O0) {
+        env.push(("RUST_BACKTRACE".into(), "1".into()));
+    }
+
     let cache = req.extensions.get::<AddCache>().unwrap();
     let (_status, output) = itry!(cache.exec(version,
                                              "/usr/local/bin/compile.sh",
                                              args,
+                                             env,
                                              data.code));
     let mut split = output.splitn(2, |b| *b == b'\xff');
     let rustc = String::from_utf8(split.next().unwrap().into()).unwrap();
@@ -198,6 +214,7 @@ fn compile(req: &mut Request) -> IronResult<Response> {
 struct FormatReq {
     version: Option<String>,
     code: String,
+    backtrace: Option<String>,
 }
 
 fn format(req: &mut Request) -> IronResult<Response> {
@@ -206,11 +223,18 @@ fn format(req: &mut Request) -> IronResult<Response> {
 
     let data: FormatReq = itry!(json::decode(&body));
     let version = itry!(data.version.map(|v| v.parse()).unwrap_or(Ok(ReleaseChannel::Stable)));
+    let backtrace = itry!(data.backtrace.map(|b| b.parse()).unwrap_or(Ok(Backtrace::Auto)));
+
+    let mut env = vec![];
+    if backtrace == Backtrace::Always {
+        env.push(("RUST_BACKTRACE".into(), "1".into()));
+    }
 
     let cache = req.extensions.get::<AddCache>().unwrap();
     let (status, output) = itry!(cache.exec(version,
                                             "rustfmt",
                                             Vec::new(),
+                                            env,
                                             data.code));
     let output = String::from_utf8(output).unwrap();
     let mut response_obj = json::Object::new();

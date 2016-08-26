@@ -33,6 +33,7 @@ fn get_rust_versions(cache: &Cache) -> Vec<String> {
         let (status, output) = cache.exec(*channel,
                                           "rustc",
                                           vec![String::from("-V")],
+                                          vec![],
                                           String::new()).unwrap();
         assert!(status.success(), "couldn't get version (this currently needs to run as root)");
         let version = str::from_utf8(&output).unwrap();
@@ -83,6 +84,7 @@ impl Playbot {
                 -> io::Result<String> {
         let (_status, output) = try!(self.cache.exec(channel,
                                                      "/usr/local/bin/evaluate.sh",
+                                                     Vec::new(),
                                                      Vec::new(),
                                                      String::from(full_code)));
 
