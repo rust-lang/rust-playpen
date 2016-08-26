@@ -15,6 +15,7 @@ pub struct Container {
 impl Container {
     pub fn new(cmd: &str,
                args: &[String],
+               env: &[(String, String)],
                name: &str) -> io::Result<Container> {
         let out = try!(run(Command::new("docker")
                                    .arg("create")
@@ -24,6 +25,7 @@ impl Container {
                                    .arg("--pids-limit=20")
                                    .arg("--security-opt=no-new-privileges")
                                    .arg("--interactive")
+                                   .args(&env.iter().map(|&(ref k, ref v)| format!("-e{}={}", k, v)).collect::<Vec<_>>())
                                    .arg(name)
                                    .arg(cmd)
                                    .stderr(Stdio::inherit())

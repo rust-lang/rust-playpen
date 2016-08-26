@@ -69,6 +69,7 @@ struct CacheKey {
     channel: ReleaseChannel,
     cmd: String,
     args: Vec<String>,
+    env: Vec<(String, String)>,
     input: String,
 }
 
@@ -84,6 +85,7 @@ impl Cache {
                 channel: ReleaseChannel,
                 cmd: &str,
                 args: Vec<String>,
+                env: Vec<(String, String)>,
                 input: String)
                 -> io::Result<(ExitStatus, Vec<u8>)> {
         // Build key to look up
@@ -91,6 +93,7 @@ impl Cache {
             channel: channel,
             cmd: cmd.to_string(),
             args: args,
+            env: env,
             input: input,
         };
         let mut cache = self.cache.lock().unwrap();
@@ -106,7 +109,7 @@ impl Cache {
         };
         let container = format!("rust-playpen-{}", chan);
 
-        let container = try!(Container::new(cmd, &key.args, &container));
+        let container = try!(Container::new(cmd, &key.args, &key.env, &container));
 
         let tuple = try!(container.run(key.input.as_bytes(), Duration::new(5, 0)));
         let (status, mut output, timeout) = tuple;
@@ -141,6 +144,36 @@ impl FromStr for AsmFlavor {
             "att" => Ok(AsmFlavor::Att),
             "intel" => Ok(AsmFlavor::Intel),
             _ => Err(StringError(format!("unknown asm dialect {}", s))),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum Backtrace {
+    Never,
+    Always,
+    Auto,
+}
+
+impl Backtrace {
+    pub fn is_requested(&self, debug: bool) -> bool {
+        match *self {
+            Backtrace::Never => false,
+            Backtrace::Always => true,
+            Backtrace::Auto => debug,
+        }
+    }
+}
+
+impl FromStr for Backtrace {
+    type Err = StringError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "0" => Ok(Backtrace::Never),
+            "1" => Ok(Backtrace::Always),
+            "2" => Ok(Backtrace::Auto),
+            _ => Err(StringError(format!("unknown backtrace setting {}", s))),
         }
     }
 }
@@ -249,6 +282,7 @@ mod tests {
         let (status, out) = cache.exec(ReleaseChannel::Stable,
                                        "/usr/local/bin/evaluate.sh",
                                        Vec::new(),
+                                       Vec::new(),
                                        input.to_string()).unwrap();
         assert!(status.success());
         assert_eq!(out, &[0xff, b'H', b'e', b'l', b'l', b'o', b'\n']);
@@ -267,6 +301,7 @@ mod tests {
         let (status, out) = cache.exec(ReleaseChannel::Stable,
                                        "/usr/local/bin/evaluate.sh",
                                        Vec::new(),
+                                       Vec::new(),
                                        input.to_string()).unwrap();
         assert!(!status.success());
         assert!(String::from_utf8_lossy(&out).contains("timeout triggered"));
@@ -281,6 +316,7 @@ mod tests {
         let (status, out) = cache.exec(ReleaseChannel::Stable,
                                        "/usr/local/bin/compile.sh",
                                        vec![String::from("--emit=llvm-ir")],
+                                       vec![],
                                        input.to_string()).unwrap();
 
         assert!(status.success());
@@ -299,6 +335,7 @@ mod tests {
         let input = r#"fn main() { println!("Hello") }"#;
         let (status, out) = cache.exec(ReleaseChannel::Stable,
                                        "rustfmt",
+                                       Vec::new(),
                                        Vec::new(),
                                        input.to_string()).unwrap();
         assert!(status.success());
