@@ -25,7 +25,7 @@ impl Container {
                                    .arg("--pids-limit=20")
                                    .arg("--security-opt=no-new-privileges")
                                    .arg("--interactive")
-                                   .args(&env.iter().map(|&(ref k, ref v)| format!("-e{}={}", k, v)).collect::<Vec<_>>())
+                                   .args(&env.iter().map(|&(ref k, ref v)| format!("--env={}={}", k, v)).collect::<Vec<_>>())
                                    .arg(name)
                                    .arg(cmd)
                                    .stderr(Stdio::inherit())
