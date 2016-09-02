@@ -273,6 +273,41 @@ mod tests {
 
     use super::*;
 
+    /// Validate the version and return out with the first line (version) removed
+    fn validate_and_remove_version<'a>(out: &'a [u8], expected: Option<&str>) -> &'a [u8] {
+        let mut split = out.splitn(2, |&b| b == b'\n');
+        let version = split.next().unwrap();
+        let out = split.next().unwrap();
+
+        assert!(version.starts_with(b"rustc "));
+
+        if let Some(expectation) = expected {
+            assert!(String::from_utf8_lossy(version).contains(expectation));
+        }
+
+        out
+    }
+
+    #[test]
+    fn versions() {
+        fn check(chan: ReleaseChannel, expectation: Option<&str>) {
+            let cache = Cache::new();
+            let input = r#"fn main() {}"#;
+
+            let (status, out) = cache.exec(chan, "/usr/local/bin/evaluate.sh",
+                                           vec![], vec![], input.into()).unwrap();
+
+            assert!(status.success());
+            validate_and_remove_version(&out.as_ref(), expectation);
+        }
+
+        drop(env_logger::init());
+
+        check(ReleaseChannel::Stable, None);
+        check(ReleaseChannel::Beta, Some("-beta"));
+        check(ReleaseChannel::Nightly, Some("-nightly"));
+    }
+
     #[test]
     fn eval() {
         drop(env_logger::init());
@@ -285,6 +320,7 @@ mod tests {
                                        Vec::new(),
                                        input.to_string()).unwrap();
         assert!(status.success());
+        let out = validate_and_remove_version(&out.as_ref(), None);
         assert_eq!(out, &[0xff, b'H', b'e', b'l', b'l', b'o', b'\n']);
     }
 
@@ -320,6 +356,7 @@ mod tests {
                                        input.to_string()).unwrap();
 
         assert!(status.success());
+        let out = validate_and_remove_version(&out, None);
         let mut split = out.splitn(2, |b| *b == b'\xff');
         let empty: &[u8] = &[];
         assert_eq!(split.next().unwrap(), empty);
