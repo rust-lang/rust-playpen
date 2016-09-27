@@ -18,11 +18,17 @@ use std::process;
 
 use hyper::client::Client;
 use irc::client::prelude::*;
-use rust_playpen::{ReleaseChannel, Cache};
+use rust_playpen::{ReleaseChannel, Cache, PLAYPEN_ENV_VAR_NAME};
 use rustc_serialize::json;
 use url::form_urlencoded;
 
 static DEFAULT_CHANNEL: ReleaseChannel = ReleaseChannel::Stable;
+
+const ENV: &'static str = "irc";
+
+fn base_env() -> Vec<(String, String)> {
+    vec![(PLAYPEN_ENV_VAR_NAME.into(), ENV.into())]
+}
 
 fn get_rust_versions(cache: &Cache) -> Vec<String> {
     let mut versions = Vec::new();
@@ -33,7 +39,7 @@ fn get_rust_versions(cache: &Cache) -> Vec<String> {
         let (status, output) = cache.exec(*channel,
                                           "rustc",
                                           vec![String::from("-V")],
-                                          vec![],
+                                          base_env(),
                                           String::new()).unwrap();
         assert!(status.success(), "couldn't get version (this currently needs to run as root)");
         let version = str::from_utf8(&output).unwrap();
@@ -85,7 +91,7 @@ impl Playbot {
         let (_status, output) = try!(self.cache.exec(channel,
                                                      "/usr/local/bin/evaluate.sh",
                                                      Vec::new(),
-                                                     Vec::new(),
+                                                     base_env(),
                                                      String::from(full_code)));
 
         let output_merged = output.splitn(2, |b| *b == b'\xff')
@@ -296,4 +302,18 @@ fn main() {
     for thread in threads {
         thread.join().unwrap();
     }
+}
+
+#[test]
+fn irc_no_version() {
+    drop(env_logger::init());
+
+    let cache = Cache::new();
+    let input = r#"fn main() {}"#;
+
+    let (status, out) = cache.exec(ReleaseChannel::Stable, "/usr/local/bin/evaluate.sh",
+                                   vec![], base_env(), input.into()).unwrap();
+
+    assert!(status.success());
+    assert_eq!(&out, b"\xFF"); // 0xFF is a separator produced by evaluate.sh
 }
