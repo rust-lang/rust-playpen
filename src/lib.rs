@@ -19,6 +19,8 @@ use docker::Container;
 
 mod docker;
 
+pub const PLAYPEN_ENV_VAR_NAME: &'static str = "RUST_PLAYPEN_ENV";
+
 /// Error type holding a description
 pub struct StringError(pub String);
 

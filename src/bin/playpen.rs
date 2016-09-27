@@ -29,6 +29,12 @@ use rustc_serialize::json;
 use staticfile::Static;
 use unicase::UniCase;
 
+const ENV: &'static str = "web";
+
+fn base_env() -> Vec<(String, String)> {
+    vec![(PLAYPEN_ENV_VAR_NAME.into(), ENV.into())]
+}
+
 #[derive(Clone, Debug)]
 struct XXssProtection(bool);
 
@@ -104,7 +110,7 @@ fn evaluate(req: &mut Request) -> IronResult<Response> {
         args.push(String::from("--test"));
     }
 
-    let mut env = vec![];
+    let mut env = base_env();
     if backtrace.is_requested(opt == OptLevel::O0) {
         env.push(("RUST_BACKTRACE".into(), "1".into()));
     }
@@ -180,7 +186,7 @@ fn compile(req: &mut Request) -> IronResult<Response> {
         args.push(String::from("--color=always"));
     }
 
-    let mut env = vec![];
+    let mut env = base_env();
     if backtrace.is_requested(opt == OptLevel::O0) {
         env.push(("RUST_BACKTRACE".into(), "1".into()));
     }
@@ -225,7 +231,7 @@ fn format(req: &mut Request) -> IronResult<Response> {
     let version = itry!(data.version.map(|v| v.parse()).unwrap_or(Ok(ReleaseChannel::Stable)));
     let backtrace = itry!(data.backtrace.map(|b| b.parse()).unwrap_or(Ok(Backtrace::Auto)));
 
-    let mut env = vec![];
+    let mut env = base_env();
     if backtrace == Backtrace::Always {
         env.push(("RUST_BACKTRACE".into(), "1".into()));
     }
@@ -297,4 +303,18 @@ fn main() {
     let addr = (&addr[..], 8080);
     println!("listening on {:?}", addr);
     Iron::new(chain).http(addr).unwrap();
+}
+
+#[test]
+fn web_has_version() {
+    drop(env_logger::init());
+
+    let cache = Cache::new();
+    let input = r#"fn main() {}"#;
+
+    let (status, out) = cache.exec(ReleaseChannel::Stable, "/usr/local/bin/evaluate.sh",
+                                   vec![], base_env(), input.into()).unwrap();
+
+    assert!(status.success());
+    assert!(String::from_utf8_lossy(&out).contains("rustc "));
 }
