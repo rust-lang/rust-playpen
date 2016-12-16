@@ -734,6 +734,42 @@
             bindKey: {win: "Ctrl-Enter", mac: "Ctrl-Enter"}
         });
 
+        // ACE uses the "cstyle" behaviour for all languages by default, which
+        // gives us nice things like quote and paren autopairing. However this
+        // also autopairs single quotes, which makes writing lifetimes annoying.
+        // To avoid having to duplicate the other functionality provided by the
+        // cstyle behaviour, we work around this situation by hijacking the
+        // single quote as a hotkey and modifying the document ourselves, which
+        // does not trigger this behaviour.
+        editor.commands.addCommand({
+            name: "rust_no_single_quote_autopairing",
+            exec: function(editor, line) {
+                var sess = editor.getSession();
+                var doc = sess.getDocument();
+                var selection = sess.getSelection();
+                var ranges = selection.getAllRanges();
+                var prev_range = null;
+
+                // no selection = zero width range, so we don't need to handle this case specially
+                // start from the back, so changes to earlier ranges don't invalidate later ranges
+                for (var i = ranges.length - 1; i >= 0; i--) {
+                    // sanity check: better to do no modification than to do something wrong
+                    // see the compareRange docs:
+                    // https://github.com/ajaxorg/ace/blob/v1.2.6/lib/ace/range.js#L106-L120
+                    if (prev_range && prev_range.compareRange(ranges[i]) != -2) {
+                        console.log("ranges intersect or are not in ascending order, skipping",
+                                    ranges[i]);
+                    }
+                    prev_range = ranges[i];
+
+                    doc.replace(ranges[i], "'");
+                }
+                // the selection contents were replaced, so clear the selection
+                selection.clearSelection();
+            },
+            bindKey: {win: "'", mac: "'"},
+        });
+
         // We’re all pretty much agreed that such an obscure command as transposing
         // letters hogging Ctrl-T, normally “open new tab”, is a bad thing.
         var transposeletters = editor.commands.commands.transposeletters;
