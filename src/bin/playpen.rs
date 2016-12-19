@@ -85,6 +85,7 @@ struct EvaluateReq {
     separate_output: Option<bool>,
     code: String,
     backtrace: Option<String>,
+    json_format: Option<bool>,
 }
 
 fn evaluate(req: &mut Request) -> IronResult<Response> {
@@ -93,6 +94,7 @@ fn evaluate(req: &mut Request) -> IronResult<Response> {
 
     let data: EvaluateReq = itry!(json::decode(&body));
     let color = data.color.unwrap_or(false);
+    let json_format = data.json_format.unwrap_or(false);
     let test = data.test.unwrap_or(false);
     let version = itry!(data.version.map(|v| v.parse()).unwrap_or(Ok(ReleaseChannel::Stable)));
     let opt = itry!(data.optimize.map(|opt| opt.parse()).unwrap_or(Ok(OptLevel::O2)));
@@ -102,6 +104,9 @@ fn evaluate(req: &mut Request) -> IronResult<Response> {
     let mut args = vec![String::from("-C"), format!("opt-level={}", opt.as_u8())];
     if opt == OptLevel::O0 {
         args.push(String::from("-g"));
+    }
+    if json_format {
+        args.push(String::from("--error-format=json"));
     }
     if color {
         args.push(String::from("--color=always"));
