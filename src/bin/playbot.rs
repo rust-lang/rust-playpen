@@ -140,25 +140,23 @@ fn main() {{
             return Ok(String::from("output too long, bailing out :("));
         }
 
-        // Print outputs up to 3 lines in length. Above that, print the first 2 lines followed by a
+        // Print outputs up to 2 lines in length. Above that, print the first line followed by a
         // shortened playpen link.
         let lines: Vec<&str> = out.lines().collect();
-        if lines.len() <= 3 {
+        if lines.len() <= 2 {
             return Ok(lines.join("\n"));
         }
 
-        // Take the first 2 lines and append the URL
-        let mut response = lines[..3].join("\n");
-        match self.pastebin(&code) {
-            Ok(short_url) => response.push_str(&format!("\n(output truncated; full output at {})",
-                                                        short_url)),
+        // Take the first line and append the URL
+        let response = lines[0];
+        Ok(match self.pastebin(&code) {
+            Ok(short_url) => format!("{}\n(output truncated; full output at {})",
+                                                        response, short_url),
             Err(e) => {
                 error!("shortening url failed: {}", e);
-                response.push_str("\n(output truncated; shortening URL failed)");
+                format!("{}\n(output truncated; shortening URL failed)", response)
             }
-        }
-
-        Ok(response)
+        })
     }
 
     fn handle_cmd(&mut self, response_to: &str, msg: &str) {
