@@ -136,7 +136,7 @@ fn main() {{
         };
 
         let out = try!(self.run_code(&code, channel));
-        if out.len() > 5000 {
+        if out.len() > 3000 {
             return Ok(String::from("output too long, bailing out :("));
         }
 
