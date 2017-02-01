@@ -119,7 +119,9 @@ impl Cache {
             output.extend_from_slice(b"\ntimeout triggered!");
         }
         let mut cache = self.cache.lock().unwrap();
-        cache.insert(key, (status.clone(), output.clone()));
+        if status.success() {
+            cache.insert(key, (status.clone(), output.clone()));
+        }
         Ok((status, output))
     }
 }
