@@ -60,7 +60,7 @@ SSH through the bastion, then:
 
 ```
 sudo apt-get update
-sudo apt-get install python-pip apt-transport-https ca-certificates
+sudo apt-get install python-pip apt-transport-https ca-certificates libssl-dev pkg-config
 sudo pip install pygments
 
 curl https://sh.rustup.rs | sh
