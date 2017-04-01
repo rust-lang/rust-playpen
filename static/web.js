@@ -131,6 +131,9 @@
     };
 
     function rehighlight(pygmentized, language) {
+        if (language == "mir") {
+            pygmentized = formatMirScopes(pygmentized);
+        }
         var mappings = PYGMENTS_TO_ACE_MAPPINGS[language];
         return pygmentized.replace(/<span class="([^"]*)">([^<]*)<\/span>/g, function() {
             var classes = mappings[arguments[1]];
@@ -593,6 +596,10 @@
         .replace(/^&lt;anon&gt;:(\d+):(\d+):\s+(\d+):(\d+)/mg, jumpToRegion)
         .replace(/^&lt;anon&gt;:(\d+)/mg, jumpToLine)
         .replace(/&lt;anon&gt;:(\d+):(\d+)/mg, jumpToPoint);  // new errors
+    }
+
+    function formatMir(text) {
+        return text.replace(/&lt;anon&gt;:(\d+):(\d+):\s+(\d+):(\d+)/mg, jumpToRegion);
     }
 
     addEventListener("DOMContentLoaded", function() {
