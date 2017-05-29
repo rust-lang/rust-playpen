@@ -80,7 +80,15 @@ impl Container {
         let mut lock = sink.lock().unwrap();
         let output = mem::replace(&mut *lock, Vec::new());
         debug!("status: {}", status);
-        debug!("output: {}", String::from_utf8_lossy(&output));
+        {
+            let output_lossy = String::from_utf8_lossy(&output);
+            if output_lossy.len() < 1024 {
+                debug!("output: {}", output_lossy);
+            } else {
+                let s = output_lossy.chars().take(1024).collect::<String>();
+                debug!("output (truncated): {}...", s);
+            }
+        }
         Ok((status, output, timeout))
     }
 }
