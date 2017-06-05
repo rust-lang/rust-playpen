@@ -598,7 +598,7 @@
         .replace(/&lt;anon&gt;:(\d+):(\d+)/mg, jumpToPoint);  // new errors
     }
 
-    function formatMir(text) {
+    function formatMirScopes(text) {
         return text.replace(/&lt;anon&gt;:(\d+):(\d+):\s+(\d+):(\d+)/mg, jumpToRegion);
     }
 
