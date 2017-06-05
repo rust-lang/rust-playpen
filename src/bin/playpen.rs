@@ -293,11 +293,11 @@ fn main() {
     Command::new("pygmentize").spawn().unwrap().kill().unwrap();
 
     let mut router = Router::new();
-    router.get("/", index);
-    router.get("/:path", Static::new("static"));
-    router.post("/evaluate.json", evaluate);
-    router.post("/compile.json", compile);
-    router.post("/format.json", format);
+    router.get("/", index, "root");
+    router.get("/:path", Static::new("static"), "static-file");
+    router.post("/evaluate.json", evaluate, "evaluate.json");
+    router.post("/compile.json", compile, "compile.json");
+    router.post("/format.json", format, "format.json");
 
     // Use our router as the middleware, and pass the generated response through `EnablePostCors`
     let mut chain = Chain::new(router);
