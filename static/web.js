@@ -804,10 +804,20 @@
             format(result, session, getRadioValue("version"), formatButton,
                    getRadioValue("optimize"), backtrace.value);
         };
+        editor.commands.addCommand({
+            name: "format",
+            exec: formatButton.onclick,
+            bindKey: {win: "Ctrl-Alt-F", mac: "Ctrl-Alt-F"}
+        });
 
         shareButton.onclick = function() {
             share(result, getRadioValue("version"), session.getValue(), shareButton, backtrace.value);
         };
+        editor.commands.addCommand({
+            name: "share",
+            exec: shareButton.onclick,
+            bindKey: {win: "Ctrl-Alt-S", mac: "Ctrl-Alt-S"}
+        });
 
         gistButton.onclick = function() {
             shareGist(result, getRadioValue("version"), session.getValue(), gistButton, backtrace.value);
