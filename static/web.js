@@ -506,7 +506,9 @@
 
     function updateEvaluateAction(code) {
         // A very simple pair of heuristics; there’s no point in doing more, IMO.
-        if (code.indexOf("fn main()") === -1 && code.indexOf("#[test]") !== -1) {
+        if ((code.indexOf("fn main()") === -1 ||
+             code.indexOf("fn main() {}") === 0 ) && //on first line, just like the first Run from here generates them: https://doc.rust-lang.org/nightly/book/testing.html
+            code.indexOf("#[test]") !== -1) {
             evaluateButton.textContent = "Test";
             evaluateAction = "test";
         } else {
