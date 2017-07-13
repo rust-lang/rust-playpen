@@ -1,5 +1,10 @@
-A web interface for running Rust code. It is hosted at
-<https://play.rust-lang.org/>.
+***Note:*** This project is deprecated.  To report issues about the playground
+hosted at <https://play.rust-lang.org/>, check out the
+[next-gen playpen](https://github.com/integer32llc/rust-playground/).
+
+# Old README
+
+A web interface for running Rust code.
 
 The interface can also be accessed in most Rust-related channels on
 `irc.mozilla.org`.
