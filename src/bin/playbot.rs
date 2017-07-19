@@ -121,7 +121,7 @@ impl Playbot {
             String::from(code)
         } else {
             format!(r#"
-#![allow(dead_code, unused_variables)]
+#![allow(warnings)]
 
 static VERSION: &'static str = "{version}";
 
