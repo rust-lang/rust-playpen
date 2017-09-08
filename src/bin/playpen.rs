@@ -23,6 +23,7 @@ use iron::modifiers::Header;
 use iron::typemap;
 use iron::prelude::*;
 use iron::status;
+use iron::headers::HeaderFormat;
 use router::Router;
 use rust_playpen::*;
 use rustc_serialize::json;
@@ -59,7 +60,7 @@ impl header::Header for XXssProtection {
     }
 }
 
-impl header::HeaderFormat for XXssProtection {
+impl HeaderFormat for XXssProtection {
     fn fmt_header(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.0 {
             f.write_str("1")
