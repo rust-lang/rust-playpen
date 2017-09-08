@@ -10,6 +10,8 @@ before_install:
   - sudo apt-get -o Dpkg::Options::="--force-confnew" install -y docker-engine
 
 install:
+  # Install node and npm
+  - sudo apt-get install -y node npm
   # needed for linting JS below (npm does not seem to be in sudo's path)
   - sudo `which npm` install -g jshint
   # this is a dependency of playpen currently
