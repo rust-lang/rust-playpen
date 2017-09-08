@@ -1,6 +1,6 @@
 #[macro_use] extern crate log;
 extern crate env_logger;
-extern crate hyper;
+extern crate reqwest;
 extern crate irc;
 extern crate rust_playpen;
 extern crate rustc_serialize;
@@ -15,12 +15,11 @@ use std::thread;
 use std::u16;
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::process;
+use std::error::Error;
 
-use hyper::client::Client;
+use reqwest::{Client, StatusCode};
 use irc::client::prelude::*;
 use rust_playpen::{ReleaseChannel, Cache, PLAYPEN_ENV_VAR_NAME};
-use rustc_serialize::json;
-use url::form_urlencoded;
 
 static DEFAULT_CHANNEL: ReleaseChannel = ReleaseChannel::Stable;
 
@@ -55,7 +54,6 @@ fn get_rust_versions(cache: &Cache) -> Vec<String> {
 struct Playbot {
     conn: IrcServer,
     rust_versions: Vec<String>,
-    shorten_key: String,
     cache: Arc<Cache>,
 }
 
@@ -63,24 +61,19 @@ impl Playbot {
     /// Shortens a playpen URL containing the given code.
     ///
     /// Returns the short URL.
-    fn pastebin(&self, code: &str) -> hyper::Result<String> {
-        let playpen_url = format!("https://play.rust-lang.org/?run=1&code={}",
-            form_urlencoded::byte_serialize(code.as_bytes()).collect::<String>());
-        let client = Client::new();
-        let url = format!(
-            "https://api-ssl.bitly.com/v3/shorten?access_token={}&longUrl={}",
-            form_urlencoded::byte_serialize(self.shorten_key.as_bytes()).collect::<String>(),
-            form_urlencoded::byte_serialize(playpen_url.as_bytes()).collect::<String>());
-        let mut response = try!(client.get(&url).send());
+    fn pastebin(&self, data: String) -> Result<String, Box<Error>> {
+        let client = Client::new()?;
+        let mut response = client.post("https://paste.rs/")?
+            .body(data)
+            .send()?;
         let mut body = String::new();
-        try!(response.read_to_string(&mut body));
-        let value: json::Json = json::Json::from_str(&body).unwrap();
-        let obj = value.as_object().unwrap();
-        if obj["status_txt"].as_string().unwrap() == "OK" {
-            Ok(String::from(value.find_path(&["data", "url"]).unwrap().as_string().unwrap()))
+
+        if response.status() == StatusCode::Created {
+            response.read_to_string(&mut body)?;
+
+            Ok(body)
         } else {
-            Err(io::Error::new(io::ErrorKind::Other,
-                               format!("server responded with: {}", body)).into())
+            Err(format!("server responded with: {}", body).into())
         }
     }
 
@@ -140,8 +133,8 @@ fn main() {{
             return Ok(String::from("output too long, bailing out :("));
         }
 
-        // Print outputs up to 2 lines in length. Above that, print the first line followed by a
-        // shortened playpen link.
+        // Print outputs up to 2 lines in length. Above that, print the first line followed by
+        // the link to the full output
         let lines: Vec<&str> = out.lines().collect();
         if lines.len() <= 2 {
             return Ok(lines.join("\n"));
@@ -149,7 +142,7 @@ fn main() {{
 
         // Take the first line and append the URL
         let response = lines[0];
-        Ok(match self.pastebin(&code) {
+        Ok(match self.pastebin(code) {
             Ok(short_url) => format!("{}\n(output truncated; full output at {})",
                                                         response, short_url),
             Err(e) => {
@@ -247,7 +240,6 @@ fn main() {
     let mut config = String::new();
     File::open("playbot.toml").unwrap().read_to_string(&mut config).unwrap();
     let toml = config.parse::<toml::Value>().unwrap();
-    let bitly_key = toml["bitly-key"].as_str().unwrap().to_string();
 
     let mut threads = Vec::new();
     for server in toml["server"].as_array().unwrap() {
@@ -280,7 +272,6 @@ fn main() {
             let mut bot = Playbot {
                 conn: server,
                 rust_versions: rust_versions.clone(),
-                shorten_key: bitly_key.clone(),
                 cache: cache.clone(),
             };
             threads.push(thread::Builder::new()
