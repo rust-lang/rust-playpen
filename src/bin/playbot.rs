@@ -3,9 +3,7 @@ extern crate env_logger;
 extern crate reqwest;
 extern crate irc;
 extern crate rust_playpen;
-extern crate rustc_serialize;
 extern crate toml;
-extern crate url;
 
 use std::fs::File;
 use std::io::{self, Read};
@@ -70,7 +68,7 @@ impl Playbot {
 
         if response.status() == StatusCode::Created {
             response.read_to_string(&mut body)?;
-
+            body.pop(); // the response ends with \n
             Ok(body)
         } else {
             Err(format!("server responded with: {}", body).into())
@@ -142,7 +140,7 @@ fn main() {{
 
         // Take the first line and append the URL
         let response = lines[0];
-        Ok(match self.pastebin(code) {
+        Ok(match self.pastebin(format!("{}\n\n~~~~~=====OUTPUT=====~~~~~\n\n{}", code, out)) {
             Ok(short_url) => format!("{}\n(output truncated; full output at {})",
                                                         response, short_url),
             Err(e) => {
