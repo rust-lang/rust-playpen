@@ -21,4 +21,4 @@ wait-timeout = "0.1.5"
 
 [dependencies.irc]
 default-features = false
-version = "0.11.7"
+version = "0.12.4"

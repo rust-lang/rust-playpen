@@ -191,18 +191,11 @@ fn main() {{
     fn main_loop(&mut self) {
         info!("playbot at your service!");
         let cloned = self.conn.clone();
-        for msg in cloned.iter() {
-            let msg = match msg {
-                Ok(msg) => msg,
-                // FIXME I'm not sure when this will be returned and whether `continue` is the right
-                // response.
-                Err(_) => continue,
-            };
-
+        cloned.for_each_incoming(|msg| {
             let from = match msg.source_nickname() {
                 Some(name) => name,
-                None => continue,   // no user attached, so it's not interesting for us
-                                    // (probably a server msg)
+                None => return,   // no user attached, so it's not interesting for us
+                                  // (probably a server msg)
             };
             match msg.command {
                 Command::PRIVMSG(ref to, ref msg) => {
@@ -224,7 +217,7 @@ fn main() {{
                 },
                 _ => {},
             }
-        }
+        }).expect("something went south");
     }
 }
 
