@@ -18,7 +18,4 @@ toml = "0.4.1"
 unicase = "1.4.2"
 url = "1.4.0"
 wait-timeout = "0.1.5"
-
-[dependencies.irc]
-default-features = false
-version = "0.11.7"
+irc = "0.12.4"
