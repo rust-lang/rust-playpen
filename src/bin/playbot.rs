@@ -12,7 +12,6 @@ use std::sync::Arc;
 use std::thread;
 use std::u16;
 use std::panic::{AssertUnwindSafe, catch_unwind};
-use std::process;
 use std::error::Error;
 
 use reqwest::{Client, StatusCode};
@@ -112,7 +111,7 @@ impl Playbot {
             String::from(code)
         } else {
             format!(r#"
-#![allow(dead_code, unused_variables)]
+#![allow(warnings)]
 
 static VERSION: &'static str = "{version}";
 
@@ -215,6 +214,7 @@ fn main() {{
                         }
                     }
                 },
+                Command::PING(ref msg, _) => self.conn.send_pong(msg).unwrap(),
                 _ => {},
             }
         }).expect("something went south");
@@ -233,54 +233,52 @@ fn main() {
     let toml = config.parse::<toml::Value>().unwrap();
 
     let mut threads = Vec::new();
-    for server in toml["server"].as_array().unwrap() {
-        let server = server.as_table().unwrap();
 
-        for nick in server["nicks"].as_array().unwrap() {
-            let nick = nick.as_str().unwrap();
-            let server_addr = server["server"].as_str().unwrap();
-            let conf = Config {
-                nickname: Some(String::from(nick)),
-                nick_password: server.get("password").map(|val| String::from(val.as_str().unwrap())),
-                alt_nicks: Some(vec![format!("{}_", nick), format!("{}__", nick)]),
-                should_ghost: Some(true),
-                ghost_sequence: Some(vec!["RECOVER".to_string()]),
-                server: Some(String::from(server_addr)),
-                port: server.get("port").map(|val| {
-                    let port = val.as_integer().unwrap();
-                    assert!(0 < port && port < u16::MAX as i64, "out of range for ports");
-                    port as u16
-                }),
-                channels: Some(server["channels"].as_array().unwrap()
-                    .iter()
-                    .map(|val| String::from(val.as_str().unwrap()))
-                    .collect()),
-                ..Config::default()
-            };
+    loop {
+        for server in toml["server"].as_array().unwrap() {
+            let server = server.as_table().unwrap();
 
-            let server = IrcServer::from_config(conf).unwrap();
-            server.identify().unwrap();
-            let mut bot = Playbot {
-                conn: server,
-                rust_versions: rust_versions.clone(),
-                cache: cache.clone(),
-            };
-            threads.push(thread::Builder::new()
-                                         .name(format!("{}@{}", nick, server_addr))
-                                         .spawn(move || {
-                if let Err(_) = catch_unwind(AssertUnwindSafe(|| bot.main_loop())) {
-                    error!("killing playbot due to previous error");
+            for nick in server["nicks"].as_array().unwrap() {
+                let nick = nick.as_str().unwrap();
+                let server_addr = server["server"].as_str().unwrap();
+                let conf = Config {
+                    nickname: Some(String::from(nick)),
+                    nick_password: server.get("password").map(|val| String::from(val.as_str().unwrap())),
+                    alt_nicks: Some(vec![format!("{}_", nick), format!("{}__", nick)]),
+                    should_ghost: Some(true),
+                    ghost_sequence: Some(vec!["RECOVER".to_string()]),
+                    server: Some(String::from(server_addr)),
+                    port: server.get("port").map(|val| {
+                        let port = val.as_integer().unwrap();
+                        assert!(0 < port && port < u16::MAX as i64, "out of range for ports");
+                        port as u16
+                    }),
+                    channels: Some(server["channels"].as_array().unwrap()
+                                   .iter()
+                                   .map(|val| String::from(val.as_str().unwrap()))
+                                   .collect()),
+                    ..Config::default()
+                };
 
-                    // Abort the whole process, killing the other threads. This should make
-                    // debugging easier since the other bots don't keep running.
-                    process::exit(101);
-                }
-            }).unwrap());
+                let server = IrcServer::from_config(conf).unwrap();
+                server.identify().unwrap();
+                let mut bot = Playbot {
+                    conn: server,
+                    rust_versions: rust_versions.clone(),
+                    cache: cache.clone(),
+                };
+                threads.push(
+                    thread::Builder::new()
+                        .name(format!("{}@{}", nick, server_addr))
+                        .spawn(move || bot.main_loop())
+                        .unwrap()
+                );
+            }
         }
-    }
 
-    for thread in threads {
-        thread.join().unwrap();
+        for thread in threads.drain(..) {
+            let _ = thread.join();
+        }
     }
 }
 
