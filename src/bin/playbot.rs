@@ -109,6 +109,22 @@ impl Playbot {
 
         let code = if self.conn.current_nickname().contains("mini") {
             String::from(code)
+        } else if channel == ReleaseChannel::Nightly {
+            format!(r#"
+#![feature(core_intrinsics)]
+#![allow(dead_code, unused_variables)]
+
+static VERSION: &'static str = "{version}";
+
+fn show<T: std::fmt::Debug>(e: T) {{ println!("{{:?}}", e) }}
+fn show_type<T>(_:T) -> &'static str {{ unsafe {{ std::intrinsics::type_name::<T>() }}}}
+
+fn main() {{
+    show({{
+        {code}
+    }});
+}}
+"#, version = self.rust_versions[channel as usize], code = code)
         } else {
             format!(r#"
 #![allow(warnings)]
