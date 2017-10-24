@@ -21,6 +21,8 @@ impl Container {
                                    .arg("create")
                                    .arg("--cap-drop=ALL")
                                    .arg("--memory=128m")
+                                   .arg("--security-opt")
+                                   .arg("seccomp=whitelist.json")
                                    .arg("--net=none")
                                    .arg("--pids-limit=20")
                                    .arg("--security-opt=no-new-privileges")
