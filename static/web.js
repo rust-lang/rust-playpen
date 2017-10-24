@@ -784,6 +784,12 @@
         delete transposeletters.bindKey;
         editor.commands.addCommand(transposeletters);
 
+        // Don't hog Ctrl-L (“focus location bar”) either:
+        var gotoline = editor.commands.commands.gotoline;
+        editor.commands.removeCommand("gotoline");
+        delete gotoline.bindKey;
+        editor.commands.addCommand(gotoline);
+
         asmButton.onclick = function() {
             compile("asm", result, session.getValue(), getRadioValue("version"),
                      getRadioValue("optimize"), asmButton, backtrace.value);
